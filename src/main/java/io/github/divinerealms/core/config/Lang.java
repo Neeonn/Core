@@ -1,0 +1,149 @@
+package io.github.divinerealms.core.config;
+
+import lombok.Getter;
+import org.bukkit.ChatColor;
+import org.bukkit.configuration.file.FileConfiguration;
+
+@Getter
+public enum Lang {
+  PREFIX("prefix", "&b&lCore&8&l» &9"),
+  HELP("help", "{prefix}&cNepoznata komanda. Dostupno: &6/&ecore reload"),
+  NO_PERM("no-perm", "{prefix}&cNemate dozvolu (&4{0}&c) za komandu &6/&e{1}&c!"),
+  UNKNOWN_COMMAND("unknown-command", "{prefix}&cNepoznata komanda."),
+  PLAYER_NOT_FOUND("player-not-found", "{prefix}&cIgrač {0} nije pronađen."),
+  ANTI_SPAM("anti-spam", "&cŠalješ previše poruka, iskuliraj malo."),
+  INGAME_ONLY("ingame-only", "{prefix}&cOva komanda se može koristiti samo u igri."),
+
+  CHANNEL_HELP("channels.help", String.join(System.lineSeparator(),
+      "{prefix}&cNepoznata komanda. Dostupne komande u Core pluginu:",
+      "&6/&echannel toggle &2<&akanal&2>&7: &f&oOmogućite/onemogućite određeni čet kanal.",
+      "&6/&echannel team&6|&et&7: &f&oKomanda za ligaški tim čet."
+  )),
+  CHANNEL_NOT_FOUND("channels.not-found", "&cChannel '&e{0}&c' not found."),
+  CHANNEL_NOT_IN_TEAM("channels.not-in-team", "{prefix}&cNiste ni u jednom timu!"),
+  CHANNEL_NO_PERM("channels.insufficient-permission", "{prefix}&cNemate dozvolu (&4{0}&c) da pišete u '&e{1}&c' četu!"),
+  CHANNEL_TOGGLE("channels.toggle", "{prefix}&e{0} čet je {1}&e!"),
+  CHANNEL_DISABLED("channels.disabled", "{prefix}&cČet kanal '&e{0}&c' je isključen od strane admina."),
+  CHANNEL_DISABLED_BROADCAST("channels.disabled-broadcast", "{prefix}&cČet kanal &e{0} &cje {1}&c od strane {2}!"),
+  CHANNEL_REPLY("channels.reply", "&7 &o(reply -> {0})&r"),
+
+  CLIENT_BLOCKER_USAGE("client-blocker.usage", "&e Koristite &6/cb toggle&e."),
+  CLIENT_BLOCKER_TOGGLE("client-blocker.toggle", "{prefix}&eClient Blocker je {0}&e!"),
+  CLIENT_BLOCKER_NOTIFY("client-blocker.notify", "&9[Client Blocker] &c{0} &8&o({1}) &cje pokušao ući sa &c{2}"),
+  CLIENT_BLOCKER_BYPASS_NOTIFY("client-blocker.notify-bypass", "&9[Client Blocker] &c{0} &8&o({1}) &bje ušao sa &c{2}"),
+  CLIENT_BLOCKER_KICK("client-blocker.kick", "&cZabranjeni clienti!"),
+  CLIENT_BLOCKER_CHECK_RESULT("client-blocker.check-result", "{prefix}&b{0} &fkoristi &e{1} &fclient."),
+
+  RESULT_HELP("result.help", String.join(System.lineSeparator(),
+      "{prefix}Lista dostupnih &6/result &9komandi:",
+      "&6/result|rs status: &fPokazuje status trenutne utakmice.",
+      "&6/result|rs start: &fStartuje meč/nastavlja poluvreme.",
+      "&6/result|rs pause/resume: &fPauzira/nastavlja štopericu.",
+      "&6/result|rs stop: &fPrekida meč.",
+      "&6/result|rs teams <home> <away>: &fPostavlja timove.",
+      "&6/result|rs prefix: &fPostavlja prefix.",
+      "&6/result|rs time: &fPodešava vreme trajanja.",
+      "&6/result|rs add <home|away> <scorer> [assister]: &fDodaje gol timu.",
+      "&6/result|rs remove <home|away>: &fUklanja gol timu.",
+      "&6/result|rs stophalf: &fStopira poluvreme.",
+      "&6/result|rs extratime: &fDodaje ET (primer: 20s, 1min, 1min20s, -50s)"
+  )),
+  RESULT_TEAMS_SET("result.teams.set", "{prefix}&aTimovi podešeni: &9{0} &avs &c{1}&a!"),
+  RESULT_TEAMS_UNKNOWN("result.teams.unknown", "{prefix}&cTimovi nisu podešeni. Koristite: &6/result teams <home> <away>"),
+  RESULT_TEAMS_INVALID("result.teams.invalid", "{prefix}&cTim nije validan! Koristite &ehome &cili &eaway&c."),
+  RESULT_MATCH_RUNNING("result.match.running", "{prefix}&cMeč je već u toku!"),
+  RESULT_MATCH_FINISHED("result.match.finished", "{prefix}&cMeč je već završen!"),
+  RESULT_MATCH_PAUSED("result.match.paused", "{prefix}&aMeč pauziran."),
+  RESULT_MATCH_RESUMED("result.match.resumed", "{prefix}&aMeč se nastavlja."),
+  RESULT_MATCH_PREFIX("result.match.prefix", "{prefix}&aMeč prefix podešen: {0}"),
+  RESULT_MATCH_TIME("result.match.time", "{prefix}&aVreme podešeno na &e{0}&a!"),
+  RESULT_MATCH_INVALID_TIME("result.match.invalid-time", "{prefix}&cVreme nije validno! Koristite: 1min20s, 30s ili -20s."),
+  RESULT_MATCH_EXTRA("result.match.extra", "{prefix}&aDodato vreme podešeno: &e{0}"),
+  RESULT_HALF_STOPPED("result.half.stopped", "{prefix}&cPoluvreme stopirano!"),
+  RESULT_HALF_NONE("result.half.none", "{prefix}&cNema aktivnog poluvremena."),
+  RESULT_SCORE_ADD("result.score.add", String.join(System.lineSeparator(),
+      "&r &r",
+      "&e   &lGOOOOOOOOOL!",
+      "&b   {0} &rje postigao gol za {1} &rtim!",
+      "&r &r"
+  )),
+  RESULT_SCORE_ADD_ASSIST("result.score.add-assist", String.join(System.lineSeparator(),
+      "&r &r",
+      "&e   &lGOOOOOOOOOL!",
+      "&b   {0} &rje postigao gol za {1} &rtim!",
+      "&f   Asistent: &b{2}",
+      "&r &r"
+  )),
+  RESULT_SCORE_INVALID("result.score.invalid", "{prefix}&cNepostojeći tim ili je rezultat već 0."),
+  RESULT_SCORE_UPDATED("result.score.update", "{prefix}&aRezultat osvežen za tim {0}&a."),
+  RESULT_STATUS("result.status.message", String.join(System.lineSeparator(),
+      "&e---------------------------------------------",
+      "{prefix}&bStatus trenutne utakmice:",
+      "&r &r",
+      "&e[{0} Utakmica&e]",
+      "&7Rezultat: &9{1} &f{2} &7- &f{3} &c{4}",
+      "&7Vreme: &e{5}{6}{7}{8}",
+      "&r &r",
+      "&e---------------------------------------------"
+  )),
+  RESULT_STATUS_NONE("result.status.none", "{prefix}&cNema aktivnih mečeva..."),
+
+  PLAYTIME_SELF("playtime.self", "{prefix}Vaš playtime je: &e{0}"),
+  PLAYTIME_OTHER("playtime.other", "{prefix}Playtime igrača &b{0} &fje: &e{1}"),
+  PLAYTIME_HELP("playtime.help", String.join(System.lineSeparator(),
+      "{prefix}Lista dostupnih &b/playtime&f komandi:",
+      "&b/playtime: &fPokazuje Vaš playtime.",
+      "&b/playtime <igrač>: &fPokazuje playtime navedenog igrača.",
+      "&b/playtime top <strana> <limit>: &fPokazuje playtime top.")),
+  PLAYTIME_TOP_HEADER("playtime.top.header", String.join(System.lineSeparator(),
+      "&e---------------------------------------------",
+      "{prefix}&eTop {0} Playtime &7(Strana {1}/{2})",
+      "&r &r")),
+  PLAYTIME_TOP_FOOTER("playtime.top.footer", String.join(System.lineSeparator(),
+      "&r &r",
+      "&9TIP: &f&oKoristite &b/playtime <igrač> &f&oda vidite tuđi playtime.",
+      "&e---------------------------------------------")),
+  PLAYTIME_TOP_ENTRY("playtime.top.entry", "&e#{0} &b{1} &7- &e{2}"),
+
+  MENTION_TOGGLED("toggle.mention", "{prefix}&fZvuk za mention u četu je {0}&f!"),
+
+  ADMIN_RELOAD("admin.reload", "{prefix}&eCore konfiguracije & poruke osvežene!"),
+
+  MENTION("mention", "&6Pstt, &e{0} &6te je spomenuo u četu!"),
+
+  ON("on", "&auključen"),
+  OFF("off", "&cisključen");
+
+  private static FileConfiguration LANG;
+  private final String path;
+  private final String def;
+
+  Lang(String path, String start) {
+    this.path = path;
+    this.def = start;
+  }
+
+  public static void setFile(FileConfiguration config) {
+    LANG = config;
+  }
+
+  public String getDefault() {
+    return this.def;
+  }
+
+  public String replace(String[] args) {
+    String value = ChatColor.translateAlternateColorCodes('&', LANG.getString(this.path, this.def));
+    if (args == null) {
+      return value;
+    } else if (args.length == 0) {
+      return value;
+    } else {
+      for (int i = 0; i < args.length; ++i) {
+        value = value.replace("{" + i + "}", args[i]);
+      }
+
+      value = ChatColor.translateAlternateColorCodes('&', value);
+      return value;
+    }
+  }
+}
