@@ -2,7 +2,6 @@ package io.github.divinerealms.core.managers;
 
 import io.github.divinerealms.core.config.Config;
 import lombok.Getter;
-import lombok.Setter;
 import org.bukkit.entity.Player;
 
 import java.util.Arrays;
@@ -15,17 +14,17 @@ public class ClientBlocker {
   private final Map<String, String> playerBrands = new HashMap<>();
   private final List<String> allowedVanillaClients = Arrays.asList("vanilla", "optifine");
 
-  @Getter @Setter private boolean enabled = Config.CLIENT_BLOCKER_ENABLED.getValue(Boolean.class);
+  @Getter private boolean enabled = Config.CLIENT_BLOCKER_ENABLED.getValue(Boolean.class);
 
   public static final String BYPASS_PERMISSION = "core.client-blocker.bypass";
   public static final String NOTIFY_PERMISSION = "core.client-blocker.notify";
 
   public boolean toggle() {
-    if (isEnabled()) {
-      setEnabled(false);
+    if (enabled) {
+      enabled = false;
       return false;
     } else {
-      setEnabled(true);
+      enabled = true;
       return true;
     }
   }

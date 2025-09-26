@@ -82,7 +82,7 @@ public class CoreManager {
 
       registerCommand(commandMap, "core", new BukkitCommandWrapper("core", new CoreCommand(this), null));
       registerCommand(commandMap, "channel", new BukkitCommandWrapper("channel", new ChannelCommand(this), null));
-      registerCommand(commandMap, "clientblocker", new BukkitCommandWrapper("cb", new ClientBlockerCommand(this), Collections.singletonList("cb")));
+      registerCommand(commandMap, "clientblocker", new BukkitCommandWrapper("clientblocker", new ClientBlockerCommand(this), Collections.singletonList("cb")));
       registerCommand(commandMap, "team", new BukkitCommandWrapper("team", new TeamChannelCommand(this), Collections.singletonList("t")));
       registerCommand(commandMap, "result", new BukkitCommandWrapper("result", new ResultCommand(this), Collections.singletonList("rs")));
       registerCommand(commandMap, "togglemention", new BukkitCommandWrapper("togglemention", new ToggleCommand(this), null));
