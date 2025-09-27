@@ -22,6 +22,9 @@ public class PlayerEvents implements Listener {
   private final ClientBlocker clientBlocker;
   private final PlayerSettingsManager playerSettingsManager;
 
+  private static final String PERM_SILENT_JOIN_QUIT = "core.silent-joinquit";
+  private static final String PATH_PLAYER_MESSAGES = "player_messages.custom_";
+
   public PlayerEvents(CoreManager coreManager) {
     this.coreManager = coreManager;
     this.logger = coreManager.getLogger();
@@ -34,37 +37,32 @@ public class PlayerEvents implements Listener {
   public void onJoin(PlayerJoinEvent event) {
     Player player = event.getPlayer();
     playerSettingsManager.loadPlayer(player);
-    if (!Config.CONFIG.getBoolean("player_messages.custom_join.enabled", false)) return;
+    if (!Config.CONFIG.getBoolean(PATH_PLAYER_MESSAGES + "join.enabled", false)) return;
     event.setJoinMessage(null);
-    if (player.hasPermission("core.silent-joinquit")) return;
+    if (player.hasPermission(PERM_SILENT_JOIN_QUIT)) return;
 
-    Bukkit.getScheduler().runTaskAsynchronously(coreManager.getPlugin(), () -> {
-      boolean isDiscordSRV = coreManager.isDiscordSRV();
+    boolean isDiscordSRV = coreManager.isDiscordSRV();
 
-      String mcMsg = Config.CONFIG.getString("player_messages.custom_join.minecraft", ChatColor.YELLOW + player.getName() + " has joined the server");
-      String dcMsg = isDiscordSRV ? Config.CONFIG.getString("player_messages.custom_join.discord", ":green_square: " + player.getName()) : null;
+    String mcMsg = Config.CONFIG.getString(PATH_PLAYER_MESSAGES + "join.minecraft", ChatColor.YELLOW + player.getName() + " has joined the server");
+    String dcMsg = isDiscordSRV ? Config.CONFIG.getString(PATH_PLAYER_MESSAGES + "join.discord", ":green_square: " + player.getName()) : null;
 
-      if (coreManager.isPlaceholderAPI()) {
-        mcMsg = PlaceholderAPI.setPlaceholders(player, mcMsg);
-        if (isDiscordSRV) dcMsg = PlaceholderAPI.setPlaceholders(player, dcMsg);
+    if (coreManager.isPlaceholderAPI()) {
+      mcMsg = PlaceholderAPI.setPlaceholders(player, mcMsg);
+      if (isDiscordSRV) dcMsg = PlaceholderAPI.setPlaceholders(player, dcMsg);
+    }
+
+    String finalMcMsg = mcMsg;
+    String finalDcMsg = isDiscordSRV ? ChatColor.translateAlternateColorCodes('&', dcMsg) : null;
+
+    Bukkit.getScheduler().runTaskLaterAsynchronously(coreManager.getPlugin(), () -> {
+      if (clientBlocker.shouldKick(player)) { clientBlocker.removePlayer(player); return; }
+
+      logger.broadcast(finalMcMsg);
+      if (isDiscordSRV) {
+        ChannelManager.ChannelInfo info = channelManager.getChannels().get(channelManager.getDefaultChannel());
+        channelManager.sendToDiscord(info, finalDcMsg);
       }
-
-      String finalMcMsg = mcMsg;
-      String finalDcMsg = isDiscordSRV ? ChatColor.translateAlternateColorCodes('&', dcMsg) : null;
-
-      Bukkit.getScheduler().runTaskLater(coreManager.getPlugin(), () -> {
-        if (clientBlocker.shouldKick(player)) {
-          clientBlocker.removePlayer(player);
-          return;
-        }
-
-        logger.broadcast(finalMcMsg);
-        if (isDiscordSRV) {
-          ChannelManager.ChannelInfo info = channelManager.getChannels().get(channelManager.getDefaultChannel());
-          Bukkit.getScheduler().runTaskAsynchronously(coreManager.getPlugin(), () -> channelManager.sendToDiscord(info, finalDcMsg));
-        }
-      }, 10L);
-    });
+    }, 10L);
   }
 
   @EventHandler
@@ -74,35 +72,33 @@ public class PlayerEvents implements Listener {
     playerSettingsManager.savePlayer(player);
     playerSettingsManager.removePlayer(player);
 
-    if (!Config.CONFIG.getBoolean("player_messages.custom_quit.enabled", false)) return;
+    if (!Config.CONFIG.getBoolean(PATH_PLAYER_MESSAGES + "quit.enabled", false)) return;
 
     event.setQuitMessage(null);
 
-    if (player.hasPermission("core.silent-joinquit")) return;
+    if (player.hasPermission(PERM_SILENT_JOIN_QUIT)) return;
+
+    boolean isDiscordSRV = coreManager.isDiscordSRV();
+
+    String mcMsg = Config.CONFIG.getString(PATH_PLAYER_MESSAGES + "quit.minecraft", ChatColor.YELLOW + player.getName() + " left the server");
+    String dcMsg = isDiscordSRV ? Config.CONFIG.getString(PATH_PLAYER_MESSAGES + "quit.discord", ":red_square: " + player.getName()) : null;
+
+    if (coreManager.isPlaceholderAPI()) {
+      mcMsg = PlaceholderAPI.setPlaceholders(player, mcMsg);
+      if (isDiscordSRV) dcMsg = PlaceholderAPI.setPlaceholders(player, dcMsg);
+    }
+
+    String finalMcMsg = mcMsg;
+    String finalDcMsg = isDiscordSRV ? ChatColor.translateAlternateColorCodes('&', dcMsg) : null;
 
     Bukkit.getScheduler().runTaskAsynchronously(coreManager.getPlugin(), () -> {
-      boolean isDiscordSRV = coreManager.isDiscordSRV();
-
-      String mcMsg = Config.CONFIG.getString("player_messages.custom_quit.minecraft", ChatColor.YELLOW + player.getName() + " left the server");
-      String dcMsg = isDiscordSRV ? Config.CONFIG.getString("player_messages.custom_quit.discord", ":red_square: " + player.getName()) : null;
-
-      if (coreManager.isPlaceholderAPI()) {
-        mcMsg = PlaceholderAPI.setPlaceholders(player, mcMsg);
-        if (isDiscordSRV) dcMsg = PlaceholderAPI.setPlaceholders(player, dcMsg);
-      }
-
-      String finalMcMsg = mcMsg;
-      String finalDcMsg = isDiscordSRV ? ChatColor.translateAlternateColorCodes('&', dcMsg) : null;
-
-      Bukkit.getScheduler().runTaskLater(coreManager.getPlugin(), () -> {
-        if (!clientBlocker.shouldKick(player)) {
-          logger.broadcast(finalMcMsg);
-          if (isDiscordSRV) {
-            ChannelManager.ChannelInfo info = channelManager.getChannels().get(channelManager.getDefaultChannel());
-            Bukkit.getScheduler().runTaskAsynchronously(coreManager.getPlugin(), () -> channelManager.sendToDiscord(info, finalDcMsg));
-          }
+      if (!clientBlocker.shouldKick(player)) {
+        logger.broadcast(finalMcMsg);
+        if (isDiscordSRV) {
+          ChannelManager.ChannelInfo info = channelManager.getChannels().get(channelManager.getDefaultChannel());
+          channelManager.sendToDiscord(info, finalDcMsg);
         }
-      }, 2L);
+      }
     });
   }
 }

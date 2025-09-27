@@ -24,6 +24,8 @@ public class ChatChannelListener implements Listener {
   private final LuckPerms luckPerms;
   private final PlayerSettingsManager playerSettingsManager;
 
+  private static final String PERM_BYPASS = "core.bypass.disabled-channel";
+
   public ChatChannelListener(CoreManager coreManager) {
     this.coreManager = coreManager;
     this.logger = coreManager.getLogger();
@@ -39,7 +41,7 @@ public class ChatChannelListener implements Listener {
     ChannelManager.ChannelInfo info = channelManager.getChannels().get(activeChannel);
     if (info == null) return;
 
-    if (channelManager.isChannelDisabled(activeChannel) && !player.hasPermission("core.bypass.disabled-channel")) {
+    if (channelManager.isChannelDisabled(activeChannel) && !player.hasPermission(PERM_BYPASS)) {
       event.setCancelled(true);
       logger.send(player, Lang.CHANNEL_DISABLED.replace(null));
       return;
