@@ -87,6 +87,7 @@ public class CoreManager {
       registerCommand(commandMap, "result", new BukkitCommandWrapper("result", new ResultCommand(this), Collections.singletonList("rs")));
       registerCommand(commandMap, "togglemention", new BukkitCommandWrapper("togglemention", new ToggleCommand(this), null));
       registerCommand(commandMap, "playtime", new BukkitCommandWrapper("playtime", new PlaytimeCommand(this), null));
+      registerCommand(commandMap, "rosters", new BukkitCommandWrapper("rosters", new RostersCommand(this), Collections.singletonList("rt")));
 
       for (ChannelManager.ChannelInfo info : channelManager.getChannels().values()) {
         if (info.name.equalsIgnoreCase("global")) continue;

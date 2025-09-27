@@ -20,13 +20,8 @@ public class DynamicChannelBukkitCommand extends Command {
     this.description = "Chat command for channel " + info.name;
     this.usageMessage = "/" + info.name + " [message]";
 
-    if (info.permission != null && !info.permission.isEmpty()) {
-      this.setPermission(info.permission);
-    }
-
-    if (info.aliases != null && !info.aliases.isEmpty()) {
-      this.setAliases(info.aliases);
-    }
+    if (info.permission != null && !info.permission.isEmpty()) this.setPermission(info.permission);
+    if (info.aliases != null && !info.aliases.isEmpty()) this.setAliases(info.aliases);
   }
 
   @Override

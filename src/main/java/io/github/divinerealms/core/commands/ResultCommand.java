@@ -5,11 +5,11 @@ import io.github.divinerealms.core.main.CoreManager;
 import io.github.divinerealms.core.managers.ResultManager;
 import io.github.divinerealms.core.utilities.Logger;
 import net.luckperms.api.LuckPerms;
+import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
-import org.bukkit.entity.HumanEntity;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,6 +22,8 @@ public class ResultCommand implements CommandExecutor, TabCompleter {
   private final LuckPerms luckPerms;
   private final Logger logger;
 
+  private static final String PERM_MAIN = "core.result";
+
   public ResultCommand(CoreManager coreManager) {
     this.resultManager = coreManager.getResultManager();
     this.luckPerms = coreManager.getLuckPerms();
@@ -30,8 +32,8 @@ public class ResultCommand implements CommandExecutor, TabCompleter {
 
   @Override
   public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-    if (!sender.hasPermission("core.result")) return noPerm(sender, "core.result", label);
-    if (args.length == 0) return sendHelp(sender);
+    if (!sender.hasPermission(PERM_MAIN)) { logger.send(sender, Lang.NO_PERM.replace(new String[]{PERM_MAIN, label})); return true; }
+    if (args.length == 0) { logger.send(sender, Lang.RESULT_HELP.replace(null)); return true; }
 
     String sub = args[0].toLowerCase();
     switch (sub) {
@@ -51,19 +53,9 @@ public class ResultCommand implements CommandExecutor, TabCompleter {
     return true;
   }
 
-  private boolean sendHelp(CommandSender sender) {
-    logger.send(sender, Lang.RESULT_HELP.replace(null));
-    return true;
-  }
-
-  private boolean noPerm(CommandSender sender, String permission, String command) {
-    logger.send(sender, Lang.NO_PERM.replace(new String[]{permission, command}));
-    return true;
-  }
-
   @Override
   public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
-    if (!sender.hasPermission("core.result")) return Collections.emptyList();
+    if (!sender.hasPermission(PERM_MAIN)) return Collections.emptyList();
 
     List<String> completions = new ArrayList<>();
     String sub = args.length > 0 ? args[0].toLowerCase() : "";
@@ -96,7 +88,7 @@ public class ResultCommand implements CommandExecutor, TabCompleter {
       }
     } else if (args.length == 3) {
       if ("add".equals(sub)) {
-        completions.addAll(getOnlinePlayerNames(sender));
+        Bukkit.getOnlinePlayers().forEach(player -> completions.add(player.getName()));
       } else if ("teams".equals(sub)) {
         completions.addAll(luckPerms.getGroupManager().getLoadedGroups().stream()
             .filter(g -> g.getWeight().orElse(0) == 200)
@@ -104,15 +96,16 @@ public class ResultCommand implements CommandExecutor, TabCompleter {
             .collect(Collectors.toList())
         );
       }
-    } else if (args.length == 4) if ("add".equals(sub)) completions.addAll(getOnlinePlayerNames(sender));
+    } else if (args.length == 4) {
+      if ("add".equals(sub)) Bukkit.getOnlinePlayers().forEach(player -> completions.add(player.getName()));
+    }
 
-    String lastWord = args[args.length - 1].toLowerCase();
-    completions.removeIf(s -> !s.toLowerCase().startsWith(lastWord));
-    Collections.sort(completions);
+    if (!completions.isEmpty()) {
+      String lastWord = args[args.length - 1].toLowerCase();
+      completions.removeIf(s -> !s.toLowerCase().startsWith(lastWord));
+      completions.sort(String.CASE_INSENSITIVE_ORDER);
+    }
+
     return completions;
-  }
-
-  private List<String> getOnlinePlayerNames(CommandSender sender) {
-    return sender.getServer().getOnlinePlayers().stream().map(HumanEntity::getName).collect(Collectors.toList());
   }
 }

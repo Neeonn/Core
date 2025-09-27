@@ -16,6 +16,9 @@ public class CoreCommand implements CommandExecutor, TabCompleter {
   private final CoreManager coreManager;
   private final Logger logger;
 
+  private static final String PERM_MAIN = "core.admin";
+  private static final String PERM_RELOAD = PERM_MAIN + ".reload";
+
   public CoreCommand(CoreManager coreManager) {
     this.coreManager = coreManager;
     this.logger = coreManager.getLogger();
@@ -23,16 +26,12 @@ public class CoreCommand implements CommandExecutor, TabCompleter {
 
   @Override
   public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-    if (args.length == 0) {
-      logger.send(sender, Lang.HELP.replace(null));
-      return true;
-    }
+    if (!sender.hasPermission(PERM_MAIN)) { logger.send(sender, Lang.NO_PERM.replace(new String[]{PERM_MAIN, label})); return true; }
+    if (args.length == 0) { logger.send(sender, Lang.HELP.replace(null)); return true; }
 
-    if (args[0].equalsIgnoreCase("reload")) {
-      if (!sender.hasPermission("core.admin.reload")) {
-        logger.send(sender, Lang.NO_PERM.replace(new String[]{"core.admin.reload", "core reload"}));
-        return true;
-      }
+    String sub = args[0].toLowerCase();
+    if (sub.equalsIgnoreCase("reload")) {
+      if (!sender.hasPermission(PERM_RELOAD)) { logger.send(sender, Lang.NO_PERM.replace(new String[]{PERM_RELOAD, label + " " + sub})); return true; }
 
       coreManager.reload();
       logger.send(sender, Lang.ADMIN_RELOAD.replace(null));
@@ -45,14 +44,18 @@ public class CoreCommand implements CommandExecutor, TabCompleter {
 
   @Override
   public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
-    if (args.length == 1) {
-      List<String> completions = new ArrayList<>();
-      completions.add("reload");
-      String typed = args[0].toLowerCase();
-      completions.removeIf(s -> !s.toLowerCase().startsWith(typed));
-      Collections.sort(completions);
-      return completions;
+    if (!sender.hasPermission(PERM_MAIN)) return Collections.emptyList();
+
+    List<String> completions = new ArrayList<>();
+
+    if (args.length == 1) completions.add("reload");
+
+    if (!completions.isEmpty()) {
+      String lastWord = args[args.length - 1].toLowerCase();
+      completions.removeIf(s -> !s.toLowerCase().startsWith(lastWord));
+      completions.sort(String.CASE_INSENSITIVE_ORDER);
     }
-    return Collections.emptyList();
+
+    return completions;
   }
 }

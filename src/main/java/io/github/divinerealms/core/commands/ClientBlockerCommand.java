@@ -17,6 +17,7 @@ import org.bukkit.entity.Player;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class ClientBlockerCommand implements CommandExecutor, TabCompleter {
@@ -24,10 +25,12 @@ public class ClientBlockerCommand implements CommandExecutor, TabCompleter {
   private final ClientBlocker clientBlocker;
   private final LuckPerms luckPerms;
 
+  private static final String PERM_MAIN = "core.client-blocker";
+  private static final String PERM_TOGGLE = PERM_MAIN + ".toggle";
+  private static final String PERM_EXEMPT = PERM_MAIN + ".exempt";
+  private static final String PERM_CHECK = PERM_MAIN + ".check";
+
   private static final Duration EXEMPT_DURATION = Duration.ofMinutes(30);
-  private static final String PERM_TOGGLE = "core.client-blocker.toggle";
-  private static final String PERM_EXEMPT = "core.client-blocker.exempt";
-  private static final String PERM_CHECK = "core.client-blocker.check";
 
   public ClientBlockerCommand(CoreManager coreManager) {
     this.logger = coreManager.getLogger();
@@ -37,20 +40,22 @@ public class ClientBlockerCommand implements CommandExecutor, TabCompleter {
 
   @Override
   public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    if (!sender.hasPermission(PERM_MAIN)) { logger.send(sender, Lang.NO_PERM.replace(new String[]{PERM_MAIN, label})); return true; }
     if (args.length == 0) {
       logger.send(sender, Lang.CLIENT_BLOCKER_TOGGLE.replace(new String[]{clientBlocker.isEnabled() ? Lang.ON.replace(null) : Lang.OFF.replace(null)}));
       return true;
     }
 
-    switch (args[0].toLowerCase()) {
+    String sub = args[0].toLowerCase();
+    switch (sub) {
       case "toggle":
-        if (!sender.hasPermission(PERM_TOGGLE)) { logger.send(sender, Lang.NO_PERM.replace(new String[]{PERM_TOGGLE, label})); return true; }
+        if (!sender.hasPermission(PERM_TOGGLE)) { logger.send(sender, Lang.NO_PERM.replace(new String[]{PERM_TOGGLE, label + " " + sub})); return true; }
         boolean enabled = clientBlocker.toggle();
         logger.send(ClientBlocker.NOTIFY_PERMISSION, Lang.CLIENT_BLOCKER_TOGGLE.replace(new String[]{enabled ? Lang.ON.replace(null) : Lang.OFF.replace(null)}));
         return true;
 
       case "exempt":
-        if (!sender.hasPermission(PERM_EXEMPT)) { logger.send(sender, Lang.NO_PERM.replace(new String[]{PERM_EXEMPT, label})); return true; }
+        if (!sender.hasPermission(PERM_EXEMPT)) { logger.send(sender, Lang.NO_PERM.replace(new String[]{PERM_EXEMPT, label + " " + sub})); return true; }
         if (args.length < 2) { logger.send(sender, Lang.CLIENT_BLOCKER_USAGE.replace(null)); return true; }
 
         String targetName = args[1];
@@ -74,7 +79,7 @@ public class ClientBlockerCommand implements CommandExecutor, TabCompleter {
         return true;
 
       case "check":
-        if (!sender.hasPermission(PERM_CHECK)) { logger.send(sender, Lang.NO_PERM.replace(new String[]{PERM_CHECK, label})); return true; }
+        if (!sender.hasPermission(PERM_CHECK)) { logger.send(sender, Lang.NO_PERM.replace(new String[]{PERM_CHECK, label + " " + sub})); return true; }
         if (args.length < 2) { logger.send(sender, Lang.CLIENT_BLOCKER_USAGE.replace(null)); return true; }
 
         String checkName = args[1];
@@ -99,14 +104,16 @@ public class ClientBlockerCommand implements CommandExecutor, TabCompleter {
 
   @Override
   public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+    if (!sender.hasPermission(PERM_MAIN)) return Collections.emptyList();
+
     List<String> completions = new ArrayList<>();
 
     if (args.length == 1) {
       completions.addAll(Arrays.asList("toggle", "check", "exempt", "help", "?"));
     } else if (args.length == 2) {
-      if (args[0].equalsIgnoreCase("check")) {
+      if (args[0].equalsIgnoreCase("check") && sender.hasPermission(PERM_CHECK)) {
         Bukkit.getOnlinePlayers().forEach(player -> completions.add(player.getName()));
-      } else if (args[0].equalsIgnoreCase("exempt")) {
+      } else if (args[0].equalsIgnoreCase("exempt") && sender.hasPermission(PERM_EXEMPT)) {
         for (OfflinePlayer offlinePlayer : Bukkit.getOfflinePlayers()) {
           if (offlinePlayer.hasPlayedBefore()) completions.add(offlinePlayer.getName());
         }

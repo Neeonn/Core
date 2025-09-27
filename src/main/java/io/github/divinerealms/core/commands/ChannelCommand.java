@@ -17,6 +17,9 @@ public class ChannelCommand implements CommandExecutor, TabCompleter {
   private final Logger logger;
   private final ChannelManager channelManager;
 
+  private static final String PERM_MAIN = "core.channel";
+  private static final String PERM_TOGGLE = PERM_MAIN + ".toggle";
+
   public ChannelCommand(CoreManager coreManager) {
     this.logger = coreManager.getLogger();
     this.channelManager = coreManager.getChannelManager();
@@ -24,21 +27,12 @@ public class ChannelCommand implements CommandExecutor, TabCompleter {
 
   @Override
   public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-    if (args.length == 0) {
-      logger.send(sender, Lang.CHANNEL_HELP.replace(null));
-      return true;
-    }
+    if (args.length == 0) { logger.send(sender, Lang.CHANNEL_HELP.replace(null)); return true; }
 
-    if (args[0].equalsIgnoreCase("toggle")) {
-      if (args.length < 2) {
-        logger.send(sender, Lang.CHANNEL_HELP.replace(null));
-        return true;
-      }
-
-      if (!sender.hasPermission("core.channel.toggle")) {
-        logger.send(sender, Lang.NO_PERM.replace(new String[]{"core.channel.toggle", "channel toggle"}));
-        return true;
-      }
+    String sub = args[0].toLowerCase();
+    if (sub.equalsIgnoreCase("toggle")) {
+      if (args.length < 2) { logger.send(sender, Lang.CHANNEL_HELP.replace(null)); return true; }
+      if (!sender.hasPermission(PERM_TOGGLE)) { logger.send(sender, Lang.NO_PERM.replace(new String[]{PERM_TOGGLE, label + " " + sub})); return true; }
 
       boolean disabled = channelManager.toggleChannel(args[1]);
       String status = disabled ? Lang.OFF.replace(null) : Lang.ON.replace(null);
@@ -52,23 +46,20 @@ public class ChannelCommand implements CommandExecutor, TabCompleter {
 
   @Override
   public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+    if (!sender.hasPermission(PERM_MAIN)) return Collections.emptyList();
+
     List<String> completions = new ArrayList<>();
 
-    if (args.length == 1) {
-      // Suggest subcommands
+    if (args.length == 1 && sender.hasPermission(PERM_MAIN)) {
       completions.add("toggle");
-    } else if (args.length == 2) {
-      // If the subcommand is toggle, suggest existing channel names
-      if (args[0].equalsIgnoreCase("toggle")) {
-        completions.addAll(channelManager.getChannels().keySet());
-      }
+    } else if (args.length == 2 && sender.hasPermission(PERM_TOGGLE)) {
+      if (args[0].equalsIgnoreCase("toggle")) completions.addAll(channelManager.getChannels().keySet());
     }
 
-    // Filter completions to what the user has typed so far
     if (!completions.isEmpty()) {
       String lastWord = args[args.length - 1].toLowerCase();
       completions.removeIf(s -> !s.toLowerCase().startsWith(lastWord));
-      Collections.sort(completions);
+      completions.sort(String.CASE_INSENSITIVE_ORDER);
     }
 
     return completions;

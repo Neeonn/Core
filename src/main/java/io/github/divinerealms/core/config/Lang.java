@@ -110,6 +110,22 @@ public enum Lang {
       "&e---------------------------------------------")),
   PLAYTIME_TOP_ENTRY("playtime.top.entry", "&e#{0} &b{1} &7- &e{2}"),
 
+  ROSTERS_USAGE("rosters.usage", String.join(System.lineSeparator(),
+      "{prefix}Lista dostupnih &b/rosters&f komandi:",
+      "&b/rosters|rt create <imeTima> <tagTima>: &fPravljenje novog tima.",
+      "&b/rosters|rt delete <imeTima>: &fBrisanje tima.",
+      "&b/rosters|rt set <imeTima> name|tag <nazivTima|tagTima>: &fPodešavanje tima.",
+      "&b/rosters|rt add <imeTima> <imeIgrača>: &fDodavanje igrača u tim.",
+      "&b/rosters|rt remove <imeIgrača>: &fBrisanje trenutnog tima igraču.")),
+  ROSTERS_EXISTS("rosters.exists", "{prefix}&cTim &e\"{0}\" &cveć postoji!"),
+  ROSTERS_NOT_FOUND("rosters.not-found", "{prefix}&cTim &e\"{0}\" &cnije pronađen!"),
+  ROSTERS_CREATE("rosters.create", "{prefix}Tim &e\"{0}\"&f sa tagom {1}&f je uspešno napravljen!"),
+  ROSTERS_DELETE("rosters.delete", "{prefix}Tim &e\"{0}\"&f je uspešno obrisan."),
+  ROSTERS_SET("rosters.set", "{prefix}Podešen &e{0} &fna {1}&f za tim &e\"{2}\"&f!"),
+  ROSTERS_INVALID_TYPE("rosters.invalid-type", "{prefix}&cKoristite &e\"name\"&c ili &e\"tag\"&c."),
+  ROSTERS_ADD("rosters.add", "{prefix}Igrač &b{0} &fje dodat u tim &e\"{1}\"&f!"),
+  ROSTERS_REMOVE("rosters.remove", "{prefix}Igrač &b{0} &fje izbačen iz svog tima!"),
+
   MENTION_TOGGLED("toggle.mention", "{prefix}&fZvuk za mention u četu je {0}&f!"),
 
   ADMIN_RELOAD("admin.reload", "{prefix}&eCore konfiguracije & poruke osvežene!"),
