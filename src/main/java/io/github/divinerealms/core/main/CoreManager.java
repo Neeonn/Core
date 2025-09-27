@@ -1,6 +1,5 @@
 package io.github.divinerealms.core.main;
 
-import io.github.divinerealms.core.Core;
 import io.github.divinerealms.core.commands.*;
 import io.github.divinerealms.core.config.Config;
 import io.github.divinerealms.core.config.ConfigManager;
@@ -15,15 +14,17 @@ import net.luckperms.api.node.types.InheritanceNode;
 import org.bukkit.command.*;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
 import java.lang.reflect.Field;
 import java.util.*;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 @Getter
 public class CoreManager {
-  private final Core plugin;
+  private final Plugin plugin;
 
   private final Logger logger;
   private final ConfigManager configManager;
@@ -40,7 +41,7 @@ public class CoreManager {
   private boolean discordSRV;
   private boolean placeholderAPI;
 
-  public CoreManager(Core plugin) throws IllegalStateException {
+  public CoreManager(Plugin plugin) throws IllegalStateException {
     this.plugin = plugin;
 
     this.configManager = new ConfigManager(plugin, "");
@@ -99,8 +100,7 @@ public class CoreManager {
 
       logger.info("&a✔ &9Registered &e" + registeredCommands.size() + " &9commands.");
     } catch (Exception exception) {
-      logger.info("&cFailed to register commands: &4" + exception.getMessage());
-      exception.printStackTrace();
+      plugin.getLogger().log(Level.SEVERE, "Failed to register commands", exception);
     }
   }
 
@@ -143,9 +143,8 @@ public class CoreManager {
         logger.info("&a✔ &9Unregistered &e" + registeredCommands.size() + " &9commands.");
         registeredCommands.clear();
       }
-    } catch (Exception e) {
-      logger.info("&cFailed to unregister commands: &4" + e.getMessage());
-      e.printStackTrace();
+    } catch (Exception exception) {
+      plugin.getLogger().log(Level.SEVERE, "Failed to unregister commands", exception);
     }
   }
 

@@ -1,7 +1,6 @@
 package io.github.divinerealms.core.main;
 
 import github.scarsz.discordsrv.DiscordSRV;
-import io.github.divinerealms.core.Core;
 import io.github.divinerealms.core.listeners.ChatChannelListener;
 import io.github.divinerealms.core.listeners.ClientBlockerListener;
 import io.github.divinerealms.core.listeners.DiscordMessageListener;
@@ -9,11 +8,12 @@ import io.github.divinerealms.core.listeners.PlayerEvents;
 import lombok.Getter;
 import org.bukkit.Server;
 import org.bukkit.event.HandlerList;
+import org.bukkit.plugin.Plugin;
 
 @Getter
 public class ListenerManager {
   private final CoreManager coreManager;
-  private final Core plugin;
+  private final Plugin plugin;
   private final Server server;
 
   private ClientBlockerListener clientBlockerListener;

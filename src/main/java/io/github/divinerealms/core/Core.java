@@ -1,11 +1,12 @@
 package io.github.divinerealms.core;
 
 import io.github.divinerealms.core.main.CoreManager;
-import lombok.Getter;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.logging.Level;
+
 public class Core extends JavaPlugin {
-  @Getter private CoreManager coreManager;
+  private CoreManager coreManager;
 
   @Override
   public void onEnable() {
@@ -13,8 +14,7 @@ public class Core extends JavaPlugin {
       this.coreManager = new CoreManager(this);
       coreManager.getLogger().info("&aSuccessfully enabled.");
     } catch (Exception exception) {
-      getLogger().severe("Failed to initialize Core: " + exception.getMessage());
-      exception.printStackTrace();
+      getLogger().log(Level.SEVERE, "Failed to initialize Core", exception);
       getServer().getPluginManager().disablePlugin(this);
     }
   }
