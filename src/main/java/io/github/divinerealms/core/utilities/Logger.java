@@ -26,7 +26,7 @@ public class Logger {
   }
 
   public void info(String message) {
-    message = message.replace("{plugin-string}", "").replace("{admin-string}", "");
+    message = message.replace("{prefix}", "");
     consoleSender.sendMessage(consolePrefix + color(message));
   }
 
@@ -49,6 +49,7 @@ public class Logger {
   }
 
   public void broadcast(String message) {
+    message = message.replace("{prefix}", Lang.PREFIX.replace(null));
     server.broadcastMessage(color(message));
   }
 

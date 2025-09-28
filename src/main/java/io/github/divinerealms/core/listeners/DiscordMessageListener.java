@@ -31,19 +31,24 @@ public class DiscordMessageListener {
     if (minecraftChannels == null || minecraftChannels.isEmpty()) return;
 
     ChannelManager.ChannelInfo globalInfo = channelManager.getChannels().get(channelManager.getDefaultChannel());
-
     String displayName = event.getMember() != null ? event.getMember().getEffectiveName().trim() : event.getAuthor().getName().trim();
     String messageRaw = event.getMessage().getContentRaw();
     String replyName = getReplyName(event);
+
+    if (messageRaw.trim().isEmpty() && !event.getMessage().getAttachments().isEmpty()) {
+      messageRaw = event.getMessage().getAttachments().get(0).getUrl();
+    }
+
     for (String minecraftChannel : minecraftChannels) {
       ChannelManager.ChannelInfo info = channelManager.getChannels().get(minecraftChannel);
       if (info == null) continue;
       if (info.discordId.equals(globalInfo.discordId) && !minecraftChannel.equals(channelManager.getDefaultChannel())) continue;
 
+      String formattedMessage = getFormatted(info, displayName, replyName, messageRaw);
       if (info.permission != null && !info.permission.isEmpty()) {
-        logger.send(info.permission, getFormatted(info, displayName, replyName, messageRaw));
+        logger.send(info.permission, formattedMessage);
       } else {
-        logger.broadcast(getFormatted(info, displayName, replyName, messageRaw));
+        logger.broadcast(formattedMessage);
       }
     }
   }

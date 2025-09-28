@@ -9,6 +9,7 @@ import net.luckperms.api.LuckPerms;
 import net.luckperms.api.model.user.User;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Server;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -19,15 +20,18 @@ import java.util.UUID;
 
 public class ChatChannelListener implements Listener {
   private final CoreManager coreManager;
+  private final Server server;
   private final Logger logger;
   private final ChannelManager channelManager;
   private final LuckPerms luckPerms;
   private final PlayerSettingsManager playerSettingsManager;
 
   private static final String PERM_BYPASS = "core.bypass.disabled-channel";
+  private static final String PERM_COLOR = "core.chat.color";
 
   public ChatChannelListener(CoreManager coreManager) {
     this.coreManager = coreManager;
+    this.server = coreManager.getPlugin().getServer();
     this.logger = coreManager.getLogger();
     this.channelManager = coreManager.getChannelManager();
     this.luckPerms = coreManager.getLuckPerms();
@@ -43,13 +47,14 @@ public class ChatChannelListener implements Listener {
 
     if (channelManager.isChannelDisabled(activeChannel) && !player.hasPermission(PERM_BYPASS)) {
       event.setCancelled(true);
-      logger.send(player, Lang.CHANNEL_DISABLED.replace(null));
+      logger.send(player, Lang.CHANNEL_DISABLED.replace(new String[]{activeChannel}));
       return;
     }
 
     event.setCancelled(true);
 
     String message = event.getMessage();
+    if (!player.hasPermission(PERM_COLOR)) message = ChatColor.stripColor(logger.color(message));
 
     UUID uuid = player.getUniqueId();
     long now = System.currentTimeMillis();
@@ -98,9 +103,9 @@ public class ChatChannelListener implements Listener {
 
     String formattedMessage = channelManager.formatChat(player, info.formats.minecraftChat, message, true);
     if (info.broadcast || info.permission == null || info.permission.isEmpty()) {
-      logger.broadcast(formattedMessage);
+      server.broadcastMessage(logger.color(formattedMessage));
     } else {
-      logger.send(info.permission, formattedMessage);
+      server.broadcast(logger.color(formattedMessage), info.permission);
     }
 
     if (coreManager.isDiscordSRV() && info.formats.minecraftToDiscord != null && !info.formats.minecraftToDiscord.isEmpty()) {
