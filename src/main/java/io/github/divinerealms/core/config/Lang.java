@@ -93,6 +93,7 @@ public enum Lang {
       "&e---------------------------------------------"
   )),
   RESULT_STATUS_NONE("result.status.none", "{prefix}&cNema aktivnih mečeva..."),
+  RESULT_PREFIX_HOST("result.prefix-host", "&b&lEvent Host"),
 
   PLAYTIME_SELF("playtime.self", "{prefix}Vaš playtime je: &e{0}"),
   PLAYTIME_OTHER("playtime.other", "{prefix}Playtime igrača &b{0} &fje: &e{1}"),

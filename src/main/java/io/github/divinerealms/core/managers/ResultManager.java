@@ -23,14 +23,12 @@ public class ResultManager {
   @Getter private boolean enabled;
   @Getter private String discordId;
 
-  // Minecraft formats
   @Getter private String formatStartMC;
   @Getter private String formatHalfMC;
   @Getter private String formatResumeMC;
   @Getter private String formatEndMC;
   @Getter private String formatUpdateMC;
 
-  // Discord formats
   @Getter private String formatStartDC;
   @Getter private String formatHalfDC;
   @Getter private String formatResumeDC;
@@ -41,8 +39,7 @@ public class ResultManager {
   @Getter @Setter private int defaultMatchDuration = defaultHalfDuration * 2;
   @Getter private int extraTime = 0;
 
-  // ===== Match State =====
-  @Getter private String prefix = "&bEvent";
+  @Getter private String prefix = Lang.RESULT_PREFIX_HOST.replace(null);
   @Getter private String home, away;
   @Getter private int homeScore;
   @Getter private int awayScore;
@@ -171,7 +168,6 @@ public class ResultManager {
     resetMatch();
   }
 
-  // ===== Setters =====
   public void setTeams(CommandSender sender, String home, String away) {
     this.home = resolveGroupName(home.toUpperCase());
     this.away = resolveGroupName(away.toUpperCase());
@@ -209,7 +205,6 @@ public class ResultManager {
     }
   }
 
-  // ===== Score Logic =====
   public void addScore(CommandSender sender, String team, String scorer, String assist) {
     if ("home".equalsIgnoreCase(team)) homeScore++;
     else if ("away".equalsIgnoreCase(team)) awayScore++;
@@ -243,21 +238,11 @@ public class ResultManager {
     logger.send(sender, Lang.RESULT_SCORE_UPDATED.replace(new String[]{team}));
   }
 
-  // ===== Broadcast / Update =====
   public void updateHalfMessage() {
     if (matchTimer == null) return;
 
     int displayTime = matchTimer.getSecondsElapsed();
     String msgMC = format(formatUpdateMC, prefix, home != null ? home : "?", away != null ? away : "?", homeScore, awayScore, formatColoredTime(displayTime), (currentHalf == Half.FIRST ? " 1HT" : " 2HT"));
-    if (currentHalfExtraTime > 0) msgMC += "&c (ET: " + formatTime(currentHalfExtraTime) + ")";
-
-    logger.broadcastBar(msgMC);
-  }
-
-  public void updateActionBar() {
-    if (matchTimer == null) return;
-
-    String msgMC = format(formatUpdateMC, prefix, home != null ? home : "?", away != null ? away : "?", homeScore, awayScore, matchTimer.getFormattedTime(), (currentHalf == Half.FIRST ? " 1HT" : " 2HT"));
     if (currentHalfExtraTime > 0) msgMC += "&c (ET: " + formatTime(currentHalfExtraTime) + ")";
 
     logger.broadcastBar(msgMC);
@@ -277,7 +262,6 @@ public class ResultManager {
     broadcastDiscord(discordMsg);
   }
 
-  // ===== Helpers =====
   public String getMatchStatus() {
     if (currentHalf == Half.NOT_STARTED) return Lang.RESULT_STATUS_NONE.replace(null);
 

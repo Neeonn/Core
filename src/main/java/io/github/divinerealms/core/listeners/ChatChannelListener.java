@@ -4,6 +4,7 @@ import io.github.divinerealms.core.config.Lang;
 import io.github.divinerealms.core.main.CoreManager;
 import io.github.divinerealms.core.managers.ChannelManager;
 import io.github.divinerealms.core.managers.PlayerSettingsManager;
+import io.github.divinerealms.core.managers.ResultManager;
 import io.github.divinerealms.core.utilities.Logger;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.model.user.User;
@@ -25,6 +26,7 @@ public class ChatChannelListener implements Listener {
   private final ChannelManager channelManager;
   private final LuckPerms luckPerms;
   private final PlayerSettingsManager playerSettingsManager;
+  private final ResultManager resultManager;
 
   private static final String PERM_BYPASS = "core.bypass.disabled-channel";
   private static final String PERM_COLOR = "core.chat.color";
@@ -36,6 +38,7 @@ public class ChatChannelListener implements Listener {
     this.channelManager = coreManager.getChannelManager();
     this.luckPerms = coreManager.getLuckPerms();
     this.playerSettingsManager = coreManager.getPlayerSettingsManager();
+    this.resultManager = coreManager.getResultManager();
   }
 
   @EventHandler
@@ -101,7 +104,9 @@ public class ChatChannelListener implements Listener {
       }
     }
 
-    String formattedMessage = channelManager.formatChat(player, info.formats.minecraftChat, message, true);
+    String formattedMessage = activeChannel.equals("host") ?
+        channelManager.formatChat(player, info.formats.minecraftChat.replace("{prefix-host}", resultManager.getPrefix()), message, true) :
+        channelManager.formatChat(player, info.formats.minecraftChat, message, true);
     if (info.broadcast || info.permission == null || info.permission.isEmpty()) {
       server.broadcastMessage(logger.color(formattedMessage));
     } else {
