@@ -203,8 +203,14 @@ public class ChannelManager {
 
   public String formatChat(Player player, String format, String message, boolean colorMessage) {
     String formatted = format.replace("%message%", "{MESSAGE}");
-    if (player != null && coreManager.isPlaceholderAPI()) formatted = PlaceholderAPI.setPlaceholders(player, formatted);
+
+    if (player != null && coreManager.isPlaceholderAPI()) {
+      formatted = PlaceholderAPI.setPlaceholders(player, formatted);
+      if (formatted.contains("%")) formatted = PlaceholderAPI.setPlaceholders(player, formatted);
+    }
+
     formatted = logger.color(formatted);
+
     String msgPart = colorMessage && player != null && player.hasPermission("core.chat.color") ? logger.color(message) : message;
     return formatted.replace("{MESSAGE}", msgPart);
   }

@@ -48,7 +48,11 @@ public class PlayerEvents implements Listener {
 
     if (coreManager.isPlaceholderAPI()) {
       mcMsg = PlaceholderAPI.setPlaceholders(player, mcMsg);
-      if (isDiscordSRV) dcMsg = PlaceholderAPI.setPlaceholders(player, dcMsg);
+      if (mcMsg.contains("%")) mcMsg = PlaceholderAPI.setPlaceholders(player, mcMsg);
+      if (isDiscordSRV) {
+        dcMsg = PlaceholderAPI.setPlaceholders(player, dcMsg);
+        if (dcMsg.contains("%")) dcMsg = PlaceholderAPI.setPlaceholders(player, dcMsg);
+      }
     }
 
     String finalMcMsg = mcMsg;
@@ -85,7 +89,11 @@ public class PlayerEvents implements Listener {
 
     if (coreManager.isPlaceholderAPI()) {
       mcMsg = PlaceholderAPI.setPlaceholders(player, mcMsg);
-      if (isDiscordSRV) dcMsg = PlaceholderAPI.setPlaceholders(player, dcMsg);
+      if (mcMsg.contains("%")) mcMsg = PlaceholderAPI.setPlaceholders(player, mcMsg);
+      if (isDiscordSRV) {
+        dcMsg = PlaceholderAPI.setPlaceholders(player, dcMsg);
+        if (dcMsg.contains("%")) dcMsg = PlaceholderAPI.setPlaceholders(player, dcMsg);
+      }
     }
 
     String finalMcMsg = mcMsg;

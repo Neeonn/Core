@@ -19,10 +19,9 @@ public class PlayerSettingsManager {
     this.configManager = coreManager.getConfigManager();
   }
 
-  // ===== Loading and saving =====
   public void loadPlayer(Player player) {
     FileConfiguration settingsConfig = configManager.getConfig("settings.yml");
-    boolean enabled = settingsConfig.getBoolean(player.getUniqueId().toString() + ".mention_sound", true); // default true
+    boolean enabled = settingsConfig.getBoolean(player.getUniqueId().toString() + ".mention_sound", true);
     mentionSound.put(player.getUniqueId(), enabled);
   }
 
@@ -40,7 +39,6 @@ public class PlayerSettingsManager {
     configManager.saveConfig("settings.yml");
   }
 
-  // ===== API =====
   public boolean isMentionSoundEnabled(Player player) {
     return mentionSound.getOrDefault(player.getUniqueId(), true);
   }
