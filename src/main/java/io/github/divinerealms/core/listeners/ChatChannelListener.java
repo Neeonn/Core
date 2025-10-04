@@ -89,6 +89,7 @@ public class ChatChannelListener implements Listener {
         boolean isMentioned = message.startsWith(targetName) || message.contains("@" + targetName);
 
         if (!isMentioned) continue;
+        if (!activeChannel.equals(channelManager.getActiveChannel(target))) continue;
 
         User user = luckPerms.getUserManager().getUser(target.getUniqueId());
         String prefixColor = user != null ? user.getCachedData().getMetaData().getPrefix()
