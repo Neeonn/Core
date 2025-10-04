@@ -184,11 +184,13 @@ public class CoreManager {
     setDefaultIfMissing(file, "result.formats.minecraft.resume", "%prefix% &8| &aDrugo poluvreme započinje!");
     setDefaultIfMissing(file, "result.formats.minecraft.end", "%prefix% &8| &cMeč završen! &9%home% &f%home_score% &7- &f%away_score% &c%away%");
     setDefaultIfMissing(file, "result.formats.minecraft.update", "%prefix% &8| &9%home% &f%home_score% &7- &f%away_score% &c%away% &8| &e%time%");
+    setDefaultIfMissing(file, "result.formats.minecraft.remove-goal", "%prefix% &8| &cObrisan gol za tim %team%");
     setDefaultIfMissing(file, "result.formats.discord.start", "**%home%** vs **%away%** meč započinje!");
     setDefaultIfMissing(file, "result.formats.discord.half", "Poluvreme: **%home%** %home_score% - %away_score% **%away%**");
     setDefaultIfMissing(file, "result.formats.discord.resume", "Drugo poluvreme započinje!");
     setDefaultIfMissing(file, "result.formats.discord.end", "Meč završen: **%home%** %home_score% - %away_score% **%away%**");
     setDefaultIfMissing(file, "result.formats.discord.goal", "**GOOOOOL!** **%scorer%** je dao gol za **%team%**.");
+    setDefaultIfMissing(file, "result.formats.discord.remove-goal", "__Obrisan__ gol za tim **%team%*");
 
     file.options().copyDefaults(true);
     configManager.saveConfig("config.yml");

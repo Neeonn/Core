@@ -28,12 +28,14 @@ public class ResultManager {
   @Getter private String formatResumeMC;
   @Getter private String formatEndMC;
   @Getter private String formatUpdateMC;
+  @Getter private String formatRemoveMC;
 
   @Getter private String formatStartDC;
   @Getter private String formatHalfDC;
   @Getter private String formatResumeDC;
   @Getter private String formatEndDC;
   @Getter private String formatGoalDC;
+  @Getter private String formatRemoveDC;
 
   @Getter @Setter private int defaultHalfDuration = 600; // default 10 minutes
   @Getter @Setter private int defaultMatchDuration = defaultHalfDuration * 2;
@@ -71,6 +73,7 @@ public class ResultManager {
     formatResumeMC = Config.CONFIG.getString("result.formats.minecraft.resume");
     formatEndMC = Config.CONFIG.getString("result.formats.minecraft.end");
     formatUpdateMC = Config.CONFIG.getString("result.formats.minecraft.update");
+    formatRemoveMC = Config.CONFIG.getString("result.formats.minecraft.remove-goal");
 
     // Discord
     formatStartDC = Config.CONFIG.getString("result.formats.discord.start");
@@ -78,6 +81,7 @@ public class ResultManager {
     formatResumeDC = Config.CONFIG.getString("result.formats.discord.resume");
     formatEndDC = Config.CONFIG.getString("result.formats.discord.end");
     formatGoalDC = Config.CONFIG.getString("result.formats.discord.goal");
+    formatRemoveDC = Config.CONFIG.getString("result.formats.discord.remove-goal");
   }
 
   // ===== Match Actions =====
@@ -228,12 +232,27 @@ public class ResultManager {
   }
 
   public void removeScore(CommandSender sender, String team) {
-    if ("home".equalsIgnoreCase(team) && homeScore > 0) homeScore--;
-    else if ("away".equalsIgnoreCase(team) && awayScore > 0) awayScore--;
-    else {
-      logger.send(sender, Lang.RESULT_SCORE_INVALID.replace(null));
-      return;
+    String teamName;
+
+    switch (team.toLowerCase()) {
+      case "home":
+        if (homeScore <= 0) { logger.send(sender, Lang.RESULT_SCORE_INVALID.replace(null)); return; }
+        homeScore--;
+        teamName = home;
+        break;
+
+      case "away":
+        if (awayScore <= 0) { logger.send(sender, Lang.RESULT_SCORE_INVALID.replace(null)); return; }
+        awayScore--;
+        teamName = away;
+        break;
+
+      default:
+        logger.send(sender, Lang.RESULT_SCORE_INVALID.replace(null));
+        return;
     }
+
+    broadcastBoth(formatRemoveMC.replace("%team%", teamName), formatRemoveDC.replace("%team%", teamName));
     updateHalfMessage();
     logger.send(sender, Lang.RESULT_SCORE_UPDATED.replace(new String[]{team}));
   }
