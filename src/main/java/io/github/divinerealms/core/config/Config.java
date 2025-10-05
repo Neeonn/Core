@@ -37,13 +37,13 @@ public enum Config {
   RESULT_FORMATS_MINECRAFT_SECOND_HALF("result.formats.minecraft.resume", "{0} &8| &aSecond Half Time starting!"),
   RESULT_FORMATS_MINECRAFT_END("result.formats.minecraft.end", "{0} &8| &cMatch ended! &9{1} &f{2} - {3} &c{4}"),
   RESULT_FORMATS_MINECRAFT_UPDATE("result.formats.minecraft.update", "{0} &8| &9{1} &f{2} - {3} &c{4} &8| &e{5}{6}"),
-  RESULT_FORMATS_MINECRAFT_GOAL_ADD("result.formats.minecraft.goal_add", String.join(System.lineSeparator(),
+  RESULT_FORMATS_MINECRAFT_GOAL_ADD("result.formats.minecraft.goal.add", String.join(System.lineSeparator(),
       "&r &r",
       "&e   &lGOOOOOOOOOL!",
       "&b   {0} &rje postigao gol za {1} &rtim!",
       "&r &r"
   )),
-  RESULT_FORMATS_MINECRAFT_GOAL_ASSIST("result.formats.minecraft.goal_assist", String.join(System.lineSeparator(),
+  RESULT_FORMATS_MINECRAFT_GOAL_ASSIST("result.formats.minecraft.goal.assist", String.join(System.lineSeparator(),
       "&r &r",
       "&e   &lGOOOOOOOOOL!",
       "&b   {0} &rje postigao gol za {1} &rtim!",
@@ -55,9 +55,30 @@ public enum Config {
   RESULT_FORMATS_DISCORD_HALFTIME("result.formats.discord.half", "`{0}` Halftime! **{1} {2} - {3} {4}**"),
   RESULT_FORMATS_DISCORD_SECOND_HALF("result.formats.discord.resume", "`{0}` Second Half Time starting! **{1} {2} - {3} {4}**"),
   RESULT_FORMATS_DISCORD_END("result.formats.discord.end", "`{0}` Match ended! **{1} {2} - {3} {4}**"),
-  RESULT_FORMATS_DISCORD_GOAL_ADD("result.formats.discord.goal_add", "`{0}` **GOOOOOOL! {1}** scored for **{2}** team!"),
-  RESULT_FORMATS_DISCORD_GOAL_ASSIST("result.formats.discord.goal_assist", "`{0}` **GOOOOOOL! {1}** scored for **{2}** team! Assist: **{3}**"),
-  RESULT_FORMATS_DISCORD_GOAL_REMOVE("result.formats.discord.goal_remove", "`{0}` __Removed__ goal for team **{1}**!");
+  RESULT_FORMATS_DISCORD_GOAL_TYPE("result.formats.discord.goal.type", "regular"),
+  RESULT_FORMATS_DISCORD_GOAL_EMBED_TITLE("result.formats.discord.goal.embed.title", "GOOOOOOL for {0}"),
+  RESULT_FORMATS_DISCORD_GOAL_EMBED_ICON_URL("result.formats.discord.goal.embed.icon_url", ""),
+  RESULT_FORMATS_DISCORD_GOAL_EMBED_COLOR("result.formats.discord.goal.embed.color", "#ffb80c"),
+  RESULT_FORMATS_DISCORD_GOAL_ADD_REGULAR("result.formats.discord.goal.add.regular", String.join(System.lineSeparator(),
+      "`{0}` **GOOOOOOL! {1}** scored for **{2}** team!",
+      "`{0}` Result: **{3} {4} - {5} {6}**"
+  )),
+  RESULT_FORMATS_DISCORD_GOAL_ADD_EMBED_DESCRIPTION("result.formats.discord.goal.add.embed_description", String.join(System.lineSeparator(),
+      "Scorer: **{0}**",
+      "Result: **{1} {2} - {3} {4}**",
+      "Time: `{5}`"
+  )),
+  RESULT_FORMATS_DISCORD_GOAL_ASSIST_REGULAR("result.formats.discord.goal.assist.regular", String.join(System.lineSeparator(),
+      "`{0}` **GOOOOOOL! {1}** scored for **{2}** team! Assist: **{3}**",
+      "`{0}` Result: **{4} {5} - {6} {7}**"
+  )),
+  RESULT_FORMATS_DISCORD_GOAL_ASSIST_EMBED_DESCRIPTION("result.formats.discord.goal.assist.embed_description", String.join(System.lineSeparator(),
+      "Scorer: **{0}**",
+      "Assist: **{1}**",
+      "Result: **{2} {3} - {4} {5}**",
+      "Time: `{6}`"
+  )),
+  RESULT_FORMATS_DISCORD_GOAL_REMOVE("result.formats.discord.goal.remove", "`{0}` __Removed__ goal for team **{1}**!");
 
   public static FileConfiguration CONFIG;
   private final String path;
@@ -80,7 +101,6 @@ public enum Config {
     return def;
   }
 
-  @SuppressWarnings("unchecked")
   public <T> T getValue(Class<T> type) {
     Object value = CONFIG.get(path, def);
 

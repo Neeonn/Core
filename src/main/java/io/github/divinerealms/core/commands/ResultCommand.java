@@ -45,8 +45,9 @@ public class ResultCommand implements CommandExecutor, TabCompleter {
         if (args.length >= 2) {
           try {
             resultManager.setTime(sender, resultManager.parseTime(args[1]));
-          } catch (NumberFormatException ignored) {
+          } catch (NumberFormatException exception) {
             logger.send(sender, Lang.RESULT_MATCH_INVALID_TIME.replace(null));
+            logger.info("Error: " + exception.getMessage());
           }
         }
         break;

@@ -1,6 +1,7 @@
 package io.github.divinerealms.core.managers;
 
 import github.scarsz.discordsrv.DiscordSRV;
+import github.scarsz.discordsrv.dependencies.jda.api.EmbedBuilder;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.TextChannel;
 import io.github.divinerealms.core.config.Config;
 import io.github.divinerealms.core.config.Lang;
@@ -14,6 +15,8 @@ import net.luckperms.api.model.group.Group;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.Plugin;
+
+import java.awt.*;
 
 public class ResultManager {
   private final Logger logger;
@@ -163,17 +166,50 @@ public class ResultManager {
     }
 
     String teamName = "home".equalsIgnoreCase(team) ? home : away;
+    String time = formatTime(matchTimer.getSecondsElapsed());
     int goalMinute = matchTimer != null ? matchTimer.getSecondsElapsed() / 60 + 1 : 0;
 
-    String msgMC = Config.RESULT_FORMATS_MINECRAFT_GOAL_ADD.getString(new String[]{scorer, teamName, String.valueOf(goalMinute)});
-    String msgDC = Config.RESULT_FORMATS_DISCORD_GOAL_ADD.getString(new String[]{formatTime(matchTimer.getSecondsElapsed()), scorer, teamName});
+    String msgMC;
     if (assist != null && !assist.isEmpty()) {
       msgMC = Config.RESULT_FORMATS_MINECRAFT_GOAL_ASSIST.getString(new String[]{scorer, teamName, String.valueOf(goalMinute), assist});
-      msgDC = Config.RESULT_FORMATS_DISCORD_GOAL_ASSIST.getString(new String[]{formatTime(matchTimer.getSecondsElapsed()), scorer, teamName, assist});
+    } else {
+      msgMC = Config.RESULT_FORMATS_MINECRAFT_GOAL_ADD.getString(new String[]{scorer, teamName, String.valueOf(goalMinute)});
     }
 
-    broadcastBoth(msgMC, msgDC);
+    broadcastMinecraft(msgMC);
     updateHalfMessage();
+
+    if (!Config.RESULT_ENABLED.getValue(Boolean.class) || DiscordSRV.getPlugin() == null) return;
+
+    String discordID = Config.RESULT_DISCORD_ID.getString(null);
+    if (discordID.isEmpty()) return;
+
+    TextChannel channel = DiscordSRV.getPlugin().getJda().getTextChannelById(discordID);
+    if (channel == null) return;
+
+    String type = Config.RESULT_FORMATS_DISCORD_GOAL_TYPE.getString(null);
+    if (type.equalsIgnoreCase("embed")) {
+      String description = assist != null && !assist.isEmpty()
+          ? Config.RESULT_FORMATS_DISCORD_GOAL_ASSIST_EMBED_DESCRIPTION.getString(new String[]{scorer, assist, home, String.valueOf(homeScore), String.valueOf(awayScore), away, time})
+          : Config.RESULT_FORMATS_DISCORD_GOAL_ADD_EMBED_DESCRIPTION.getString(new String[]{scorer, home, String.valueOf(homeScore), String.valueOf(awayScore), away, time});
+
+      EmbedBuilder embedBuilder = new EmbedBuilder()
+          .setAuthor(
+              ChatColor.stripColor(logger.color(Config.RESULT_FORMATS_DISCORD_GOAL_EMBED_TITLE.getString(new String[]{teamName}))),
+              null,
+              Config.RESULT_FORMATS_DISCORD_GOAL_EMBED_ICON_URL.getString(null)
+          )
+          .setDescription(ChatColor.stripColor(logger.color(description)))
+          .setColor(Color.decode(Config.RESULT_FORMATS_DISCORD_GOAL_EMBED_COLOR.getString(null)));
+
+      channel.sendMessageEmbeds(embedBuilder.build()).queue();
+    } else {
+      String message = assist != null && !assist.isEmpty()
+          ? Config.RESULT_FORMATS_DISCORD_GOAL_ASSIST_REGULAR.getString(new String[]{time, scorer, teamName, assist, home, String.valueOf(homeScore), String.valueOf(awayScore), away})
+          : Config.RESULT_FORMATS_DISCORD_GOAL_ADD_REGULAR.getString(new String[]{time, scorer, teamName, home, String.valueOf(homeScore), String.valueOf(awayScore), away});
+
+      channel.sendMessage(ChatColor.stripColor(logger.color(message))).queue();
+    }
   }
 
   public void removeScore(CommandSender sender, String team) {
@@ -271,26 +307,45 @@ public class ResultManager {
   }
 
   public int parseTime(String input) throws NumberFormatException {
+    if (input == null || input.isEmpty()) throw new NumberFormatException("Time string is empty");
+
+    String normalized = input.toLowerCase().replaceAll("\\s+", "");
     int totalSeconds = 0;
-    input = input.toLowerCase().replaceAll("\\s+", "");
     StringBuilder number = new StringBuilder();
-    for (int i = 0; i < input.length(); i++) {
-      char c = input.charAt(i);
-      if (Character.isDigit(c)) number.append(c);
-      else if (c == 'm') {
-        if (i + 2 < input.length() && input.startsWith("min", i)) {
-          totalSeconds += Integer.parseInt(number.toString()) * 60;
-          number.setLength(0);
-          i += 2;
-        } else throw new NumberFormatException("Invalid time format");
-      } else if (c == 's') {
-        totalSeconds += Integer.parseInt(number.toString());
-        number.setLength(0);
-      } else throw new NumberFormatException("Invalid time format");
+
+    for (int i = 0; i < normalized.length(); i++) {
+      char c = normalized.charAt(i);
+
+      if (Character.isDigit(c)) {
+        number.append(c);
+        continue;
+      }
+
+      if (number.length() == 0) throw new NumberFormatException("Unit without number at position " + i);
+      int value = Integer.parseInt(number.toString());
+
+      switch (c) {
+        case 'm':
+          if (i + 2 < normalized.length() && normalized.startsWith("min", i)) {
+            totalSeconds += value * 60;
+            i += 2;
+          } else totalSeconds += value * 60;
+          break;
+
+        case 's':
+          totalSeconds += value;
+          break;
+
+        default: throw new NumberFormatException("Invalid character '" + c + "' at position " + i);
+      }
+
+      number.setLength(0);
     }
+
     if (number.length() > 0) totalSeconds += Integer.parseInt(number.toString());
     return totalSeconds;
   }
+
 
   public String formatTime(int totalSeconds) {
     int minutes = totalSeconds / 60;
@@ -314,10 +369,14 @@ public class ResultManager {
   }
 
   public void sendToDiscord(String message) {
-    String discordID = Config.RESULT_DISCORD_ID.getString(null);
+    if (!Config.RESULT_ENABLED.getValue(Boolean.class) || DiscordSRV.getPlugin() == null) return;
 
-    if (!Config.RESULT_ENABLED.getValue(Boolean.class) || DiscordSRV.getPlugin() == null || discordID.isEmpty()) return;
-    TextChannel channel = DiscordSRV.getPlugin().getJda().getTextChannelById(Config.RESULT_DISCORD_ID.getString(null));
-    if (channel != null) channel.sendMessage(ChatColor.stripColor(logger.color(message))).queue();
+    String discordID = Config.RESULT_DISCORD_ID.getString(null);
+    if (discordID.isEmpty()) return;
+
+    TextChannel channel = DiscordSRV.getPlugin().getJda().getTextChannelById(discordID);
+    if (channel == null) return;
+
+    channel.sendMessage(ChatColor.stripColor(logger.color(message))).queue();
   }
 }
