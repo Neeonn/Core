@@ -1,5 +1,7 @@
-package io.github.divinerealms.core.config;
+package io.github.divinerealms.core.managers;
 
+import io.github.divinerealms.core.config.Config;
+import io.github.divinerealms.core.config.Lang;
 import lombok.Getter;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -9,6 +11,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
 
 public class ConfigManager {
   @Getter private final Plugin plugin;
@@ -95,8 +98,7 @@ public class ConfigManager {
         plugin.getLogger().info("Copied default config from JAR: " + resourcePath);
       }
     } catch (Exception exception) {
-      plugin.getLogger().severe("Failed to copy default config from resource: " + name);
-      exception.printStackTrace();
+      plugin.getLogger().log(Level.SEVERE, "Failed to copy default config from resource: " + name, exception);
     }
   }
 }

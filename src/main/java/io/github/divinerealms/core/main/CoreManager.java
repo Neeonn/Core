@@ -2,7 +2,7 @@ package io.github.divinerealms.core.main;
 
 import io.github.divinerealms.core.commands.*;
 import io.github.divinerealms.core.config.Config;
-import io.github.divinerealms.core.config.ConfigManager;
+import io.github.divinerealms.core.managers.ConfigManager;
 import io.github.divinerealms.core.config.Lang;
 import io.github.divinerealms.core.managers.*;
 import io.github.divinerealms.core.utilities.Logger;
@@ -70,7 +70,6 @@ public class CoreManager {
     channelManager.reloadAll();
     registerCommands();
     getListenerManager().registerAll();
-    resultManager.load();
   }
 
   public void registerCommands() {
@@ -125,7 +124,6 @@ public class CoreManager {
 
       Field knownCommandField = SimpleCommandMap.class.getDeclaredField("knownCommands");
       knownCommandField.setAccessible(true);
-      //noinspection unchecked
       Map<String, Command> knownCommands = (Map<String, Command>) knownCommandField.get(commandMap);
 
       for (String cmd : registeredCommands) {
@@ -156,41 +154,6 @@ public class CoreManager {
     for (Config value : Config.values()) {
       setDefaultIfMissing(file, value.getPath(), value.getDefault());
     }
-
-    ensureSection(file, "channels.list");
-    ensureSection(file, "channels.list.global");
-    ensureSection(file, "channels.list.global.formats");
-    ensureSection(file, "player_messages");
-    ensureSection(file, "player_messages.custom_join");
-    ensureSection(file, "player_messages.custom_quit");
-    ensureSection(file, "result");
-    ensureSection(file, "result.formats");
-
-    setDefaultIfMissing(file, "channels.list.global.permission", "core.channel.global");
-    setDefaultIfMissing(file, "channels.list.global.discord_id", "");
-    setDefaultIfMissing(file, "channels.list.global.formats.minecraft_chat", "%luckperms_meta_rankPrefix%%essentials_nickname%%luckperms_meta_tag% &8» &r%message%");
-    setDefaultIfMissing(file, "channels.list.global.formats.discord_to_minecraft", "&3&o[Discord] %name%%reply% » %message%");
-    setDefaultIfMissing(file, "channels.list.global.formats.minecraft_to_discord", "%luckperms_meta_rankPrefix%%name%%luckperms_meta_tag% » %message%");
-    setDefaultIfMissing(file, "player_messages.custom_join.enabled", false);
-    setDefaultIfMissing(file, "player_messages.custom_join.minecraft", "&8[&a+&8] &r%luckperms_meta_rankprefix%%essentials_nickname%");
-    setDefaultIfMissing(file, "player_messages.custom_join.discord", ":green_square: %luckperms_meta_rankprefix%%essentials_nickname%");
-    setDefaultIfMissing(file, "player_messages.custom_quit.enabled", false);
-    setDefaultIfMissing(file, "player_messages.custom_quit.minecraft", "&8[&c-&8] &r%luckperms_meta_rankprefix%%essentials_nickname%");
-    setDefaultIfMissing(file, "player_messages.custom_quit.discord", ":red_square: %luckperms_meta_rankprefix%%essentials_nickname%");
-    setDefaultIfMissing(file, "result.enabled", true);
-    setDefaultIfMissing(file, "result.discord_id", "");
-    setDefaultIfMissing(file, "result.formats.minecraft.start", "%prefix% &8| &aMeč započinje: &9%home% &fvs &c%away%");
-    setDefaultIfMissing(file, "result.formats.minecraft.half", "%prefix% &8| &ePoluvreme! &9%home% &f%home_score% &7- &f%away_score% &c%away%");
-    setDefaultIfMissing(file, "result.formats.minecraft.resume", "%prefix% &8| &aDrugo poluvreme započinje!");
-    setDefaultIfMissing(file, "result.formats.minecraft.end", "%prefix% &8| &cMeč završen! &9%home% &f%home_score% &7- &f%away_score% &c%away%");
-    setDefaultIfMissing(file, "result.formats.minecraft.update", "%prefix% &8| &9%home% &f%home_score% &7- &f%away_score% &c%away% &8| &e%time%");
-    setDefaultIfMissing(file, "result.formats.minecraft.remove-goal", "%prefix% &8| &cObrisan gol za tim %team%");
-    setDefaultIfMissing(file, "result.formats.discord.start", "**%home%** vs **%away%** meč započinje!");
-    setDefaultIfMissing(file, "result.formats.discord.half", "Poluvreme: **%home%** %home_score% - %away_score% **%away%**");
-    setDefaultIfMissing(file, "result.formats.discord.resume", "Drugo poluvreme započinje!");
-    setDefaultIfMissing(file, "result.formats.discord.end", "Meč završen: **%home%** %home_score% - %away_score% **%away%**");
-    setDefaultIfMissing(file, "result.formats.discord.goal", "**GOOOOOL!** **%scorer%** je dao gol za **%team%**.");
-    setDefaultIfMissing(file, "result.formats.discord.remove-goal", "__Obrisan__ gol za tim **%team%*");
 
     file.options().copyDefaults(true);
     configManager.saveConfig("config.yml");
@@ -235,10 +198,6 @@ public class CoreManager {
         .map(Group::getName)
         .map(String::toUpperCase)
         .findFirst().orElse(null);
-  }
-
-  private void ensureSection(FileConfiguration file, String path) {
-    if (!file.isConfigurationSection(path)) file.createSection(path);
   }
 
   private void setDefaultIfMissing(FileConfiguration file, String path, Object value) {

@@ -1,6 +1,5 @@
 package io.github.divinerealms.core.managers;
 
-import io.github.divinerealms.core.config.ConfigManager;
 import io.github.divinerealms.core.main.CoreManager;
 import lombok.Getter;
 import org.bukkit.configuration.file.FileConfiguration;

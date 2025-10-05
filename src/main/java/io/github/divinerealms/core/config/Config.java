@@ -1,6 +1,7 @@
 package io.github.divinerealms.core.config;
 
 import lombok.Getter;
+import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
 
 import java.util.Arrays;
@@ -11,10 +12,52 @@ import java.util.stream.Collectors;
 public enum Config {
   CHANNELS_ENABLED("channels.enabled", true),
   CHANNELS_DEFAULT("channels.default_channel", "global"),
+  CHANNELS_DEFAULT_CHANNEL_PERMISSION("channels.list.global.permission", ""),
+  CHANNELS_DEFAULT_CHANNEL_DISCORD_ID("channels.list.global.discord_id", ""),
+  CHANNELS_DEFAULT_CHANNEL_FORMATS_MINECRAFT("channels.list.global.formats.minecraft_chat", "&r<%player_displayname%&r> %message%"),
+  CHANNELS_DEFAULT_CHANNEL_FORMATS_DISCORD_TO_MINECRAFT("channels.list.global.formats.discord_to_minecraft", "&3[Discord] &r<%player_displayname&r> %message%"),
+  CHANNELS_DEFAULT_CHANNEL_FORMATS_MINECRAFT_TO_DISCORD("channels.list.global.formats.minecraft_to_discord", "**%player_name%**: %message%"),
+  CHANNELS_ANTI_SPAM_MAX_MESSAGES("channels.anti_spam.max_messages", 5),
+  CHANNELS_ANTI_SPAM_COOLDOWN("channels.anti_spam.cooldown", 2500L),
 
   CLIENT_BLOCKER_ENABLED("client_blocker.enabled", true),
   CLIENT_BLOCKER_MODE("client_blocker.mode", "WHITELIST"),
-  CLIENT_BLOCKER_LIST("client_blocker.list", Arrays.asList("vanilla", "optifine"));
+  CLIENT_BLOCKER_LIST("client_blocker.list", Arrays.asList("vanilla", "optifine")),
+
+  PLAYER_MESSAGES_CUSTOM_JOIN_ENABLED("player_messages.custom_join.enabled", true),
+  PLAYER_MESSAGES_CUSTOM_JOIN_FORMATS_MINECRAFT("player_messages.custom_join.minecraft", "&e%player_displayname%&e has joined the server!"),
+  PLAYER_MESSAGES_CUSTOM_JOIN_FORMATS_DISCORD("player_messages.custom_join.discord", "**%player_name%** has joined the server!"),
+  PLAYER_MESSAGES_CUSTOM_QUIT_FORMATS_MINECRAFT("player_messages.custom_quit.minecraft", "&e%player_displayname%&e has left the server!"),
+  PLAYER_MESSAGES_CUSTOM_QUIT_FORMATS_DISCORD("player_messages.custom_quit.discord", "**%player_name%** has left the server!"),
+
+  RESULT_ENABLED("result.enabled", true),
+  RESULT_DISCORD_ID("result.discord_id", ""),
+  RESULT_FORMATS_MINECRAFT_START("result.formats.minecraft.start", "{0} &8| &aMatch &9{1} &f- &c{2} &ais starting!"),
+  RESULT_FORMATS_MINECRAFT_HALFTIME("result.formats.minecraft.half", "{0} &8| &aHalftime! &9{1} &f{2} - {3} &c{4}"),
+  RESULT_FORMATS_MINECRAFT_SECOND_HALF("result.formats.minecraft.resume", "{0} &8| &aSecond Half Time starting!"),
+  RESULT_FORMATS_MINECRAFT_END("result.formats.minecraft.end", "{0} &8| &cMatch ended! &9{1} &f{2} - {3} &c{4}"),
+  RESULT_FORMATS_MINECRAFT_UPDATE("result.formats.minecraft.update", "{0} &8| &9{1} &f{2} - {3} &c{4} &8| &e{5}{6}"),
+  RESULT_FORMATS_MINECRAFT_GOAL_ADD("result.formats.minecraft.goal_add", String.join(System.lineSeparator(),
+      "&r &r",
+      "&e   &lGOOOOOOOOOL!",
+      "&b   {0} &rje postigao gol za {1} &rtim!",
+      "&r &r"
+  )),
+  RESULT_FORMATS_MINECRAFT_GOAL_ASSIST("result.formats.minecraft.goal_assist", String.join(System.lineSeparator(),
+      "&r &r",
+      "&e   &lGOOOOOOOOOL!",
+      "&b   {0} &rje postigao gol za {1} &rtim!",
+      "&f   Asistent: &b{2}",
+      "&r &r"
+  )),
+  RESULT_FORMATS_MINECRAFT_GOAL_REMOVE("result.formats.minecraft.remove_goal", "{0} &8| &cRemoved goal for team {1}"),
+  RESULT_FORMATS_DISCORD_START("result.formats.discord.start", "`{0}` Starting **{1}**, match **{2} - {3}**!"),
+  RESULT_FORMATS_DISCORD_HALFTIME("result.formats.discord.half", "`{0}` Halftime! **{1} {2} - {3} {4}**"),
+  RESULT_FORMATS_DISCORD_SECOND_HALF("result.formats.discord.resume", "`{0}` Second Half Time starting! **{1} {2} - {3} {4}**"),
+  RESULT_FORMATS_DISCORD_END("result.formats.discord.end", "`{0}` Match ended! **{1} {2} - {3} {4}**"),
+  RESULT_FORMATS_DISCORD_GOAL_ADD("result.formats.discord.goal_add", "`{0}` **GOOOOOOL! {1}** scored for **{2}** team!"),
+  RESULT_FORMATS_DISCORD_GOAL_ASSIST("result.formats.discord.goal_assist", "`{0}` **GOOOOOOL! {1}** scored for **{2}** team! Assist: **{3}**"),
+  RESULT_FORMATS_DISCORD_GOAL_REMOVE("result.formats.discord.goal_remove", "`{0}` __Removed__ goal for team **{1}**!");
 
   public static FileConfiguration CONFIG;
   private final String path;
@@ -48,5 +91,21 @@ public enum Config {
     }
 
     return (T) value;
+  }
+
+  public String getString(String[] args) {
+    String value = ChatColor.translateAlternateColorCodes('&', CONFIG.getString(this.path, (String) this.def));
+    if (args == null) {
+      return value;
+    } else if (args.length == 0) {
+      return value;
+    } else {
+      for (int i = 0; i < args.length; ++i) {
+        value = value.replace("{" + i + "}", args[i]);
+      }
+
+      value = ChatColor.translateAlternateColorCodes('&', value);
+      return value;
+    }
   }
 }

@@ -2,6 +2,7 @@ package io.github.divinerealms.core.commands;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -9,6 +10,7 @@ import org.bukkit.command.TabCompleter;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.logging.Level;
 
 public class BukkitCommandWrapper extends Command {
   @Getter private final CommandExecutor executor;
@@ -35,7 +37,7 @@ public class BukkitCommandWrapper extends Command {
         List<String> completions = tabCompleter.onTabComplete(sender, this, alias, args);
         return completions != null ? completions : Collections.emptyList();
       } catch (Exception ex) {
-        ex.printStackTrace();
+        Bukkit.getLogger().log(Level.SEVERE, "Error on tab complete", ex);
         return Collections.emptyList();
       }
     }
