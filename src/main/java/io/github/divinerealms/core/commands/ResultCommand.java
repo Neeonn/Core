@@ -41,7 +41,15 @@ public class ResultCommand implements CommandExecutor, TabCompleter {
       case "stop": resultManager.stopMatch(); break;
       case "teams": if (args.length >= 3) resultManager.setTeams(sender, args[1], args[2]); break;
       case "prefix": if (args.length >= 2) resultManager.setPrefix(sender, String.join(" ", java.util.Arrays.copyOfRange(args, 1, args.length))); break;
-      case "time": if (args.length >= 2) resultManager.setTime(sender, resultManager.parseTime(args[1])); break;
+      case "time":
+        if (args.length >= 2) {
+          try {
+            resultManager.setTime(sender, resultManager.parseTime(args[1]));
+          } catch (NumberFormatException ignored) {
+            logger.send(sender, Lang.RESULT_MATCH_INVALID_TIME.replace(null));
+          }
+        }
+        break;
       case "add": if (args.length >= 3) resultManager.addScore(sender, args[1], args[2], args.length >= 4 ? args[3] : null); break;
       case "remove": if (args.length >= 2) resultManager.removeScore(sender, args[1]); break;
       case "extratime":

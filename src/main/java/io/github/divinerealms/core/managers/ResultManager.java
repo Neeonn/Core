@@ -332,12 +332,12 @@ public class ResultManager {
 
   public int parseTime(String input) throws NumberFormatException {
     int totalSeconds = 0;
-    input = input.toLowerCase().replaceAll("\\s+", ""); // remove spaces
+    input = input.toLowerCase().replaceAll("\\s+", "");
     StringBuilder number = new StringBuilder();
     for (int i = 0; i < input.length(); i++) {
       char c = input.charAt(i);
       if (Character.isDigit(c)) number.append(c);
-      else if (c == 'm') { // check "min"
+      else if (c == 'm') {
         if (i + 2 < input.length() && input.startsWith("min", i)) {
           totalSeconds += Integer.parseInt(number.toString()) * 60;
           number.setLength(0);
@@ -359,7 +359,6 @@ public class ResultManager {
   }
 
   public String formatColoredTime(int secondsElapsed) {
-    int totalHalf = defaultHalfDuration + currentHalfExtraTime;
     int warningThreshold = (int) (defaultHalfDuration * 0.9);
 
     int adjustedSeconds = secondsElapsed;
