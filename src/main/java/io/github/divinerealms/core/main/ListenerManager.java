@@ -1,10 +1,7 @@
 package io.github.divinerealms.core.main;
 
 import github.scarsz.discordsrv.DiscordSRV;
-import io.github.divinerealms.core.listeners.ChatChannelListener;
-import io.github.divinerealms.core.listeners.ClientBlockerListener;
-import io.github.divinerealms.core.listeners.DiscordMessageListener;
-import io.github.divinerealms.core.listeners.PlayerEvents;
+import io.github.divinerealms.core.listeners.*;
 import lombok.Getter;
 import org.bukkit.Server;
 import org.bukkit.event.HandlerList;
@@ -18,6 +15,7 @@ public class ListenerManager {
 
   private ClientBlockerListener clientBlockerListener;
   private DiscordMessageListener discordMessageListener;
+  private GUIListener guiListener;
 
   public ListenerManager(CoreManager coreManager) {
     this.coreManager = coreManager;
@@ -48,6 +46,16 @@ public class ListenerManager {
     }
 
     disableClientBlocker();
+  }
+
+  public void enableMenuListener() {
+    guiListener = new GUIListener();
+    server.getPluginManager().registerEvents(guiListener, plugin);
+  }
+
+  public void disableMenuListener() {
+    HandlerList.unregisterAll(guiListener);
+    guiListener = null;
   }
 
   public void enableClientBlocker() {

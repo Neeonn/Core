@@ -34,6 +34,7 @@ public class CoreManager {
   private final ResultManager resultManager;
   private final PlayerSettingsManager playerSettingsManager;
   private final PlaytimeManager playtimeManager;
+  private final GUIManager guiManager;
 
   private final Set<String> registeredCommands = new HashSet<>();
 
@@ -59,6 +60,7 @@ public class CoreManager {
     this.resultManager = new ResultManager(this);
     this.playerSettingsManager = new PlayerSettingsManager(this);
     this.playtimeManager = new PlaytimeManager(this);
+    this.guiManager = new GUIManager(this);
 
     this.reload();
   }
@@ -70,6 +72,7 @@ public class CoreManager {
     channelManager.reloadAll();
     registerCommands();
     getListenerManager().registerAll();
+    guiManager.reloadMenus();
   }
 
   public void registerCommands() {
@@ -90,13 +93,13 @@ public class CoreManager {
       registerCommand(commandMap, "rosters", new BukkitCommandWrapper("rosters", new RostersCommand(this), Collections.singletonList("rt")));
       registerCommand(commandMap, "proxycheck", new BukkitCommandWrapper("proxycheck", new ProxyCheckCommand(this), Collections.singletonList("proxy")));
 
-      for (ChannelManager.ChannelInfo info : channelManager.getChannels().values()) {
-        if (info.name.equalsIgnoreCase("global")) continue;
-        if (info.permission.startsWith("tab.group.")) continue;
+      channelManager.getChannels().values().forEach(info -> {
+        if (info.name.equalsIgnoreCase("global")) return;
+        if (info.permission.startsWith("tab.group.")) return;
 
         DynamicChannelBukkitCommand dynamicCommand = new DynamicChannelBukkitCommand(info, channelManager, logger);
         registerCommand(commandMap, dynamicCommand.getName(), dynamicCommand);
-      }
+      });
 
       logger.info("&a✔ &9Registered &e" + registeredCommands.size() + " &9commands.");
     } catch (Exception exception) {

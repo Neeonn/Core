@@ -9,6 +9,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -31,11 +32,29 @@ public class CoreCommand implements CommandExecutor, TabCompleter {
 
     String sub = args[0].toLowerCase();
     if (sub.equalsIgnoreCase("reload")) {
+      if (args.length == 1) { logger.send(sender, Lang.HELP.replace(null)); return true; }
       if (!sender.hasPermission(PERM_RELOAD)) { logger.send(sender, Lang.NO_PERM.replace(new String[]{PERM_RELOAD, label + " " + sub})); return true; }
 
-      coreManager.reload();
-      logger.send(sender, Lang.ADMIN_RELOAD.replace(null));
-      return true;
+      switch (args[1].toLowerCase()) {
+        case "menus":
+          coreManager.getGuiManager().reloadMenus();
+          logger.send(sender, "&aMenus reloaded!");
+          return true;
+
+        case "configs":
+          coreManager.getConfigManager().reloadAllConfigs();
+          logger.send(sender, "&aConfigs reloaded!");
+          return true;
+
+        case "all":
+          coreManager.reload();
+          logger.send(sender, Lang.ADMIN_RELOAD.replace(null));
+          return true;
+
+        default:
+          logger.send(sender, Lang.USAGE.replace(new String[]{label + " " + sub + " <menus|configs|all>"}));
+          return true;
+      }
     }
 
     logger.send(sender, Lang.UNKNOWN_COMMAND.replace(null));
@@ -49,6 +68,7 @@ public class CoreCommand implements CommandExecutor, TabCompleter {
     List<String> completions = new ArrayList<>();
 
     if (args.length == 1) completions.add("reload");
+    if (args.length == 2) completions.addAll(Arrays.asList("menus", "configs", "all"));
 
     if (!completions.isEmpty()) {
       String lastWord = args[args.length - 1].toLowerCase();
