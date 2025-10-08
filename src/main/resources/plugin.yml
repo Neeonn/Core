@@ -8,5 +8,6 @@ depend:
 softdepend:
   - PlaceholderAPI
   - DiscordSRV
+  - AuthMe
 loadbefore:
   - FootCube

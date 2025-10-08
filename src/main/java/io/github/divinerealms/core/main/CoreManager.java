@@ -2,9 +2,9 @@ package io.github.divinerealms.core.main;
 
 import io.github.divinerealms.core.commands.*;
 import io.github.divinerealms.core.config.Config;
-import io.github.divinerealms.core.managers.ConfigManager;
 import io.github.divinerealms.core.config.Lang;
 import io.github.divinerealms.core.managers.*;
+import io.github.divinerealms.core.utilities.AuthMeHook;
 import io.github.divinerealms.core.utilities.Logger;
 import lombok.Getter;
 import net.luckperms.api.LuckPerms;
@@ -39,6 +39,7 @@ public class CoreManager {
   private final Set<String> registeredCommands = new HashSet<>();
 
   private LuckPerms luckPerms;
+  private boolean authMe;
   private boolean discordSRV;
   private boolean placeholderAPI;
 
@@ -185,7 +186,11 @@ public class CoreManager {
     this.placeholderAPI = plugin.getServer().getPluginManager().getPlugin("PlaceholderAPI") != null;
     if (!placeholderAPI) logger.info("&cPlaceholderAPI not found! Placeholders features disabled.");
 
-    logger.info("&a✔ &9Hooked into &dLuckPerms &9successfully!");
+    this.authMe = plugin.getServer().getPluginManager().getPlugin("AuthMe") != null;
+    if (!authMe) logger.info("&cAuthMe not found! We won't check if the player is logged in.");
+    else AuthMeHook.initializeHook();
+
+    logger.info("&a✔ &9Hooked into &dLuckPerms &9and &dAuthMe &9successfully!");
   }
 
   public String getTeam(Player player) {

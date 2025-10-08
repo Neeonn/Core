@@ -166,7 +166,7 @@ public class ChannelManager {
         boolean nowOn = switchChannel(player.getUniqueId(), channel);
         logger.send(player, Lang.CHANNEL_TOGGLE.replace(new String[]{channel.toUpperCase(), nowOn ? Lang.ON.replace(null) : Lang.OFF.replace(null)}));
       } else {
-        logger.send(sender, "&cConsole can't toggle channels.");
+        logger.send(sender, Lang.INGAME_ONLY.replace(null));
       }
       return;
     }

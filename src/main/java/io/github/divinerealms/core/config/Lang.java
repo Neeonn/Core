@@ -135,7 +135,7 @@ public enum Lang {
 
   MENTION_TOGGLED("toggle.mention", "{prefix}&fZvuk za mention u četu je {0}&f!"),
 
-  ADMIN_RELOAD("admin.reload", "{prefix}&eCore konfiguracije & poruke osvežene!"),
+  ADMIN_RELOAD("admin.reload", "{prefix}&eCore reloaded! Osveženo: &e{0}"),
 
   MENTION("mention", "&6Pstt, &e{0} &6te je spomenuo u četu!"),
 

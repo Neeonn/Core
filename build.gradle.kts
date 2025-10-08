@@ -16,6 +16,7 @@ repositories {
     maven("https://repo.aikar.co/content/groups/aikar/")
     maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
     maven("https://nexus.scarsz.me/content/groups/public/")
+    maven("https://repo.codemc.org/repository/maven-public/")
 }
 
 dependencies {
@@ -28,6 +29,7 @@ dependencies {
     compileOnly("net.luckperms:api:5.4")
     compileOnly("com.discordsrv:discordsrv:1.30.0")
     compileOnly("com.comphenix.protocol:ProtocolLib:5.3.0")
+    compileOnly("fr.xephi:authme:5.6.0-SNAPSHOT")
 
     annotationProcessor("org.projectlombok:lombok:1.18.38")
 

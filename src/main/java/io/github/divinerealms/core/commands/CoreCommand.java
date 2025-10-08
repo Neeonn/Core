@@ -38,17 +38,17 @@ public class CoreCommand implements CommandExecutor, TabCompleter {
       switch (args[1].toLowerCase()) {
         case "menus":
           coreManager.getGuiManager().reloadMenus();
-          logger.send(sender, "&aMenus reloaded!");
+          logger.send(sender, Lang.ADMIN_RELOAD.replace(new String[]{"menus"}));
           return true;
 
         case "configs":
           coreManager.getConfigManager().reloadAllConfigs();
-          logger.send(sender, "&aConfigs reloaded!");
+          logger.send(sender, Lang.ADMIN_RELOAD.replace(new String[]{"configs"}));
           return true;
 
         case "all":
           coreManager.reload();
-          logger.send(sender, Lang.ADMIN_RELOAD.replace(null));
+          logger.send(sender, Lang.ADMIN_RELOAD.replace(new String[]{"all"}));
           return true;
 
         default:
