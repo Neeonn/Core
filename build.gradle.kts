@@ -1,10 +1,70 @@
+import java.io.ByteArrayOutputStream
+import java.util.Properties
+import kotlin.apply
+
 plugins {
     id("java")
     id("com.gradleup.shadow") version "8.3.0"
 }
 
 group = "io.github.divinerealms.core"
-version = "1.0-SNAPSHOT"
+
+val versionFile = file("version.properties")
+val props = Properties().apply {
+    if (versionFile.exists()) {
+        load(versionFile.inputStream())
+    } else {
+        setProperty("major", "1")
+        setProperty("minor", "0")
+        setProperty("patch", "0")
+    }
+}
+
+val major = props.getProperty("major").toInt()
+val minor = props.getProperty("minor").toInt()
+var patch = props.getProperty("patch").toInt()
+
+fun gitCommitHash(): String? = try {
+    val stdout = ByteArrayOutputStream()
+    exec {
+        commandLine("git", "rev-parse", "--short", "HEAD")
+        standardOutput = stdout
+    }
+    stdout.toString().trim()
+} catch (_: Exception) {
+    null
+}
+
+val commit = gitCommitHash()
+version = if (commit != null)
+    "$major.$minor.$patch-$commit"
+else
+    "$major.$minor.$patch"
+
+tasks.register("bumpPatch") {
+    doLast {
+        patch += 1
+        props.setProperty("patch", patch.toString())
+        props.store(versionFile.outputStream(), "Auto-incremented patch version")
+    }
+}
+
+tasks.named("build") {
+    dependsOn("bumpPatch")
+    doFirst {
+        println("Building Core version $version")
+    }
+}
+
+tasks.processResources {
+    filesMatching("plugin.yml") {
+        expand("version" to project.version.toString())
+    }
+}
+
+tasks.jar {
+    archiveFileName.set("Core.jar")
+}
 
 repositories {
     mavenCentral()

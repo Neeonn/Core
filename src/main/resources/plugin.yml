@@ -1,5 +1,5 @@
 name: Core
-version: '0.0.1-BETA'
+version: ${version}
 main: io.github.divinerealms.core.Core
 author: neonsh
 description: Core plugin for FootCube Servers
