@@ -5,6 +5,8 @@ import github.scarsz.discordsrv.dependencies.jda.api.entities.TextChannel;
 import io.github.divinerealms.core.config.Config;
 import io.github.divinerealms.core.config.Lang;
 import io.github.divinerealms.core.main.CoreManager;
+import io.github.divinerealms.core.utilities.ChannelFormats;
+import io.github.divinerealms.core.utilities.ChannelInfo;
 import io.github.divinerealms.core.utilities.Logger;
 import lombok.Getter;
 import lombok.Setter;
@@ -122,7 +124,7 @@ public class ChannelManager {
       for (String key : Config.CONFIG.getConfigurationSection("channels.list").getKeys(false)) {
         String path = "channels.list." + key;
 
-        ChannelInfo.ChannelFormats formats = new ChannelInfo.ChannelFormats(
+        ChannelFormats formats = new ChannelFormats(
             Config.CONFIG.getString(path + ".formats.minecraft_chat", "%player%: %message%"),
             Config.CONFIG.getString(path + ".formats.discord_to_minecraft", "%player%: %message%"),
             Config.CONFIG.getString(path + ".formats.minecraft_to_discord", "%player%: %message%")
@@ -226,40 +228,13 @@ public class ChannelManager {
     TextChannel discordChannel = DiscordSRV.getPlugin().getJda().getTextChannelById(discordId);
     if (discordChannel == null) return;
 
+    TextChannel consoleChannel = DiscordSRV.getPlugin().getConsoleChannel();
+    if (consoleChannel != null && consoleChannel.getId().equals(discordId)) return;
+
     String lastMessage = discordLastMessage.get(discordId);
     if (lastMessage != null && lastMessage.equalsIgnoreCase(message)) return;
 
     discordChannel.sendMessage(ChatColor.stripColor(message)).queue();
     discordLastMessage.put(discordId, message);
-  }
-
-  public static class ChannelInfo {
-    public final String name;
-    public final String permission;
-    public final String discordId;
-    public final ChannelFormats formats;
-    public final boolean broadcast;
-    public final List<String> aliases;
-
-    public ChannelInfo(String name, String permission, String discordId, ChannelFormats formats, boolean broadcast, List<String> aliases) {
-      this.name = name;
-      this.permission = permission;
-      this.discordId = discordId;
-      this.formats = formats;
-      this.broadcast = broadcast;
-      this.aliases = aliases;
-    }
-
-    public static class ChannelFormats {
-      public final String minecraftChat;
-      public final String discordToMinecraft;
-      public final String minecraftToDiscord;
-
-      public ChannelFormats(String minecraftChat, String discordToMinecraft, String minecraftToDiscord) {
-        this.minecraftChat = minecraftChat;
-        this.discordToMinecraft = discordToMinecraft;
-        this.minecraftToDiscord = minecraftToDiscord;
-      }
-    }
   }
 }

@@ -2,6 +2,7 @@ package io.github.divinerealms.core.commands;
 
 import io.github.divinerealms.core.config.Lang;
 import io.github.divinerealms.core.managers.ChannelManager;
+import io.github.divinerealms.core.utilities.ChannelInfo;
 import io.github.divinerealms.core.utilities.Logger;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -11,7 +12,7 @@ public class DynamicChannelBukkitCommand extends Command {
   private final ChannelManager channelManager;
   private final Logger logger;
 
-  public DynamicChannelBukkitCommand(ChannelManager.ChannelInfo info, ChannelManager channelManager, Logger logger) {
+  public DynamicChannelBukkitCommand(ChannelInfo info, ChannelManager channelManager, Logger logger) {
     super(info.name);
     this.channel = info.name;
     this.channelManager = channelManager;

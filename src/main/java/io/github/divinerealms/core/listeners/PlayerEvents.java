@@ -5,6 +5,7 @@ import io.github.divinerealms.core.main.CoreManager;
 import io.github.divinerealms.core.managers.ChannelManager;
 import io.github.divinerealms.core.managers.ClientBlocker;
 import io.github.divinerealms.core.managers.PlayerSettingsManager;
+import io.github.divinerealms.core.utilities.ChannelInfo;
 import io.github.divinerealms.core.utilities.Logger;
 import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.Bukkit;
@@ -63,7 +64,7 @@ public class PlayerEvents implements Listener {
 
       logger.broadcast(finalMcMsg);
       if (isDiscordSRV) {
-        ChannelManager.ChannelInfo info = channelManager.getChannels().get(channelManager.getDefaultChannel());
+        ChannelInfo info = channelManager.getChannels().get(channelManager.getDefaultChannel());
         channelManager.sendToDiscord(info, finalDcMsg);
       }
     }, 10L);
@@ -103,7 +104,7 @@ public class PlayerEvents implements Listener {
       if (!clientBlocker.shouldKick(player)) {
         logger.broadcast(finalMcMsg);
         if (isDiscordSRV) {
-          ChannelManager.ChannelInfo info = channelManager.getChannels().get(channelManager.getDefaultChannel());
+          ChannelInfo info = channelManager.getChannels().get(channelManager.getDefaultChannel());
           channelManager.sendToDiscord(info, finalDcMsg);
         }
       }

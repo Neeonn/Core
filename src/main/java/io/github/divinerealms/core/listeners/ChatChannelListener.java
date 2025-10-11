@@ -6,6 +6,7 @@ import io.github.divinerealms.core.managers.ChannelManager;
 import io.github.divinerealms.core.managers.PlayerSettingsManager;
 import io.github.divinerealms.core.managers.ResultManager;
 import io.github.divinerealms.core.utilities.AuthMeHook;
+import io.github.divinerealms.core.utilities.ChannelInfo;
 import io.github.divinerealms.core.utilities.Logger;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.model.user.User;
@@ -46,7 +47,7 @@ public class ChatChannelListener implements Listener {
   public void onPlayerChat(AsyncPlayerChatEvent event) {
     Player player = event.getPlayer();
     String activeChannel = channelManager.getActiveChannel(player);
-    ChannelManager.ChannelInfo info = channelManager.getChannels().get(activeChannel);
+    ChannelInfo info = channelManager.getChannels().get(activeChannel);
     if (info == null) return;
 
     if (!AuthMeHook.isAuthenticated(player)) {

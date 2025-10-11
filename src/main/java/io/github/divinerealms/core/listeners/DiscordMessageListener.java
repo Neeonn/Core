@@ -1,11 +1,14 @@
 package io.github.divinerealms.core.listeners;
 
+import github.scarsz.discordsrv.DiscordSRV;
 import github.scarsz.discordsrv.api.Subscribe;
 import github.scarsz.discordsrv.api.events.DiscordGuildMessageReceivedEvent;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.Message;
+import github.scarsz.discordsrv.dependencies.jda.api.entities.TextChannel;
 import io.github.divinerealms.core.config.Lang;
 import io.github.divinerealms.core.main.CoreManager;
 import io.github.divinerealms.core.managers.ChannelManager;
+import io.github.divinerealms.core.utilities.ChannelInfo;
 import io.github.divinerealms.core.utilities.Logger;
 import org.jetbrains.annotations.NotNull;
 
@@ -25,12 +28,14 @@ public class DiscordMessageListener {
   @Subscribe
   public void onDiscordMessage(DiscordGuildMessageReceivedEvent event) {
     if (!coreManager.isDiscordSRV()) return;
+    TextChannel consoleChannel = DiscordSRV.getPlugin().getConsoleChannel();
+    if (consoleChannel != null && event.getChannel().getId().equals(consoleChannel.getId())) return;
     if (event.getMessage().getAuthor().isBot()) return;
 
     List<String> minecraftChannels = channelManager.getDiscordIdToMinecraft().get(event.getChannel().getId());
     if (minecraftChannels == null || minecraftChannels.isEmpty()) return;
 
-    ChannelManager.ChannelInfo globalInfo = channelManager.getChannels().get(channelManager.getDefaultChannel());
+    ChannelInfo globalInfo = channelManager.getChannels().get(channelManager.getDefaultChannel());
     String displayName = event.getMember() != null ? event.getMember().getEffectiveName().trim() : event.getAuthor().getName().trim();
     String messageRaw = event.getMessage().getContentRaw();
     String replyName = getReplyName(event);
@@ -40,7 +45,7 @@ public class DiscordMessageListener {
     }
 
     for (String minecraftChannel : minecraftChannels) {
-      ChannelManager.ChannelInfo info = channelManager.getChannels().get(minecraftChannel);
+      ChannelInfo info = channelManager.getChannels().get(minecraftChannel);
       if (info == null) continue;
       if (info.discordId.equals(globalInfo.discordId) && !minecraftChannel.equals(channelManager.getDefaultChannel())) continue;
 
@@ -61,7 +66,7 @@ public class DiscordMessageListener {
         : Lang.CHANNEL_REPLY.replace(new String[]{referenced.getAuthor().getName().trim()});
   }
 
-  private static @NotNull String getFormatted(ChannelManager.ChannelInfo info, String displayName, String replyName, String message) {
+  private static @NotNull String getFormatted(ChannelInfo info, String displayName, String replyName, String message) {
     String format = info.formats.discordToMinecraft;
     if (format == null || format.trim().isEmpty()) format = "%name%: %message%";
 
