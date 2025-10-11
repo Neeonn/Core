@@ -15,15 +15,13 @@ import org.bukkit.command.CommandMap;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.Plugin;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Level;
 
 public class GUIManager {
@@ -97,10 +95,23 @@ public class GUIManager {
         var itemSec = buttonSec.getConfigurationSection(buttonKey);
         if (itemSec == null) return;
 
-        Material mat = Material.matchMaterial(itemSec.getString("material", "STONE"));
-        if (mat == null) mat = Material.STONE;
+        String materialRaw = itemSec.getString("material", "STONE");
+        Material mat;
+        short data = 0;
 
-        ItemStack stack = new ItemStack(mat);
+        if (materialRaw.contains(":")) {
+          String[] parts = materialRaw.split(":");
+          mat = Material.matchMaterial(parts[0]);
+          if (mat == null) mat = Material.STONE;
+          try {
+            data = Short.parseShort(parts[1]);
+          } catch (NumberFormatException ignored) {}
+        } else {
+          mat = Material.matchMaterial(materialRaw);
+          if (mat == null) mat = Material.STONE;
+        }
+
+        ItemStack stack = new ItemStack(mat, 1, data);
         ItemMeta meta = stack.getItemMeta();
         if (meta == null) return;
 
@@ -108,11 +119,15 @@ public class GUIManager {
         List<String> rawLore = itemSec.getStringList("lore");
 
         meta.setDisplayName(logger.color(rawName));
+
         if (rawLore != null && !rawLore.isEmpty()) {
           List<String> colored = new ArrayList<>();
           for (String line : rawLore) colored.add(logger.color(line));
           meta.setLore(colored);
-        }
+        } else meta.setLore(new ArrayList<>());
+
+        for (ItemFlag flag : ItemFlag.values()) meta.removeItemFlags(flag);
+
         stack.setItemMeta(meta);
 
         String action = itemSec.getString("action", "");
@@ -155,6 +170,10 @@ public class GUIManager {
     } else if (action.startsWith("message:")) {
       player.closeInventory();
       logger.send(player, action.substring("message:".length()));
+    } else if (action.startsWith("menu:")) {
+      String menu = action.substring("menu:".length());
+      player.closeInventory();
+      openMenu(player, menu);
     } else if (action.equalsIgnoreCase("close")) {
       player.closeInventory();
     }
