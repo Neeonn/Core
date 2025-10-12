@@ -5,9 +5,12 @@ import io.github.divinerealms.core.main.CoreManager;
 import io.github.divinerealms.core.managers.ChannelManager;
 import io.github.divinerealms.core.managers.ClientBlocker;
 import io.github.divinerealms.core.managers.PlayerSettingsManager;
+import io.github.divinerealms.core.managers.PlaytimeManager;
 import io.github.divinerealms.core.utilities.ChannelInfo;
 import io.github.divinerealms.core.utilities.Logger;
 import me.clip.placeholderapi.PlaceholderAPI;
+import net.luckperms.api.LuckPerms;
+import net.luckperms.api.node.Node;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
@@ -16,12 +19,16 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
+import java.util.concurrent.TimeUnit;
+
 public class PlayerEvents implements Listener {
   private final CoreManager coreManager;
   private final Logger logger;
   private final ChannelManager channelManager;
   private final ClientBlocker clientBlocker;
   private final PlayerSettingsManager playerSettingsManager;
+  private final LuckPerms luckPerms;
+  private final PlaytimeManager playtimeManager;
 
   private static final String PERM_SILENT_JOIN_QUIT = "core.silent-joinquit";
   private static final String PATH_PLAYER_MESSAGES = "player_messages.custom_";
@@ -32,12 +39,29 @@ public class PlayerEvents implements Listener {
     this.channelManager = coreManager.getChannelManager();
     this.clientBlocker = coreManager.getClientBlocker();
     this.playerSettingsManager = coreManager.getPlayerSettingsManager();
+    this.luckPerms = coreManager.getLuckPerms();
+    this.playtimeManager = coreManager.getPlaytimeManager();
   }
 
   @EventHandler
   public void onJoin(PlayerJoinEvent event) {
     Player player = event.getPlayer();
     playerSettingsManager.loadPlayer(player);
+
+    long playtime = playtimeManager.getPlaytime(player.getUniqueId());
+    long hoursPlayed = playtime / 20 / 3600;
+
+    if (!player.hasPlayedBefore() || hoursPlayed < 5) {
+      luckPerms.getUserManager().modifyUser(player.getUniqueId(), user -> {
+        boolean hasNewbie = user.getNodes().stream().anyMatch(node -> node.getKey().equalsIgnoreCase("group.newbie"));
+        if (!hasNewbie) {
+          Node node = Node.builder("group.newbie").expiry(30, TimeUnit.DAYS).build();
+          user.data().add(node);
+          logger.info("&fNew player &b" + player.getDisplayName() + "&f got assigned a newbie rank.");
+        }
+      });
+    }
+
     if (!Config.CONFIG.getBoolean(PATH_PLAYER_MESSAGES + "join.enabled", false)) return;
     event.setJoinMessage(null);
     if (player.hasPermission(PERM_SILENT_JOIN_QUIT)) return;
