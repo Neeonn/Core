@@ -1,11 +1,13 @@
 package io.github.divinerealms.core.listeners;
 
+import fr.xephi.authme.events.LoginEvent;
 import io.github.divinerealms.core.config.Config;
 import io.github.divinerealms.core.main.CoreManager;
 import io.github.divinerealms.core.managers.ChannelManager;
 import io.github.divinerealms.core.managers.ClientBlocker;
 import io.github.divinerealms.core.managers.PlayerSettingsManager;
 import io.github.divinerealms.core.managers.PlaytimeManager;
+import io.github.divinerealms.core.utilities.AuthMeHook;
 import io.github.divinerealms.core.utilities.ChannelInfo;
 import io.github.divinerealms.core.utilities.Logger;
 import me.clip.placeholderapi.PlaceholderAPI;
@@ -44,14 +46,20 @@ public class PlayerEvents implements Listener {
   }
 
   @EventHandler
-  public void onJoin(PlayerJoinEvent event) {
+  public void onLogin(LoginEvent event) {
     Player player = event.getPlayer();
+
+    if (clientBlocker.shouldKick(player)) {
+      clientBlocker.removePlayer(player);
+      return;
+    }
+
     playerSettingsManager.loadPlayer(player);
 
     long playtime = playtimeManager.getPlaytime(player.getUniqueId());
     long hoursPlayed = playtime / 20 / 3600;
 
-    if (!player.hasPlayedBefore() || hoursPlayed < 5) {
+    if (!player.hasPlayedBefore() || hoursPlayed < 2) {
       luckPerms.getUserManager().modifyUser(player.getUniqueId(), user -> {
         boolean hasNewbie = user.getNodes().stream().anyMatch(node -> node.getKey().equalsIgnoreCase("group.newbie"));
         if (!hasNewbie) {
@@ -63,13 +71,11 @@ public class PlayerEvents implements Listener {
     }
 
     if (!Config.CONFIG.getBoolean(PATH_PLAYER_MESSAGES + "join.enabled", false)) return;
-    event.setJoinMessage(null);
     if (player.hasPermission(PERM_SILENT_JOIN_QUIT)) return;
-
     boolean isDiscordSRV = coreManager.isDiscordSRV();
 
     String mcMsg = Config.CONFIG.getString(PATH_PLAYER_MESSAGES + "join.minecraft", ChatColor.YELLOW + player.getName() + " has joined the server");
-    String dcMsg = isDiscordSRV ? Config.CONFIG.getString(PATH_PLAYER_MESSAGES + "join.discord", ":green_square: " + player.getName()) : null;
+    String dcMsg = Config.CONFIG.getString(PATH_PLAYER_MESSAGES + "join.discord", ":green_square: " + player.getName());
 
     if (coreManager.isPlaceholderAPI()) {
       mcMsg = PlaceholderAPI.setPlaceholders(player, mcMsg);
@@ -80,18 +86,17 @@ public class PlayerEvents implements Listener {
       }
     }
 
-    String finalMcMsg = mcMsg;
-    String finalDcMsg = isDiscordSRV ? ChatColor.translateAlternateColorCodes('&', dcMsg) : null;
+    logger.broadcast(mcMsg);
+    if (isDiscordSRV) {
+      ChannelInfo info = channelManager.getChannels().get(channelManager.getDefaultChannel());
+      channelManager.sendToDiscord(info, ChatColor.translateAlternateColorCodes('&', dcMsg));
+    }
+  }
 
-    Bukkit.getScheduler().runTaskLaterAsynchronously(coreManager.getPlugin(), () -> {
-      if (clientBlocker.shouldKick(player)) { clientBlocker.removePlayer(player); return; }
-
-      logger.broadcast(finalMcMsg);
-      if (isDiscordSRV) {
-        ChannelInfo info = channelManager.getChannels().get(channelManager.getDefaultChannel());
-        channelManager.sendToDiscord(info, finalDcMsg);
-      }
-    }, 10L);
+  @EventHandler
+  public void onJoin(PlayerJoinEvent event) {
+    if (!Config.CONFIG.getBoolean(PATH_PLAYER_MESSAGES + "join.enabled", false)) return;
+    event.setJoinMessage(null);
   }
 
   @EventHandler
@@ -102,10 +107,9 @@ public class PlayerEvents implements Listener {
     playerSettingsManager.removePlayer(player);
 
     if (!Config.CONFIG.getBoolean(PATH_PLAYER_MESSAGES + "quit.enabled", false)) return;
-
     event.setQuitMessage(null);
-
     if (player.hasPermission(PERM_SILENT_JOIN_QUIT)) return;
+    if (!AuthMeHook.isAuthenticated(player)) return;
 
     boolean isDiscordSRV = coreManager.isDiscordSRV();
 

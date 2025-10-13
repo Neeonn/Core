@@ -28,7 +28,7 @@ public class ClientBlockerListener implements Listener, PluginMessageListener {
 
     clientBlocker.setPlayerBrand(player, brand);
     if (clientBlocker.shouldKick(player)) {
-      player.kickPlayer(Lang.CLIENT_BLOCKER_KICK.replace(null));
+      player.kickPlayer(Lang.CLIENT_BLOCKER_KICK.replace(new String[]{brand}));
       logger.send(ClientBlocker.NOTIFY_PERMISSION, Lang.CLIENT_BLOCKER_NOTIFY.replace(new String[]{player.getName(), ip, brand}));
       return;
     }
