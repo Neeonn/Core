@@ -115,11 +115,21 @@ public class ChatChannelListener implements Listener {
     String formattedMessage = activeChannel.equals("host") ?
         channelManager.formatChat(player, info.formats.minecraftChat.replace("{prefix-host}", resultManager.getPrefix()), message, true) :
         channelManager.formatChat(player, info.formats.minecraftChat, message, true);
-    if (info.broadcast || info.permission == null || info.permission.isEmpty()) {
-      server.broadcastMessage(logger.color(formattedMessage));
-    } else {
-      server.broadcast(logger.color(formattedMessage), info.permission);
-    }
+
+    boolean isBroadcast = info.broadcast || info.permission == null || info.permission.isEmpty();
+    channelManager.getSocialSpy().forEach(spyUUID -> {
+      if (spyUUID.equals(player.getUniqueId())) return;
+      if (isBroadcast) return;
+
+      Player spy = Bukkit.getPlayer(spyUUID);
+      if (spy == null) return;
+      if (spy.hasPermission(info.permission)) return;
+
+      logger.send(spy, Lang.CHANNEL_SPY_PREFIX.replace(new String[]{activeChannel.toUpperCase()}) + formattedMessage);
+    });
+
+    if (isBroadcast) server.broadcastMessage(logger.color(formattedMessage));
+    else server.broadcast(logger.color(formattedMessage), info.permission);
 
     if (coreManager.isDiscordSRV() && info.formats.minecraftToDiscord != null && !info.formats.minecraftToDiscord.isEmpty()) {
       channelManager.sendToDiscord(info, channelManager.formatChat(player, info.formats.minecraftToDiscord, event.getMessage(), false));

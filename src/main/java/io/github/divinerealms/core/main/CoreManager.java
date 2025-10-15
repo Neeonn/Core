@@ -93,6 +93,9 @@ public class CoreManager {
       registerCommand(commandMap, "playtime", new BukkitCommandWrapper("playtime", new PlaytimeCommand(this), null));
       registerCommand(commandMap, "rosters", new BukkitCommandWrapper("rosters", new RostersCommand(this), Collections.singletonList("rt")));
       registerCommand(commandMap, "proxycheck", new BukkitCommandWrapper("proxycheck", new ProxyCheckCommand(this), Collections.singletonList("proxy")));
+      registerCommand(commandMap, "socialspy", new BukkitCommandWrapper("socialspy", new SocialSpy(this), Collections.singletonList("spy")));
+      registerCommand(commandMap, "msg", new BukkitCommandWrapper("msg", new PrivateMessageCommand(this), List.of("pm", "whisper", "w")));
+      registerCommand(commandMap, "reply", new BukkitCommandWrapper("reply", new ReplyCommand(this), Collections.singletonList("r")));
 
       channelManager.getChannels().values().forEach(info -> {
         if (info.name.equalsIgnoreCase("global")) return;

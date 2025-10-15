@@ -11,6 +11,7 @@ import io.github.divinerealms.core.utilities.Logger;
 import lombok.Getter;
 import lombok.Setter;
 import me.clip.placeholderapi.PlaceholderAPI;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -41,6 +42,9 @@ public class ChannelManager {
   @Getter private final Map<UUID, Long> mcLastMessageTime = new ConcurrentHashMap<>();
   @Getter private final Map<String, String> discordLastMessage = new ConcurrentHashMap<>();
 
+  @Getter private final Set<UUID> socialSpy = ConcurrentHashMap.newKeySet();
+  private final Map<UUID, UUID> lastConvoPartner = new ConcurrentHashMap<>();
+
   public ChannelManager(CoreManager coreManager) {
     this.coreManager = coreManager;
     this.logger = coreManager.getLogger();
@@ -58,6 +62,8 @@ public class ChannelManager {
     mcMessageCount.clear();
     mcLastMessageTime.clear();
     discordLastMessage.clear();
+    socialSpy.clear();
+    lastConvoPartner.clear();
   }
 
   public Set<String> getChannels(UUID uuid) {
@@ -99,6 +105,16 @@ public class ChannelManager {
       return false;
     } else {
       disabledChannels.add(channel);
+      return true;
+    }
+  }
+
+  public boolean toggleSocialSpy(Player player) {
+    if (socialSpy.contains(player.getUniqueId())) {
+      socialSpy.remove(player.getUniqueId());
+      return false;
+    } else {
+      socialSpy.add(player.getUniqueId());
       return true;
     }
   }
@@ -180,11 +196,21 @@ public class ChannelManager {
       }
 
       String formattedMessage = formatChat(player, info.formats.minecraftChat, message, true);
-      if (info.broadcast || info.permission == null || info.permission.isEmpty()) {
-        logger.broadcast(formattedMessage);
-      } else {
-        logger.send(info.permission, formattedMessage);
-      }
+      boolean isBroadcast = info.broadcast || info.permission == null || info.permission.isEmpty();
+
+      socialSpy.forEach(spyUUID -> {
+        if (spyUUID.equals(player.getUniqueId())) return;
+        if (isBroadcast) return;
+
+        Player spy = Bukkit.getPlayer(spyUUID);
+        if (spy == null) return;
+        if (spy.hasPermission(info.permission)) return;
+
+        logger.send(spy, Lang.CHANNEL_SPY_PREFIX.replace(new String[]{channel.toUpperCase()}) + formattedMessage);
+      });
+
+      if (isBroadcast) logger.broadcast(formattedMessage);
+      else logger.send(info.permission, formattedMessage);
 
       if (info.formats.minecraftToDiscord != null && !info.formats.minecraftToDiscord.isEmpty()) {
         sendToDiscord(info, formatChat(player, info.formats.minecraftToDiscord, message, false));
@@ -201,6 +227,37 @@ public class ChannelManager {
     if (coreManager.isDiscordSRV() && info.formats.minecraftToDiscord != null && !info.formats.minecraftToDiscord.isEmpty()) {
       sendToDiscord(info, "Console » " + message);
     }
+  }
+
+  public void sendPrivateMessage(Player sender, Player recipient, String message) {
+    logger.send(sender, Lang.PRIVATE_MESSAGES_SENDER_FORMAT.replace(new String[]{recipient.getDisplayName(), message}));
+    logger.send(recipient, Lang.PRIVATE_MESSAGES_RECIPIENT_FORMAT.replace(new String[]{sender.getDisplayName(), message}));
+
+    lastConvoPartner.put(sender.getUniqueId(), recipient.getUniqueId());
+    lastConvoPartner.put(recipient.getUniqueId(), sender.getUniqueId());
+
+    socialSpy.forEach(spyUUID -> {
+      if (spyUUID.equals(sender.getUniqueId()) || spyUUID.equals(recipient.getUniqueId())) return;
+
+      Player spy = Bukkit.getPlayer(spyUUID);
+      if (spy == null) return;
+
+      logger.send(spy, Lang.PRIVATE_MESSAGES_SPY_FORMAT.replace(new String[]{Lang.CHANNEL_SPY_PREFIX.replace(null), sender.getDisplayName(), recipient.getDisplayName(), message}));
+    });
+  }
+
+  public void reply(Player sender, String message) {
+    UUID lastPartnerUUID = lastConvoPartner.get(sender.getUniqueId());
+    if (lastPartnerUUID == null) { logger.send(sender, Lang.PRIVATE_MESSAGES_NO_REPLY_TARGET.replace(null)); return; }
+
+    Player recipient = Bukkit.getPlayer(lastPartnerUUID);
+    if (recipient == null || !recipient.isOnline()) {
+      logger.send(sender, Lang.PRIVATE_MESSAGES_NO_REPLY_TARGET.replace(null));
+      lastConvoPartner.remove(sender.getUniqueId());
+      return;
+    }
+
+    sendPrivateMessage(sender, recipient, message);
   }
 
   public String formatChat(Player player, String format, String message, boolean colorMessage) {
