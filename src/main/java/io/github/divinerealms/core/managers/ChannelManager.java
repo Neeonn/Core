@@ -230,8 +230,10 @@ public class ChannelManager {
   }
 
   public void sendPrivateMessage(Player sender, Player recipient, String message) {
-    logger.send(sender, Lang.PRIVATE_MESSAGES_SENDER_FORMAT.replace(new String[]{recipient.getDisplayName(), message}));
-    logger.send(recipient, Lang.PRIVATE_MESSAGES_RECIPIENT_FORMAT.replace(new String[]{sender.getDisplayName(), message}));
+    String senderName = coreManager.getChat().getPlayerPrefix(sender) + sender.getName();
+    String recipientName = coreManager.getChat().getPlayerPrefix(recipient) + recipient.getName();
+    logger.send(sender, Lang.PRIVATE_MESSAGES_SENDER_FORMAT.replace(new String[]{recipientName, message}));
+    logger.send(recipient, Lang.PRIVATE_MESSAGES_RECIPIENT_FORMAT.replace(new String[]{senderName, message}));
 
     lastConvoPartner.put(sender.getUniqueId(), recipient.getUniqueId());
     lastConvoPartner.put(recipient.getUniqueId(), sender.getUniqueId());
@@ -242,7 +244,7 @@ public class ChannelManager {
       Player spy = Bukkit.getPlayer(spyUUID);
       if (spy == null) return;
 
-      logger.send(spy, Lang.PRIVATE_MESSAGES_SPY_FORMAT.replace(new String[]{Lang.CHANNEL_SPY_PREFIX.replace(null), sender.getDisplayName(), recipient.getDisplayName(), message}));
+      logger.send(spy, Lang.PRIVATE_MESSAGES_SPY_FORMAT.replace(new String[]{Lang.CHANNEL_SPY_PREFIX.replace(null), senderName, recipientName, message}));
     });
   }
 

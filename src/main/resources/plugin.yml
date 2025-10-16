@@ -9,5 +9,6 @@ depend:
 softdepend:
   - PlaceholderAPI
   - AuthMe
+  - Vault
 loadbefore:
   - FootCube

@@ -11,6 +11,7 @@ import net.luckperms.api.LuckPerms;
 import net.luckperms.api.model.group.Group;
 import net.luckperms.api.model.user.User;
 import net.luckperms.api.node.types.InheritanceNode;
+import net.milkbowl.vault.chat.Chat;
 import org.bukkit.command.*;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
@@ -38,6 +39,7 @@ public class CoreManager {
 
   private final Set<String> registeredCommands = new HashSet<>();
 
+  private Chat chat;
   private LuckPerms luckPerms;
   private boolean authMe;
   private boolean discordSRV;
@@ -193,7 +195,11 @@ public class CoreManager {
     if (!authMe) logger.info("&cAuthMe not found! We won't check if the player is logged in.");
     else AuthMeHook.initializeHook();
 
-    logger.info("&a✔ &9Hooked into &dLuckPerms &9and &dAuthMe &9successfully!");
+    RegisteredServiceProvider<Chat> chatRsp = plugin.getServer().getServicesManager().getRegistration(Chat.class);
+    this.chat = chatRsp == null ? null : chatRsp.getProvider();
+    if (chat == null) throw new IllegalStateException("Vault not found!");
+
+    logger.info("&a✔ &9Hooked into &dLuckPerms&9, &dAuthMe &9and &dVault &9successfully!");
   }
 
   public String getTeam(Player player) {
