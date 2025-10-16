@@ -26,6 +26,7 @@ public class PrivateMessageCommand implements CommandExecutor {
 
   @Override
   public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    if (!(sender instanceof Player)) { logger.send(sender, Lang.INGAME_ONLY.replace(null)); return true; }
     Player pmSender = (Player) sender;
     if (!pmSender.hasPermission(PERM_USE)) { logger.send(pmSender, Lang.NO_PERM.replace(new String[]{PERM_USE, label})); return true; }
     if (args.length < 2) { logger.send(pmSender, Lang.USAGE.replace(new String[]{label + " <player> <message>"})); return true; }
