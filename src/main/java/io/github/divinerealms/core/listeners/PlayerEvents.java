@@ -32,6 +32,7 @@ public class PlayerEvents implements Listener {
   private final LuckPerms luckPerms;
   private final PlaytimeManager playtimeManager;
 
+  private static final long NEWBIE_THRESHOLD_HOURS = 2;
   private static final String PERM_SILENT_JOIN_QUIT = "core.silent-joinquit";
   private static final String PATH_PLAYER_MESSAGES = "player_messages.custom_";
 
@@ -59,16 +60,20 @@ public class PlayerEvents implements Listener {
     long playtime = playtimeManager.getPlaytime(player.getUniqueId());
     long hoursPlayed = playtime / 20 / 3600;
 
-    if (!player.hasPlayedBefore() || hoursPlayed < 2) {
-      luckPerms.getUserManager().modifyUser(player.getUniqueId(), user -> {
-        boolean hasNewbie = user.getNodes().stream().anyMatch(node -> node.getKey().equalsIgnoreCase("group.newbie"));
-        if (!hasNewbie) {
-          Node node = Node.builder("group.newbie").expiry(30, TimeUnit.DAYS).build();
-          user.data().add(node);
-          logger.info("&fNew player &b" + player.getDisplayName() + "&f got assigned a newbie rank.");
+    luckPerms.getUserManager().modifyUser(player.getUniqueId(), user -> {
+      Node newbieNode = user.getNodes().stream().filter(node -> node.getKey().equalsIgnoreCase("group.newbie")).findFirst().orElse(null);
+
+      if (hoursPlayed >= NEWBIE_THRESHOLD_HOURS) {
+        if (newbieNode != null) {
+          user.data().remove(newbieNode);
+          logger.info("&fPlayer &b" + player.getDisplayName() + "&f reached &c" + NEWBIE_THRESHOLD_HOURS + "&f hours and had the newbie rank automatically removed.");
         }
-      });
-    }
+      } else if (newbieNode == null) {
+        Node node = Node.builder("group.newbie").expiry(5, TimeUnit.DAYS).build();
+        user.data().add(node);
+        logger.info("&fNew/low-playtime player &b" + player.getDisplayName() + "&f got assigned the newbie rank.");
+      }
+    });
 
     if (!Config.CONFIG.getBoolean(PATH_PLAYER_MESSAGES + "join.enabled", false)) return;
     if (player.hasPermission(PERM_SILENT_JOIN_QUIT)) return;
