@@ -130,7 +130,12 @@ public class GUIManager {
 
         stack.setItemMeta(meta);
 
-        String action = itemSec.getString("action", "");
+        List<String> actions = new ArrayList<>();
+        String singleAction = itemSec.getString("action");
+        if (singleAction != null && !singleAction.isEmpty()) actions.add(singleAction);
+        List<String> actionList = itemSec.getStringList("actions");
+        if (actionList != null && !actionList.isEmpty()) actions.addAll(actionList);
+
         InventoryButton button = new InventoryButton()
             .creator(player -> {
               ItemStack clone = stack.clone();
@@ -150,7 +155,7 @@ public class GUIManager {
             })
             .consumer(event -> {
               if (!((event.getWhoClicked()) instanceof Player)) return;
-              handleAction((Player) event.getWhoClicked(), action);
+              handleActions((Player) event.getWhoClicked(), actions);
             });
 
         template.addButton(slot, button);
@@ -160,22 +165,23 @@ public class GUIManager {
     });
   }
 
-  private void handleAction(Player player, String action) {
-    if (action == null || action.isEmpty()) return;
+  private void handleActions(Player player, List<String> actions) {
+    if (actions == null || actions.isEmpty()) return;
 
-    if (action.startsWith("command:")) {
-      String cmd = action.substring("command:".length());
-      player.closeInventory();
-      player.performCommand(cmd);
-    } else if (action.startsWith("message:")) {
-      player.closeInventory();
-      logger.send(player, action.substring("message:".length()));
-    } else if (action.startsWith("menu:")) {
-      String menu = action.substring("menu:".length());
-      player.closeInventory();
-      openMenu(player, menu);
-    } else if (action.equalsIgnoreCase("close")) {
-      player.closeInventory();
+    for (String action : actions) {
+      if (action == null || action.isEmpty()) continue;
+
+      if (action.startsWith("command:")) {
+        String cmd = action.substring("command:".length());
+        player.performCommand(cmd);
+      } else if (action.startsWith("message:")) {
+        logger.send(player, action.substring("message:".length()));
+      } else if (action.startsWith("menu:")) {
+        String menu = action.substring("menu:".length());
+        openMenu(player, menu);
+      } else if (action.equalsIgnoreCase("close")) {
+        player.closeInventory();
+      }
     }
   }
 

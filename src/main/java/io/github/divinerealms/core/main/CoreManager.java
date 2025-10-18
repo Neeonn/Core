@@ -4,6 +4,7 @@ import io.github.divinerealms.core.commands.*;
 import io.github.divinerealms.core.config.Config;
 import io.github.divinerealms.core.config.Lang;
 import io.github.divinerealms.core.managers.*;
+import io.github.divinerealms.core.utilities.ActionHandler;
 import io.github.divinerealms.core.utilities.AuthMeHook;
 import io.github.divinerealms.core.utilities.Logger;
 import lombok.Getter;
@@ -36,6 +37,8 @@ public class CoreManager {
   private final PlayerSettingsManager playerSettingsManager;
   private final PlaytimeManager playtimeManager;
   private final GUIManager guiManager;
+  private final ActionHandler actionHandler;
+  private final CommandManager commandManager;
 
   private final Set<String> registeredCommands = new HashSet<>();
 
@@ -64,6 +67,8 @@ public class CoreManager {
     this.playerSettingsManager = new PlayerSettingsManager(this);
     this.playtimeManager = new PlaytimeManager(this);
     this.guiManager = new GUIManager(this);
+    this.actionHandler = new ActionHandler(this);
+    this.commandManager = new CommandManager(this);
 
     this.reload();
   }
@@ -74,6 +79,7 @@ public class CoreManager {
     setupMessages();
     channelManager.reloadAll();
     registerCommands();
+    commandManager.reloadCommands();
     getListenerManager().registerAll();
     guiManager.reloadMenus();
   }
