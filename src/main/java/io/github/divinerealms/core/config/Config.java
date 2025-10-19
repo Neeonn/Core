@@ -30,6 +30,11 @@ public enum Config {
   PLAYER_MESSAGES_CUSTOM_QUIT_FORMATS_MINECRAFT("player_messages.custom_quit.minecraft", "&e%player_displayname%&e has left the server!"),
   PLAYER_MESSAGES_CUSTOM_QUIT_FORMATS_DISCORD("player_messages.custom_quit.discord", "**%player_name%** has left the server!"),
 
+  PRIVATE_MESSAGES_ENABLED("private_messages.enabled", true),
+  PRIVATE_MESSAGES_SENDER_FORMAT("private_messages.formats.sender", "&6(&eJa &7→ &r{0}&6) &e&o{1}"),
+  PRIVATE_MESSAGES_RECIPIENT_FORMAT("private_messages.formats.recipient", "&6(&r{0} &7→ &eJa&6) &e&o{1}"),
+  PRIVATE_MESSAGES_SPY_FORMAT("private_messages.formats.spy", "{0}&e({0} &7→ &e{1}): &f{2}"),
+
   RESULT_ENABLED("result.enabled", true),
   RESULT_DISCORD_ID("result.discord_id", ""),
   RESULT_FORMATS_MINECRAFT_START("result.formats.minecraft.start", "{0} &8| &aMatch &9{1} &f- &c{2} &ais starting!"),

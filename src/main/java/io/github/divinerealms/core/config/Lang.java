@@ -31,11 +31,8 @@ public enum Lang {
   CHANNEL_SPY_PREFIX("channels.spy.prefix", "&c[SPY] [&e{0}&c] &r"),
   CHANNEL_SPY_TOGGLED("channels.spy.toggled", "{prefix}Social Spy je {0}&f!"),
 
-  PRIVATE_MESSAGES_SENDER_FORMAT("private-messages.format.sender", "&6✉ &fVi &7→ &b{0}&7: {1}"),
-  PRIVATE_MESSAGES_RECIPIENT_FORMAT("private-messages.format.recipient", "&6✉ &b{0} &7kaže: &f{1}"),
-  PRIVATE_MESSAGES_SPY_FORMAT("private-messages.format.spy", "{0}&e({0} &7→ &e{1}): &f{2}"),
   PRIVATE_MESSAGES_SELF("private-messages.self", "&cNe možete poslati poruku samom sebi."),
-  PRIVATE_MESSAGES_NO_REPLY_TARGET("private-messages.reply.no-target", ""),
+  PRIVATE_MESSAGES_NO_REPLY_TARGET("private-messages.reply.no-target", "&cNemate kome poslati poruku."),
 
   CLIENT_BLOCKER_USAGE("client-blocker.usage", String.join(System.lineSeparator(),
       "{prefix}Lista dostupnih &b/clientblocker &fkomandi:",

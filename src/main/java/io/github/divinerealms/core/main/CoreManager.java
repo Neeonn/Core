@@ -40,6 +40,7 @@ public class CoreManager {
   private final BookManager bookManager;
   private final ActionHandler actionHandler;
   private final CommandManager commandManager;
+  private final PrivateMessagesManager privateMessagesManager;
 
   private final Set<String> registeredCommands = new HashSet<>();
 
@@ -71,6 +72,7 @@ public class CoreManager {
     this.bookManager = new BookManager(this);
     this.actionHandler = new ActionHandler(this);
     this.commandManager = new CommandManager(this);
+    this.privateMessagesManager = new PrivateMessagesManager(this);
 
     this.reload();
   }
@@ -105,8 +107,11 @@ public class CoreManager {
       registerCommand(commandMap, "rosters", new BukkitCommandWrapper("rosters", new RostersCommand(this), Collections.singletonList("rt")));
       registerCommand(commandMap, "proxycheck", new BukkitCommandWrapper("proxycheck", new ProxyCheckCommand(this), Collections.singletonList("proxy")));
       registerCommand(commandMap, "socialspy", new BukkitCommandWrapper("socialspy", new SocialSpy(this), Collections.singletonList("spy")));
-      registerCommand(commandMap, "msg", new BukkitCommandWrapper("msg", new PrivateMessageCommand(this), List.of("pm", "whisper", "w")));
-      registerCommand(commandMap, "reply", new BukkitCommandWrapper("reply", new ReplyCommand(this), Collections.singletonList("r")));
+
+      if (privateMessagesManager.isEnabled()) {
+        registerCommand(commandMap, "msg", new BukkitCommandWrapper("msg", new PrivateMessageCommand(this), List.of("pm", "whisper", "w")));
+        registerCommand(commandMap, "reply", new BukkitCommandWrapper("reply", new ReplyCommand(this), Collections.singletonList("r")));
+      }
 
       channelManager.getChannels().values().forEach(info -> {
         if (info.name.equalsIgnoreCase("global")) return;

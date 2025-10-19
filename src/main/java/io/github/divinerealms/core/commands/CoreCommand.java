@@ -51,6 +51,11 @@ public class CoreCommand implements CommandExecutor, TabCompleter {
           logger.send(sender, Lang.ADMIN_RELOAD.replace(new String[]{"custom commands"}));
           return true;
 
+        case "books":
+          coreManager.getBookManager().reloadBooks();
+          logger.send(sender, Lang.ADMIN_RELOAD.replace(new String[]{"books"}));
+          return true;
+
         case "all":
           coreManager.reload();
           logger.send(sender, Lang.ADMIN_RELOAD.replace(new String[]{"everything"}));
@@ -73,7 +78,7 @@ public class CoreCommand implements CommandExecutor, TabCompleter {
     List<String> completions = new ArrayList<>();
 
     if (args.length == 1) completions.add("reload");
-    if (args.length == 2) completions.addAll(Arrays.asList("menus", "configs", "commands", "all"));
+    if (args.length == 2) completions.addAll(Arrays.asList("menus", "configs", "commands", "books", "all"));
 
     if (!completions.isEmpty()) {
       String lastWord = args[args.length - 1].toLowerCase();
