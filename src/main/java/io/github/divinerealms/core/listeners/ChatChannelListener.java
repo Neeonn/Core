@@ -132,7 +132,8 @@ public class ChatChannelListener implements Listener {
     else server.broadcast(logger.color(formattedMessage), info.permission);
 
     if (coreManager.isDiscordSRV() && info.formats.minecraftToDiscord != null && !info.formats.minecraftToDiscord.isEmpty()) {
-      channelManager.sendToDiscord(info, channelManager.formatChat(player, info.formats.minecraftToDiscord, event.getMessage(), false));
+      channelManager.sendToDiscord(info, channelManager.formatChat(player,
+          info.formats.minecraftToDiscord.replace("{prefix-host}", resultManager.getPrefix()), event.getMessage(), false));
     }
   }
 }
