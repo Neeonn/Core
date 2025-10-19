@@ -14,6 +14,7 @@ public enum Lang {
   ANTI_SPAM("anti-spam", "&cŠalješ previše poruka, iskuliraj malo."),
   INGAME_ONLY("ingame-only", "{prefix}&cOva komanda se može koristiti samo u igri."),
   USAGE("usage", "{prefix}Usage: /{0}"),
+  BOOK_NOT_FOUND("book-not-found", "&cKnjiga \"&e{0}&c\" nije pronađena."),
 
   CHANNEL_HELP("channels.help", String.join(System.lineSeparator(),
       "{prefix}&cNepoznata komanda. Dostupne komande u Core pluginu:",

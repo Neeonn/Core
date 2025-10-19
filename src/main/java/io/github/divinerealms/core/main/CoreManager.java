@@ -37,6 +37,7 @@ public class CoreManager {
   private final PlayerSettingsManager playerSettingsManager;
   private final PlaytimeManager playtimeManager;
   private final GUIManager guiManager;
+  private final BookManager bookManager;
   private final ActionHandler actionHandler;
   private final CommandManager commandManager;
 
@@ -67,6 +68,7 @@ public class CoreManager {
     this.playerSettingsManager = new PlayerSettingsManager(this);
     this.playtimeManager = new PlaytimeManager(this);
     this.guiManager = new GUIManager(this);
+    this.bookManager = new BookManager(this);
     this.actionHandler = new ActionHandler(this);
     this.commandManager = new CommandManager(this);
 
@@ -82,6 +84,7 @@ public class CoreManager {
     commandManager.reloadCommands();
     getListenerManager().registerAll();
     guiManager.reloadMenus();
+    bookManager.reloadBooks();
   }
 
   public void registerCommands() {

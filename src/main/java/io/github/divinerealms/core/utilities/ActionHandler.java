@@ -1,6 +1,7 @@
 package io.github.divinerealms.core.utilities;
 
 import io.github.divinerealms.core.main.CoreManager;
+import io.github.divinerealms.core.managers.BookManager;
 import io.github.divinerealms.core.managers.GUIManager;
 import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.entity.Player;
@@ -11,11 +12,13 @@ public class ActionHandler {
   private final CoreManager coreManager;
   private final Logger logger;
   private final GUIManager guiManager;
+  private final BookManager bookManager;
 
   public ActionHandler(CoreManager coreManager) {
     this.coreManager = coreManager;
     this.logger = coreManager.getLogger();
     this.guiManager = coreManager.getGuiManager();
+    this.bookManager = coreManager.getBookManager();
   }
 
   public void handleActions(Player player, List<String> actions) {
@@ -41,6 +44,9 @@ public class ActionHandler {
       } else if (trimmedAction.startsWith("menu:")) {
         String menu = trimmedAction.substring("menu:".length()).trim();
         guiManager.openMenu(player, menu);
+      } else if (trimmedAction.startsWith("book:")) {
+        String book = trimmedAction.substring("book:".length()).trim();
+        bookManager.openBook(player, book);
       } else if (trimmedAction.equalsIgnoreCase("close")) {
         player.closeInventory();
       }
