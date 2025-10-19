@@ -180,6 +180,7 @@ public class ResultManager {
     updateHalfMessage();
 
     if (!Config.RESULT_ENABLED.getValue(Boolean.class) || DiscordSRV.getPlugin() == null) return;
+    if (!shouldSendToDiscord) return;
 
     String discordID = Config.RESULT_DISCORD_ID.getString(null);
     if (discordID.isEmpty()) return;
