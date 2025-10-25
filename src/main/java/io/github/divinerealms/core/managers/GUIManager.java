@@ -22,12 +22,16 @@ import org.bukkit.plugin.Plugin;
 
 import java.lang.reflect.Field;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
 public class GUIManager {
   @Getter private final Map<String, InventoryGUI> menus = new HashMap<>();
   @Getter private final Map<String, String> menuCommands = new HashMap<>();
   @Getter private final Map<String, String> menuPermissions = new HashMap<>();
+  private final Map<UUID, Long> userCooldowns = new HashMap<>();
+
+  private static final long COOLDOWN_DURATION_MS = TimeUnit.SECONDS.toMillis(5);
 
   private final ConfigManager configManager;
   private final ListenerManager listenerManager;
@@ -220,6 +224,7 @@ public class GUIManager {
     menus.clear();
     menuCommands.clear();
     menuPermissions.clear();
+    userCooldowns.clear();
 
     loadMenus();
 
@@ -256,6 +261,22 @@ public class GUIManager {
       if (perm == null) perm = "core.menu." + menuKey.toLowerCase();
       if (!player.hasPermission(perm)) { logger.send(player, Lang.NO_PERM.replace(new String[]{commandName, permission})); return true; }
 
+      UUID playerId = player.getUniqueId();
+      long now = System.currentTimeMillis();
+      if (userCooldowns.containsKey(playerId)) {
+        long lastUsedTime = userCooldowns.get(playerId);
+        long timeSinceLastUse = now - lastUsedTime;
+
+        if (timeSinceLastUse < COOLDOWN_DURATION_MS) {
+          long remainingTimeMs = COOLDOWN_DURATION_MS - timeSinceLastUse;
+          long timeLeftSeconds = (long) Math.ceil(remainingTimeMs / 1000.0);
+
+          logger.sendActionBar(player, Lang.ANTI_SPAM_COMMANDS.replace(new String[]{String.valueOf(timeLeftSeconds)}));
+          return true;
+        }
+      }
+
+      userCooldowns.put(playerId, now);
       openMenu(player, menuKey);
       return true;
     }, null);

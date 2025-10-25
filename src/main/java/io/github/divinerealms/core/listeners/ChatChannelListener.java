@@ -79,7 +79,7 @@ public class ChatChannelListener implements Listener {
 
     if (channelManager.getMcMessageCount().get(uuid) > channelManager.getMcMaxMessages()) {
       event.setCancelled(true);
-      logger.sendActionBar(player, Lang.ANTI_SPAM.replace(null));
+      logger.sendActionBar(player, Lang.ANTI_SPAM_MESSAGES.replace(null));
       return;
     }
 
