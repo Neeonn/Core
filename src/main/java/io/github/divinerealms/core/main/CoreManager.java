@@ -57,7 +57,9 @@ public class CoreManager {
     this.logger = new Logger(plugin);
     this.sendBanner();
 
+    this.initializeConfigs();
     this.setupConfig();
+    this.setupSettings();
     this.setupMessages();
     this.setupDependencies();
 
@@ -80,6 +82,7 @@ public class CoreManager {
   public void reload() {
     configManager.reloadAllConfigs();
     setupConfig();
+    setupSettings();
     setupMessages();
     channelManager.reloadAll();
     registerCommands();
@@ -170,6 +173,15 @@ public class CoreManager {
     }
   }
 
+  private void initializeConfigs() {
+    configManager.createNewFile("config.yml", "Core Plugin Configuration");
+    configManager.createNewFile("messages.yml", "Core Plugin Messages");
+    configManager.createNewFile("settings.yml", "Core Plugin per player Settings");
+    configManager.createNewFile("menus.yml", "Core Plugin Menus Configuration");
+    configManager.createNewFile("commands.yml", "Core Plugin Custom Commands Configuration");
+    configManager.createNewFile("books.yml", "Core Plugin Custom Books Configuration");
+  }
+
   private void setupConfig() {
     FileConfiguration file = configManager.getConfig("config.yml");
     Config.setFile(file);
@@ -180,6 +192,12 @@ public class CoreManager {
 
     file.options().copyDefaults(true);
     configManager.saveConfig("config.yml");
+  }
+
+  private void setupSettings() {
+    FileConfiguration file = configManager.getConfig("settings.yml");
+    file.options().copyDefaults(true);
+    configManager.saveConfig("settings.yml");
   }
 
   private void setupMessages() {
