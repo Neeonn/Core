@@ -286,6 +286,7 @@ public class CoreManager {
 
   public void saveAll() {
     configManager.saveAll();
+    dataManager.saveAll();
   }
 
   private void sendBanner() {
