@@ -1,6 +1,6 @@
 package io.github.divinerealms.core.managers;
 
-import io.github.divinerealms.core.config.PlayerData;
+import io.github.divinerealms.core.configs.PlayerData;
 import io.github.divinerealms.core.main.CoreManager;
 import io.github.divinerealms.core.utilities.Logger;
 import org.bukkit.configuration.file.FileConfiguration;

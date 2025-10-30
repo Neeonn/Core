@@ -1,7 +1,7 @@
 package io.github.divinerealms.core.commands;
 
-import io.github.divinerealms.core.config.Lang;
-import io.github.divinerealms.core.config.PlayerData;
+import io.github.divinerealms.core.configs.Lang;
+import io.github.divinerealms.core.configs.PlayerData;
 import io.github.divinerealms.core.main.CoreManager;
 import io.github.divinerealms.core.managers.PlayerDataManager;
 import io.github.divinerealms.core.utilities.Logger;

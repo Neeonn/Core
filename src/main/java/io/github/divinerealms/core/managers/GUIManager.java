@@ -1,7 +1,7 @@
 package io.github.divinerealms.core.managers;
 
 import io.github.divinerealms.core.commands.BukkitCommandWrapper;
-import io.github.divinerealms.core.config.Lang;
+import io.github.divinerealms.core.configs.Lang;
 import io.github.divinerealms.core.gui.InventoryButton;
 import io.github.divinerealms.core.gui.InventoryGUI;
 import io.github.divinerealms.core.main.CoreManager;

@@ -1,6 +1,6 @@
 package io.github.divinerealms.core.managers;
 
-import io.github.divinerealms.core.config.Config;
+import io.github.divinerealms.core.configs.Config;
 import lombok.Getter;
 import org.bukkit.entity.Player;
 

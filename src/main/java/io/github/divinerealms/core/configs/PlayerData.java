@@ -1,4 +1,4 @@
-package io.github.divinerealms.core.config;
+package io.github.divinerealms.core.configs;
 
 import io.github.divinerealms.core.managers.ConfigManager;
 import io.github.divinerealms.core.managers.PlayerDataManager;

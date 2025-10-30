@@ -1,9 +1,9 @@
 package io.github.divinerealms.core.main;
 
 import io.github.divinerealms.core.commands.*;
-import io.github.divinerealms.core.config.Config;
-import io.github.divinerealms.core.config.Lang;
-import io.github.divinerealms.core.config.PlayerData;
+import io.github.divinerealms.core.configs.Config;
+import io.github.divinerealms.core.configs.Lang;
+import io.github.divinerealms.core.configs.PlayerData;
 import io.github.divinerealms.core.managers.*;
 import io.github.divinerealms.core.utilities.ActionHandler;
 import io.github.divinerealms.core.utilities.AuthMeHook;

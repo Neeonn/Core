@@ -1,6 +1,6 @@
 package io.github.divinerealms.core.commands;
 
-import io.github.divinerealms.core.config.Lang;
+import io.github.divinerealms.core.configs.Lang;
 import io.github.divinerealms.core.main.CoreManager;
 import io.github.divinerealms.core.managers.ChannelManager;
 import io.github.divinerealms.core.utilities.Logger;

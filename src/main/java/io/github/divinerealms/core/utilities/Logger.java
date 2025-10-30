@@ -1,6 +1,6 @@
 package io.github.divinerealms.core.utilities;
 
-import io.github.divinerealms.core.config.Lang;
+import io.github.divinerealms.core.configs.Lang;
 import io.github.divinerealms.core.main.CoreManager;
 import lombok.Getter;
 import net.minecraft.server.v1_8_R3.IChatBaseComponent;
