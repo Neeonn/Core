@@ -1,5 +1,6 @@
 package io.github.divinerealms.core.managers;
 
+import io.github.divinerealms.core.configs.Config;
 import io.github.divinerealms.core.configs.Lang;
 import lombok.Getter;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -54,6 +55,7 @@ public class ConfigManager {
 
   public void reloadAllConfigs() {
     configs.keySet().forEach(this::reloadConfig);
+    Config.setFile(getConfig("config.yml"));
     Lang.setFile(getConfig("messages.yml"));
   }
 
