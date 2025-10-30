@@ -3,11 +3,11 @@ package io.github.divinerealms.core.listeners;
 import io.github.divinerealms.core.config.Lang;
 import io.github.divinerealms.core.main.CoreManager;
 import io.github.divinerealms.core.managers.ChannelManager;
-import io.github.divinerealms.core.managers.PlayerSettingsManager;
 import io.github.divinerealms.core.managers.ResultManager;
 import io.github.divinerealms.core.utilities.AuthMeHook;
 import io.github.divinerealms.core.utilities.ChannelInfo;
 import io.github.divinerealms.core.utilities.Logger;
+import io.github.divinerealms.core.utilities.PlayerSettings;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.model.user.User;
 import org.bukkit.Bukkit;
@@ -18,16 +18,19 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.plugin.Plugin;
+import org.bukkit.scheduler.BukkitScheduler;
 
 import java.util.UUID;
 
 public class ChatChannelListener implements Listener {
   private final CoreManager coreManager;
+  private final Plugin plugin;
   private final Server server;
+  private final BukkitScheduler scheduler;
   private final Logger logger;
   private final ChannelManager channelManager;
   private final LuckPerms luckPerms;
-  private final PlayerSettingsManager playerSettingsManager;
   private final ResultManager resultManager;
 
   private static final String PERM_BYPASS = "core.bypass.disabled-channel";
@@ -35,11 +38,12 @@ public class ChatChannelListener implements Listener {
 
   public ChatChannelListener(CoreManager coreManager) {
     this.coreManager = coreManager;
-    this.server = coreManager.getPlugin().getServer();
+    this.plugin = coreManager.getPlugin();
+    this.server = plugin.getServer();
+    this.scheduler = server.getScheduler();
     this.logger = coreManager.getLogger();
     this.channelManager = coreManager.getChannelManager();
     this.luckPerms = coreManager.getLuckPerms();
-    this.playerSettingsManager = coreManager.getPlayerSettingsManager();
     this.resultManager = coreManager.getResultManager();
   }
 
@@ -61,10 +65,22 @@ public class ChatChannelListener implements Listener {
       return;
     }
 
+    boolean isBroadcast = info.broadcast || info.permission == null || info.permission.isEmpty();
+    if (!isBroadcast && !player.hasPermission(info.permission)) {
+      String defaultChannel = channelManager.getDefaultChannel();
+      if (defaultChannel == null) return;
+
+      channelManager.setLastActiveChannel(player.getUniqueId(), defaultChannel);
+      logger.send(player, Lang.CHANNEL_RESET_PERMISSION.replace(new String[]{activeChannel.toUpperCase(), defaultChannel.toUpperCase()}));
+      event.setCancelled(true);
+      return;
+    }
+
     event.setCancelled(true);
 
     String message = event.getMessage();
     if (!player.hasPermission(PERM_COLOR)) message = ChatColor.stripColor(logger.color(message));
+    final String initialMessage = message;
 
     UUID uuid = player.getUniqueId();
     long now = System.currentTimeMillis();
@@ -83,57 +99,65 @@ public class ChatChannelListener implements Listener {
       return;
     }
 
-    if (channelManager.isMentionsEnabled()) {
-      Sound mentionSound;
-      try {
-        mentionSound = Sound.valueOf(channelManager.getMentionSound().toUpperCase());
-      } catch (IllegalArgumentException ignored) {
-        mentionSound = Sound.ORB_PICKUP;
-      }
+    scheduler.runTask(plugin, () -> {
+      String messageToSend = initialMessage;
 
-      for (Player target : Bukkit.getOnlinePlayers()) {
-        String targetName = target.getName();
-        boolean isMentioned = message.startsWith(targetName) || message.contains("@" + targetName);
+      if (channelManager.isMentionsEnabled()) {
+        Sound mentionSound;
+        try {
+          mentionSound = Sound.valueOf(channelManager.getMentionSound().toUpperCase());
+        } catch (IllegalArgumentException ignored) {
+          mentionSound = Sound.ORB_PICKUP;
+        }
 
-        if (!isMentioned) continue;
-        if (!activeChannel.equals(channelManager.getActiveChannel(target))) continue;
+        for (Player target : coreManager.getCachedPlayers()) {
+          String targetName = target.getName();
+          boolean isMentioned = false;
 
-        User user = luckPerms.getUserManager().getUser(target.getUniqueId());
-        String prefixColor = user != null ? user.getCachedData().getMetaData().getPrefix()
-            : (channelManager.getMentionColor() != null && !channelManager.getMentionColor().isEmpty()
-            ? channelManager.getMentionColor() : "&e");
+          if (messageToSend.contains("@" + targetName)) isMentioned = true;
+          else if (messageToSend.startsWith(targetName)) {
+            int nameEndIndex = targetName.length();
+            if (messageToSend.length() == nameEndIndex || !Character.isLetterOrDigit(messageToSend.charAt(nameEndIndex))) isMentioned = true;
+          }
 
-        message = message.replaceAll("(?<!\\S)@?" + targetName + "(?!\\S)", logger.color(prefixColor) + "@" + targetName + ChatColor.RESET);
+          if (!isMentioned) continue;
+          if (!activeChannel.equals(channelManager.getActiveChannel(target))) continue;
 
-        logger.sendActionBar(target, Lang.MENTION.replace(new String[]{player.getName()}));
-        if (playerSettingsManager.isMentionSoundEnabled(player)) {
-          target.playSound(target.getLocation(), mentionSound, 1.0F, 1.0F);
+          User user = luckPerms.getUserManager().getUser(target.getUniqueId());
+          String prefixColor = user != null ? user.getCachedData().getMetaData().getPrefix()
+              : (channelManager.getMentionColor() != null && !channelManager.getMentionColor().isEmpty()
+              ? channelManager.getMentionColor() : "&7");
+          final String coloredName = logger.color(prefixColor) + "@" + targetName + ChatColor.RESET;
+
+          if (messageToSend.contains("@" + targetName)) messageToSend = messageToSend.replace("@" + targetName, coloredName);
+          else if (messageToSend.startsWith(targetName)) messageToSend = coloredName + messageToSend.substring(targetName.length());
+
+          logger.sendActionBar(target, Lang.MENTION.replace(new String[]{player.getName()}));
+
+          PlayerSettings settings = coreManager.getPlayerSettings(target);
+          if (settings != null && settings.isMentionSoundEnabled()) {
+            target.playSound(target.getLocation(), mentionSound, 1.0F, 1.0F);
+          }
         }
       }
-    }
 
-    String formattedMessage = activeChannel.equals("host") ?
-        channelManager.formatChat(player, info.formats.minecraftChat.replace("{prefix-host}", resultManager.getPrefix()), message, true) :
-        channelManager.formatChat(player, info.formats.minecraftChat, message, true);
+      final String formattedMessage = activeChannel.equals("host") ?
+          channelManager.formatChat(player, info.formats.minecraftChat.replace("{prefix-host}", resultManager.getPrefix()), messageToSend, true) :
+          channelManager.formatChat(player, info.formats.minecraftChat, messageToSend, true);
 
-    boolean isBroadcast = info.broadcast || info.permission == null || info.permission.isEmpty();
-    channelManager.getSocialSpy().forEach(spyUUID -> {
-      if (spyUUID.equals(player.getUniqueId())) return;
-      if (isBroadcast) return;
+      channelManager.getSocialSpy().stream()
+          .filter(playerId -> !playerId.equals(player.getUniqueId()) && !isBroadcast)
+          .map(Bukkit::getPlayer)
+          .filter(spy -> spy != null && !spy.hasPermission(info.permission))
+          .forEach(spy -> logger.send(spy, Lang.CHANNEL_SPY_PREFIX.replace(new String[]{activeChannel.toUpperCase()}) + formattedMessage));
 
-      Player spy = Bukkit.getPlayer(spyUUID);
-      if (spy == null) return;
-      if (spy.hasPermission(info.permission)) return;
+      if (isBroadcast) server.broadcastMessage(logger.color(formattedMessage));
+      else server.broadcast(logger.color(formattedMessage), info.permission);
 
-      logger.send(spy, Lang.CHANNEL_SPY_PREFIX.replace(new String[]{activeChannel.toUpperCase()}) + formattedMessage);
+      if (coreManager.isDiscordSRV() && info.formats.minecraftToDiscord != null && !info.formats.minecraftToDiscord.isEmpty()) {
+        channelManager.sendToDiscord(info, channelManager.formatChat(player,
+            info.formats.minecraftToDiscord.replace("{prefix-host}", resultManager.getPrefix()), initialMessage, false));
+      }
     });
-
-    if (isBroadcast) server.broadcastMessage(logger.color(formattedMessage));
-    else server.broadcast(logger.color(formattedMessage), info.permission);
-
-    if (coreManager.isDiscordSRV() && info.formats.minecraftToDiscord != null && !info.formats.minecraftToDiscord.isEmpty()) {
-      channelManager.sendToDiscord(info, channelManager.formatChat(player,
-          info.formats.minecraftToDiscord.replace("{prefix-host}", resultManager.getPrefix()), event.getMessage(), false));
-    }
   }
 }

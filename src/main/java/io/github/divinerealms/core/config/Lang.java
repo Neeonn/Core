@@ -31,6 +31,7 @@ public enum Lang {
   CHANNEL_REPLY("channels.reply", "&7 &o(reply -> {0})&r"),
   CHANNEL_SPY_PREFIX("channels.spy.prefix", "&c[SPY] [&e{0}&c] &r"),
   CHANNEL_SPY_TOGGLED("channels.spy.toggled", "{prefix}Social Spy je {0}&f!"),
+  CHANNEL_RESET_PERMISSION("channels.reset-permission", "{prefix}&cPrebačeni ste u &e{1} &ckanal jer više nemate pristup &e{0} &ckanalu."),
 
   PRIVATE_MESSAGES_SELF("private-messages.self", "&cNe možete poslati poruku samom sebi."),
   PRIVATE_MESSAGES_NO_REPLY_TARGET("private-messages.reply.no-target", "&cNemate kome poslati poruku."),

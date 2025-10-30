@@ -3,30 +3,37 @@ package io.github.divinerealms.core.main;
 import io.github.divinerealms.core.commands.*;
 import io.github.divinerealms.core.config.Config;
 import io.github.divinerealms.core.config.Lang;
+import io.github.divinerealms.core.config.PlayerData;
 import io.github.divinerealms.core.managers.*;
 import io.github.divinerealms.core.utilities.ActionHandler;
 import io.github.divinerealms.core.utilities.AuthMeHook;
 import io.github.divinerealms.core.utilities.Logger;
+import io.github.divinerealms.core.utilities.PlayerSettings;
 import lombok.Getter;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.model.group.Group;
 import net.luckperms.api.model.user.User;
 import net.luckperms.api.node.types.InheritanceNode;
 import net.milkbowl.vault.chat.Chat;
+import org.bukkit.Bukkit;
+import org.bukkit.Sound;
 import org.bukkit.command.*;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
+import org.bukkit.scheduler.BukkitScheduler;
 
 import java.lang.reflect.Field;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 @Getter
 public class CoreManager {
   private final Plugin plugin;
+  private final BukkitScheduler scheduler;
 
   private final Logger logger;
   private final ConfigManager configManager;
@@ -34,7 +41,7 @@ public class CoreManager {
   private final ClientBlocker clientBlocker;
   private final ListenerManager listenerManager;
   private final ResultManager resultManager;
-  private final PlayerSettingsManager playerSettingsManager;
+  private final PlayerDataManager dataManager;
   private final PlaytimeManager playtimeManager;
   private final GUIManager guiManager;
   private final BookManager bookManager;
@@ -43,6 +50,8 @@ public class CoreManager {
   private final PrivateMessagesManager privateMessagesManager;
 
   private final Set<String> registeredCommands = new HashSet<>();
+  private final Set<Player> cachedPlayers = ConcurrentHashMap.newKeySet();
+  private final Map<UUID, PlayerSettings> playerSettings = new ConcurrentHashMap<>();
 
   private Chat chat;
   private LuckPerms luckPerms;
@@ -52,14 +61,14 @@ public class CoreManager {
 
   public CoreManager(Plugin plugin) throws IllegalStateException {
     this.plugin = plugin;
+    this.scheduler = plugin.getServer().getScheduler();
 
     this.configManager = new ConfigManager(plugin, "");
-    this.logger = new Logger(plugin);
+    this.logger = new Logger(this);
     this.sendBanner();
 
     this.initializeConfigs();
     this.setupConfig();
-    this.setupSettings();
     this.setupMessages();
     this.setupDependencies();
 
@@ -68,7 +77,7 @@ public class CoreManager {
     this.listenerManager = new ListenerManager(this);
     this.clientBlocker = new ClientBlocker();
     this.resultManager = new ResultManager(this);
-    this.playerSettingsManager = new PlayerSettingsManager(this);
+    this.dataManager = new PlayerDataManager(this);
     this.playtimeManager = new PlaytimeManager(this);
     this.guiManager = new GUIManager(this);
     this.bookManager = new BookManager(this);
@@ -80,9 +89,9 @@ public class CoreManager {
   }
 
   public void reload() {
+    initializeCachedPlayers();
     configManager.reloadAllConfigs();
     setupConfig();
-    setupSettings();
     setupMessages();
     channelManager.reloadAll();
     registerCommands();
@@ -90,6 +99,20 @@ public class CoreManager {
     getListenerManager().registerAll();
     guiManager.reloadMenus();
     bookManager.reloadBooks();
+    List<UUID> onlinePlayers = cachedPlayers.stream().map(Player::getUniqueId).collect(Collectors.toList());
+    scheduler.runTaskAsynchronously(plugin, () -> onlinePlayers.forEach(uuid -> {
+      Player asyncPlayer = plugin.getServer().getPlayer(uuid);
+      if (asyncPlayer == null || !asyncPlayer.isOnline()) return;
+
+      PlayerData playerData = dataManager.get(asyncPlayer);
+      if (playerData != null) preloadSettings(asyncPlayer, playerData);
+    }));
+  }
+
+  private void initializeCachedPlayers() {
+    Collection<? extends Player> onlinePlayers = Bukkit.getOnlinePlayers();
+    cachedPlayers.clear();
+    cachedPlayers.addAll(onlinePlayers);
   }
 
   public void registerCommands() {
@@ -176,7 +199,6 @@ public class CoreManager {
   private void initializeConfigs() {
     configManager.createNewFile("config.yml", "Core Plugin Configuration");
     configManager.createNewFile("messages.yml", "Core Plugin Messages");
-    configManager.createNewFile("settings.yml", "Core Plugin per player Settings");
     configManager.createNewFile("menus.yml", "Core Plugin Menus Configuration");
     configManager.createNewFile("commands.yml", "Core Plugin Custom Commands Configuration");
     configManager.createNewFile("books.yml", "Core Plugin Custom Books Configuration");
@@ -194,12 +216,6 @@ public class CoreManager {
     configManager.saveConfig("config.yml");
   }
 
-  private void setupSettings() {
-    FileConfiguration file = configManager.getConfig("settings.yml");
-    file.options().copyDefaults(true);
-    configManager.saveConfig("settings.yml");
-  }
-
   private void setupMessages() {
     FileConfiguration file = configManager.getConfig("messages.yml");
     Lang.setFile(file);
@@ -210,6 +226,21 @@ public class CoreManager {
 
     file.options().copyDefaults(true);
     configManager.saveConfig("messages.yml");
+  }
+
+  public PlayerSettings getPlayerSettings(Player player) {
+    return playerSettings.get(player.getUniqueId());
+  }
+
+  public void preloadSettings(Player player, PlayerData playerData) {
+    PlayerSettings settings = getPlayerSettings(player);
+    if (settings == null) {
+      settings = new PlayerSettings();
+      playerSettings.put(player.getUniqueId(), settings);
+    }
+
+    if (playerData.has("mention_sound.enabled")) settings.setMentionSoundEnabled((Boolean) playerData.get("mention_sound.enabled"));
+    if (playerData.has("mention_sound.sound")) settings.setMentionSound(Sound.valueOf((String) playerData.get("mention_sound.sound")));
   }
 
   private void setupDependencies() throws IllegalStateException {

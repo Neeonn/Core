@@ -38,8 +38,8 @@ public class ChannelManager {
   @Getter private int mcMaxMessages;
   @Getter private long mcCooldownMs;
 
-  @Getter private final Map<UUID, Integer> mcMessageCount = new ConcurrentHashMap<>();
-  @Getter private final Map<UUID, Long> mcLastMessageTime = new ConcurrentHashMap<>();
+  @Getter private final ConcurrentHashMap<UUID, Integer> mcMessageCount = new ConcurrentHashMap<>();
+  @Getter private final ConcurrentHashMap<UUID, Long> mcLastMessageTime = new ConcurrentHashMap<>();
   @Getter private final Map<String, String> discordLastMessage = new ConcurrentHashMap<>();
 
   @Getter private final Set<UUID> socialSpy = ConcurrentHashMap.newKeySet();

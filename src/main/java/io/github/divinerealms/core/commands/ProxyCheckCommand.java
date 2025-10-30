@@ -23,6 +23,7 @@ import java.util.*;
 import java.util.logging.Level;
 
 public class ProxyCheckCommand implements CommandExecutor, TabCompleter {
+  private final CoreManager coreManager;
   private final Plugin plugin;
   private final Logger logger;
 
@@ -33,6 +34,7 @@ public class ProxyCheckCommand implements CommandExecutor, TabCompleter {
   private final Map<String, Long> lastUse = new HashMap<>();
 
   public ProxyCheckCommand(CoreManager coreManager) {
+    this.coreManager = coreManager;
     this.plugin = coreManager.getPlugin();
     this.logger = coreManager.getLogger();
   }
@@ -137,7 +139,7 @@ public class ProxyCheckCommand implements CommandExecutor, TabCompleter {
 
     List<String> completions = new ArrayList<>();
 
-    if (args.length == 1) Bukkit.getOnlinePlayers().forEach(player -> completions.add(player.getName()));
+    if (args.length == 1) coreManager.getCachedPlayers().forEach(player -> completions.add(player.getName()));
 
     if (!completions.isEmpty()) {
       String lastWord = args[args.length - 1].toLowerCase();

@@ -5,7 +5,6 @@ import io.github.divinerealms.core.main.CoreManager;
 import io.github.divinerealms.core.managers.ResultManager;
 import io.github.divinerealms.core.utilities.Logger;
 import net.luckperms.api.LuckPerms;
-import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -18,6 +17,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class ResultCommand implements CommandExecutor, TabCompleter {
+  private final CoreManager coreManager;
   private final ResultManager resultManager;
   private final LuckPerms luckPerms;
   private final Logger logger;
@@ -25,6 +25,7 @@ public class ResultCommand implements CommandExecutor, TabCompleter {
   private static final String PERM_MAIN = "core.result";
 
   public ResultCommand(CoreManager coreManager) {
+    this.coreManager = coreManager;
     this.resultManager = coreManager.getResultManager();
     this.luckPerms = coreManager.getLuckPerms();
     this.logger = coreManager.getLogger();
@@ -97,7 +98,7 @@ public class ResultCommand implements CommandExecutor, TabCompleter {
       }
     } else if (args.length == 3) {
       if ("add".equals(sub)) {
-        Bukkit.getOnlinePlayers().forEach(player -> completions.add(player.getName()));
+        coreManager.getCachedPlayers().forEach(player -> completions.add(player.getName()));
       } else if ("teams".equals(sub)) {
         completions.addAll(luckPerms.getGroupManager().getLoadedGroups().stream()
             .filter(g -> g.getWeight().orElse(0) == 200)
@@ -106,7 +107,7 @@ public class ResultCommand implements CommandExecutor, TabCompleter {
         );
       }
     } else if (args.length == 4) {
-      if ("add".equals(sub)) Bukkit.getOnlinePlayers().forEach(player -> completions.add(player.getName()));
+      if ("add".equals(sub)) coreManager.getCachedPlayers().forEach(player -> completions.add(player.getName()));
     }
 
     if (!completions.isEmpty()) {

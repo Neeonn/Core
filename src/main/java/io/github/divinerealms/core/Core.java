@@ -25,7 +25,7 @@ public class Core extends JavaPlugin {
       coreManager.saveAll();
       coreManager.unregisterCommands();
       coreManager.getListenerManager().unregisterAll();
-      coreManager.getPlayerSettingsManager().saveAll();
+      coreManager.getDataManager().saveAll();
       coreManager.getLogger().info("&cSuccessfully disabled.");
     }
   }

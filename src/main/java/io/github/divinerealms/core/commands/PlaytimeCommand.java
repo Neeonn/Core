@@ -16,6 +16,7 @@ import org.bukkit.entity.Player;
 import java.util.*;
 
 public class PlaytimeCommand implements CommandExecutor, TabCompleter {
+  private final CoreManager coreManager;
   private final Logger logger;
   private final PlaytimeManager playtimeManager;
 
@@ -24,6 +25,7 @@ public class PlaytimeCommand implements CommandExecutor, TabCompleter {
   private static final String PERM_TOP = PERM_MAIN + ".top";
 
   public PlaytimeCommand(CoreManager coreManager) {
+    this.coreManager = coreManager;
     this.logger = coreManager.getLogger();
     this.playtimeManager = coreManager.getPlaytimeManager();
   }
@@ -113,7 +115,7 @@ public class PlaytimeCommand implements CommandExecutor, TabCompleter {
     List<String> completions = new ArrayList<>();
 
     if (args.length == 1 && sender.hasPermission(PERM_OTHER)) {
-      Bukkit.getOnlinePlayers().forEach(player -> completions.add(player.getName()));
+      coreManager.getCachedPlayers().forEach(player -> completions.add(player.getName()));
       completions.addAll(Arrays.asList("top","?","help"));
     } else if (args.length == 2 && args[0].equalsIgnoreCase("top") && sender.hasPermission(PERM_TOP)) {
       completions.addAll(Arrays.asList("1","2","3","4","5"));

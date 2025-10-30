@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.List;
 
 public class ClientBlockerCommand implements CommandExecutor, TabCompleter {
+  private final CoreManager coreManager;
   private final Logger logger;
   private final ClientBlocker clientBlocker;
   private final LuckPerms luckPerms;
@@ -33,6 +34,7 @@ public class ClientBlockerCommand implements CommandExecutor, TabCompleter {
   private static final Duration EXEMPT_DURATION = Duration.ofMinutes(30);
 
   public ClientBlockerCommand(CoreManager coreManager) {
+    this.coreManager = coreManager;
     this.logger = coreManager.getLogger();
     this.clientBlocker = coreManager.getClientBlocker();
     this.luckPerms = coreManager.getLuckPerms();
@@ -112,7 +114,7 @@ public class ClientBlockerCommand implements CommandExecutor, TabCompleter {
       completions.addAll(Arrays.asList("toggle", "check", "exempt", "help", "?"));
     } else if (args.length == 2) {
       if (args[0].equalsIgnoreCase("check") && sender.hasPermission(PERM_CHECK)) {
-        Bukkit.getOnlinePlayers().forEach(player -> completions.add(player.getName()));
+        coreManager.getCachedPlayers().forEach(player -> completions.add(player.getName()));
       } else if (args[0].equalsIgnoreCase("exempt") && sender.hasPermission(PERM_EXEMPT)) {
         for (OfflinePlayer offlinePlayer : Bukkit.getOfflinePlayers()) {
           if (offlinePlayer.hasPlayedBefore()) completions.add(offlinePlayer.getName());

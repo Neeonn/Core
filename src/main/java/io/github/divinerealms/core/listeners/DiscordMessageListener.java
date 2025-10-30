@@ -3,8 +3,7 @@ package io.github.divinerealms.core.listeners;
 import github.scarsz.discordsrv.DiscordSRV;
 import github.scarsz.discordsrv.api.Subscribe;
 import github.scarsz.discordsrv.api.events.DiscordGuildMessageReceivedEvent;
-import github.scarsz.discordsrv.dependencies.jda.api.entities.Message;
-import github.scarsz.discordsrv.dependencies.jda.api.entities.TextChannel;
+import github.scarsz.discordsrv.dependencies.jda.api.entities.*;
 import io.github.divinerealms.core.config.Lang;
 import io.github.divinerealms.core.main.CoreManager;
 import io.github.divinerealms.core.managers.ChannelManager;
@@ -25,6 +24,7 @@ public class DiscordMessageListener {
     this.channelManager = coreManager.getChannelManager();
   }
 
+  @SuppressWarnings("unused")
   @Subscribe
   public void onDiscordMessage(DiscordGuildMessageReceivedEvent event) {
     if (!coreManager.isDiscordSRV()) return;
@@ -37,7 +37,7 @@ public class DiscordMessageListener {
 
     ChannelInfo globalInfo = channelManager.getChannels().get(channelManager.getDefaultChannel());
     String displayName = event.getMember() != null ? event.getMember().getEffectiveName().trim() : event.getAuthor().getName().trim();
-    String messageRaw = event.getMessage().getContentRaw();
+    String messageRaw = resolveDiscordMentions(event.getMessage());
     String replyName = getReplyName(event);
 
     if (messageRaw.trim().isEmpty() && !event.getMessage().getAttachments().isEmpty()) {
@@ -71,5 +71,28 @@ public class DiscordMessageListener {
     if (format == null || format.trim().isEmpty()) format = "%name%: %message%";
 
     return format.replace("%name%", displayName).replace("%reply%", replyName).replace("%message%", message).replaceAll("%[^%]+%", "").trim();
+  }
+
+  private static String resolveDiscordMentions(Message message) {
+    String content = message.getContentRaw();
+
+    for (User user : message.getMentionedUsers()) {
+      String name = user.getName();
+      content = content
+          .replace("<@!" + user.getId() + ">", "@" + name)
+          .replace("<@" + user.getId() + ">", "@" + name);
+    }
+
+    for (Role role : message.getMentionedRoles()) {
+      String name = role.getName();
+      content = content.replace("<@&" + role.getId() + ">", "@" + name);
+    }
+
+    for (GuildChannel channel : message.getMentionedChannels()) {
+      String name = channel.getName();
+      content = content.replace("<#" + channel.getId() + ">", "#" + name);
+    }
+
+    return content;
   }
 }

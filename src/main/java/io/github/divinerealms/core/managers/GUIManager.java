@@ -26,6 +26,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
 public class GUIManager {
+  private final CoreManager coreManager;
+  private final ConfigManager configManager;
+  private final ListenerManager listenerManager;
+  private final Logger logger;
+  private final Plugin plugin;
+
   @Getter private final Map<String, InventoryGUI> menus = new HashMap<>();
   @Getter private final Map<String, String> menuCommands = new HashMap<>();
   @Getter private final Map<String, String> menuPermissions = new HashMap<>();
@@ -33,14 +39,10 @@ public class GUIManager {
 
   private static final long COOLDOWN_DURATION_MS = TimeUnit.SECONDS.toMillis(5);
 
-  private final ConfigManager configManager;
-  private final ListenerManager listenerManager;
-  private final Logger logger;
-  private final Plugin plugin;
-
   private CommandMap commandMap;
 
   public GUIManager(CoreManager coreManager) {
+    this.coreManager = coreManager;
     this.configManager = coreManager.getConfigManager();
     this.listenerManager = coreManager.getListenerManager();
     this.logger = coreManager.getLogger();
@@ -212,7 +214,7 @@ public class GUIManager {
     listenerManager.disableMenuListener();
 
     for (InventoryGUI gui : new ArrayList<>(menus.values())) {
-      plugin.getServer().getOnlinePlayers().forEach(player -> {
+      coreManager.getCachedPlayers().forEach(player -> {
         if (player.getOpenInventory() != null && player.getOpenInventory().getTopInventory() != null &&
             player.getOpenInventory().getTopInventory().getHolder() == gui) {
           player.closeInventory();
