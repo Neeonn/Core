@@ -8,6 +8,7 @@ import io.github.divinerealms.core.utilities.AuthMeHook;
 import io.github.divinerealms.core.utilities.ChannelInfo;
 import io.github.divinerealms.core.utilities.Logger;
 import io.github.divinerealms.core.utilities.PlayerSettings;
+import me.clip.placeholderapi.PlaceholderAPI;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.model.user.User;
 import org.bukkit.Bukkit;
@@ -102,7 +103,8 @@ public class ChatChannelListener implements Listener {
     scheduler.runTask(plugin, () -> {
       String messageToSend = initialMessage;
 
-      if (channelManager.isMentionsEnabled()) {
+      boolean fcMatchesEnabled = PlaceholderAPI.setPlaceholders(null, "%fc_enabled%").equals("YES");
+      if (channelManager.isMentionsEnabled() && fcMatchesEnabled) {
         Sound mentionSound;
         try {
           mentionSound = Sound.valueOf(channelManager.getMentionSound().toUpperCase());
