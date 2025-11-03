@@ -14,9 +14,12 @@ import net.luckperms.api.LuckPerms;
 import net.luckperms.api.model.group.Group;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.Plugin;
 
 import java.awt.*;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ResultManager {
   private final Logger logger;
@@ -39,6 +42,9 @@ public class ResultManager {
   private int currentHalfExtraTime = 0;
   private boolean paused = false;
   private boolean shouldSendToDiscord = false;
+  @Getter private boolean matchRunning = false;
+
+  @Getter private final Map<String, Map<String, String>> cachedTeamMedia = new ConcurrentHashMap<>();
 
   public ResultManager(CoreManager coreManager) {
     this.logger = coreManager.getLogger();
@@ -77,6 +83,7 @@ public class ResultManager {
 
     matchTimer.start();
     paused = false;
+    matchRunning = true;
   }
 
   private void endHalf() {
@@ -93,6 +100,8 @@ public class ResultManager {
       matchTimer.cancel();
       matchTimer = null;
     }
+
+    matchRunning = false;
   }
 
   public void stopHalf(CommandSender sender) {
@@ -100,6 +109,7 @@ public class ResultManager {
       matchTimer.cancel();
       logger.send(sender, Lang.RESULT_HALF_STOPPED.replace(null));
       endHalf();
+      matchRunning = false;
       currentHalfExtraTime = 0;
     } else {
       logger.send(sender, Lang.RESULT_HALF_NONE.replace(null));
@@ -116,6 +126,10 @@ public class ResultManager {
     String msgDC = Config.RESULT_FORMATS_DISCORD_END.getString(new String[]{formatTime(matchTimer.getSecondsElapsed()), home, String.valueOf(homeScore), String.valueOf(awayScore), away});
 
     broadcastBoth(msgMC, msgDC);
+    String winner = (homeScore == awayScore) ? null : (homeScore > awayScore ? home : away);
+    winner = ChatColor.stripColor(logger.color(winner));
+    if (winner != null) sendWinVideoToDiscord(winner.trim().toUpperCase());
+
     resetMatch();
   }
 
@@ -202,6 +216,13 @@ public class ResultManager {
           )
           .setDescription(ChatColor.stripColor(logger.color(description)))
           .setColor(Color.decode(Config.RESULT_FORMATS_DISCORD_GOAL_EMBED_COLOR.getString(null)));
+
+      teamName = ChatColor.stripColor(logger.color(teamName)).trim().toUpperCase();
+      var teamMedia = cachedTeamMedia.get(teamName);
+      if (teamMedia != null && teamMedia.containsKey("goal_video")) {
+        String gifUrl = teamMedia.get("goal_video");
+        if (gifUrl != null && !gifUrl.isBlank()) embedBuilder.setImage(gifUrl);
+      }
 
       channel.sendMessageEmbeds(embedBuilder.build()).queue();
     } else {
@@ -305,6 +326,7 @@ public class ResultManager {
     paused = false;
     prefix = "&bEvent";
     currentHalfExtraTime = 0;
+    matchRunning = false;
   }
 
   public int parseTime(String input) throws NumberFormatException {
@@ -379,5 +401,56 @@ public class ResultManager {
     if (channel == null) return;
 
     channel.sendMessage(ChatColor.stripColor(logger.color(message))).queue();
+  }
+
+  public void preloadTeamMedia() {
+    cachedTeamMedia.clear();
+
+    ConfigurationSection section = Config.CONFIG.getConfigurationSection("channels.list");
+    if (section == null) {
+      logger.info("&eNo channels.list section found in config.yml — skipping media preload.");
+      return;
+    }
+
+    for (String team : section.getKeys(false)) {
+      String normalizedTeam = ChatColor.stripColor(team).trim().toUpperCase();
+      ConfigurationSection teamSection = section.getConfigurationSection(team);
+      if (teamSection == null) continue;
+
+      Map<String, String> media = new ConcurrentHashMap<>();
+      for (String key : teamSection.getKeys(false)) {
+        if (!key.endsWith("_video")) continue;
+        String url = teamSection.getString(key, "").trim();
+        if (url.isEmpty()) continue;
+
+        media.put(key, url);
+        logger.info("&a✔ Cached &f" + key + "&a for team &f" + normalizedTeam + "&a → " + url);
+      }
+
+      if (!media.isEmpty()) cachedTeamMedia.put(normalizedTeam, media);
+    }
+
+    if (!cachedTeamMedia.isEmpty()) logger.info("&a✔ Preloaded &e" + cachedTeamMedia.size() + "&a teams with media URLs from config.");
+  }
+
+  private void sendWinVideoToDiscord(String teamName) {
+    if (!Config.RESULT_ENABLED.getValue(Boolean.class) || DiscordSRV.getPlugin() == null) return;
+
+    var teamMedia = cachedTeamMedia.get(teamName);
+    if (teamMedia == null || !teamMedia.containsKey("win_video")) {
+      logger.info("&eNo win-video URL configured for team &f" + teamName + "&e — skipping.");
+      return;
+    }
+
+    String url = teamMedia.get("win_video");
+    if (url.isBlank()) return;
+
+    String discordID = Config.RESULT_DISCORD_ID.getString(null);
+    if (discordID.isBlank()) return;
+
+    var channel = DiscordSRV.getPlugin().getJda().getTextChannelById(discordID);
+    if (channel == null) return;
+
+    channel.sendMessage(url).queue();
   }
 }

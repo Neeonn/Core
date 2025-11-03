@@ -77,6 +77,7 @@ public class CoreManager {
     this.listenerManager = new ListenerManager(this);
     this.clientBlocker = new ClientBlocker();
     this.resultManager = new ResultManager(this);
+    this.resultManager.preloadTeamMedia();
     this.dataManager = new PlayerDataManager(this);
     this.playtimeManager = new PlaytimeManager(this);
     this.guiManager = new GUIManager(this);
@@ -106,6 +107,8 @@ public class CoreManager {
 
       PlayerData playerData = dataManager.get(asyncPlayer);
       if (playerData != null) preloadSettings(asyncPlayer, playerData);
+
+      resultManager.preloadTeamMedia();
     }));
   }
 

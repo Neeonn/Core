@@ -38,10 +38,24 @@ public class ResultCommand implements CommandExecutor, TabCompleter {
 
     String sub = args[0].toLowerCase();
     switch (sub) {
-      case "start": resultManager.startMatch(sender); break;
-      case "stop": resultManager.stopMatch(); break;
-      case "teams": if (args.length >= 3) resultManager.setTeams(sender, args[1], args[2]); break;
-      case "prefix": if (args.length >= 2) resultManager.setPrefix(sender, String.join(" ", java.util.Arrays.copyOfRange(args, 1, args.length))); break;
+      case "start":
+        if (resultManager.isMatchRunning()) { logger.send(sender, Lang.RESULT_MATCH_RUNNING.replace(null)); return true; }
+        resultManager.startMatch(sender);
+        break;
+
+      case "stop":
+        if (!resultManager.isMatchRunning()) { logger.send(sender, Lang.RESULT_STATUS_NONE.replace(null)); return true; }
+        resultManager.stopMatch();
+        break;
+
+      case "teams":
+        if (args.length >= 3) resultManager.setTeams(sender, args[1], args[2]);
+        break;
+
+      case "prefix":
+        if (args.length >= 2) resultManager.setPrefix(sender, String.join(" ", java.util.Arrays.copyOfRange(args, 1, args.length)));
+        break;
+
       case "time":
         if (args.length >= 2) {
           try {
@@ -52,13 +66,32 @@ public class ResultCommand implements CommandExecutor, TabCompleter {
           }
         }
         break;
-      case "add": if (args.length >= 3) resultManager.addScore(sender, args[1], args[2], args.length >= 4 ? args[3] : null); break;
-      case "remove": if (args.length >= 2) resultManager.removeScore(sender, args[1]); break;
+
+      case "add":
+        if (!resultManager.isMatchRunning()) { logger.send(sender, Lang.RESULT_STATUS_NONE.replace(null)); return true; }
+        if (args.length >= 3) resultManager.addScore(sender, args[1], args[2], args.length >= 4 ? args[3] : null);
+        break;
+
+      case "remove":
+        if (!resultManager.isMatchRunning()) { logger.send(sender, Lang.RESULT_STATUS_NONE.replace(null)); return true; }
+        if (args.length >= 2) resultManager.removeScore(sender, args[1]);
+        break;
+
       case "extratime":
-      case "extend": if (args.length >= 2) resultManager.addExtraTime(sender, args[1]); break;
-      case "stophalf": resultManager.stopHalf(sender); break;
+      case "extend":
+        if (!resultManager.isMatchRunning()) { logger.send(sender, Lang.RESULT_STATUS_NONE.replace(null)); return true; }
+        if (args.length >= 2) resultManager.addExtraTime(sender, args[1]);
+        break;
+
+      case "stophalf":
+        if (!resultManager.isMatchRunning()) { logger.send(sender, Lang.RESULT_STATUS_NONE.replace(null)); return true; }
+        resultManager.stopHalf(sender);
+        break;
+
       case "status":
-      default: logger.send(sender, resultManager.getMatchStatus()); break;
+      default:
+        logger.send(sender, resultManager.getMatchStatus());
+        break;
     }
     return true;
   }
