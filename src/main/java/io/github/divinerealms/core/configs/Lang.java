@@ -11,30 +11,10 @@ public enum Lang {
   NO_PERM("no-perm", "{prefix}&cNemate dozvolu (&4{0}&c) za komandu &6/&e{1}&c!"),
   UNKNOWN_COMMAND("unknown-command", "{prefix}&cNepoznata komanda."),
   PLAYER_NOT_FOUND("player-not-found", "{prefix}&cIgrač {0} nije pronađen."),
-  ANTI_SPAM_MESSAGES("anti-spam.messages", "&cŠalješ previše poruka, iskuliraj malo."),
-  ANTI_SPAM_COMMANDS("anti-spam.commands", "&cŠalješ previše komandi, sačekaj {0}s."),
   INGAME_ONLY("ingame-only", "{prefix}&cOva komanda se može koristiti samo u igri."),
   USAGE("usage", "{prefix}Usage: /{0}"),
   BOOK_NOT_FOUND("book-not-found", "&cKnjiga \"&e{0}&c\" nije pronađena."),
-
-  CHANNEL_HELP("channels.help", String.join(System.lineSeparator(),
-      "{prefix}&cNepoznata komanda. Dostupne komande u Core pluginu:",
-      "&6/&echannel toggle &2<&akanal&2>&7: &f&oOmogućite/onemogućite određeni čet kanal.",
-      "&6/&echannel team&6|&et&7: &f&oKomanda za ligaški tim čet."
-  )),
-  CHANNEL_NOT_FOUND("channels.not-found", "&cChannel '&e{0}&c' not found."),
-  CHANNEL_NOT_IN_TEAM("channels.not-in-team", "{prefix}&cNiste ni u jednom timu!"),
-  CHANNEL_NO_PERM("channels.insufficient-permission", "{prefix}&cNemate dozvolu (&4{0}&c) da pišete u '&e{1}&c' četu!"),
-  CHANNEL_TOGGLE("channels.toggle", "{prefix}&e{0} čet je {1}&e!"),
-  CHANNEL_DISABLED("channels.disabled", "{prefix}&cČet kanal '&e{0}&c' je isključen od strane admina."),
-  CHANNEL_DISABLED_BROADCAST("channels.disabled-broadcast", "{prefix}&cČet kanal &e{0} &cje {1}&c od strane {2}!"),
-  CHANNEL_REPLY("channels.reply", "&7 &o(reply -> {0})&r"),
-  CHANNEL_SPY_PREFIX("channels.spy.prefix", "&c[SPY] [&e{0}&c] &r"),
-  CHANNEL_SPY_TOGGLED("channels.spy.toggled", "{prefix}Social Spy je {0}&f!"),
-  CHANNEL_RESET_PERMISSION("channels.reset-permission", "{prefix}&cPrebačeni ste u &e{1} &ckanal jer više nemate pristup &e{0} &ckanalu."),
-
-  PRIVATE_MESSAGES_SELF("private-messages.self", "&cNe možete poslati poruku samom sebi."),
-  PRIVATE_MESSAGES_NO_REPLY_TARGET("private-messages.reply.no-target", "&cNemate kome poslati poruku."),
+  ANTI_SPAM_COMMANDS("anti-spam.commands", "&6⚠ &eŠalješ previše komandi, sačekaj {0}s &6⚠"),
 
   CLIENT_BLOCKER_USAGE("client-blocker.usage", String.join(System.lineSeparator(),
       "{prefix}Lista dostupnih &b/clientblocker &fkomandi:",
@@ -69,12 +49,15 @@ public enum Lang {
   RESULT_MATCH_FINISHED("result.match.finished", "{prefix}&cMeč je već završen!"),
   RESULT_MATCH_PREFIX("result.match.prefix", "{prefix}&aMeč prefix podešen: {0}"),
   RESULT_MATCH_TIME("result.match.time", "{prefix}&aVreme podešeno na &e{0}&a!"),
+  RESULT_MATCH_TIME_ALREADY("result.match.time-already-set", "{prefix}&cVreme je već podešeno na istu dužinu, ne menjamo..."),
   RESULT_MATCH_INVALID_TIME("result.match.invalid-time", "{prefix}&cVreme nije validno! Koristite: 1min20s, 30s ili -20s."),
   RESULT_MATCH_EXTRA("result.match.extra", "{prefix}&aDodato vreme podešeno: &e{0}"),
   RESULT_HALF_STOPPED("result.half.stopped", "{prefix}&cPoluvreme stopirano!"),
   RESULT_HALF_NONE("result.half.none", "{prefix}&cNema aktivnog poluvremena."),
   RESULT_SCORE_INVALID("result.score.invalid", "{prefix}&cNepostojeći tim ili je rezultat već 0."),
   RESULT_SCORE_UPDATED("result.score.update", "{prefix}&aRezultat osvežen za tim {0}&a."),
+  RESULT_WARP_SET("result.warp.set", "{prefix}&aPodešen warp na &e\"{0}\"&a."),
+  RESULT_WARP_MISSING("result.warp.not-set", "{prefix}&cNiste podesili warp. Podesili smo automatski. Kucajte ponovo komandu."),
   RESULT_STATUS("result.status.message", String.join(System.lineSeparator(),
       "&e---------------------------------------------",
       "{prefix}&bStatus trenutne utakmice:",
@@ -141,11 +124,7 @@ public enum Lang {
   PROXY_CHECK_ERROR("proxy-check.error", "{prefix}&cGreška prilikom provere: {0}"),
   PROXY_CHECK_COOLDOWN("proxy-check.cooldown", "{prefix}&cMorate sačekati još {0}s pre korišćenja."),
 
-  MENTION_TOGGLED("toggle.mention", "{prefix}&fZvuk za mention u četu je {0}&f!"),
-
   ADMIN_RELOAD("admin.reload", "{prefix}&eCore reloaded! Osveženo: &e{0}"),
-
-  MENTION("mention", "&6Pstt, &e{0} &6te je spomenuo u četu!"),
 
   ON("on", "&auključen"),
   OFF("off", "&cisključen");

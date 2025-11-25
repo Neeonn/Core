@@ -75,11 +75,9 @@ dependencies {
     compileOnly("org.spigotmc:spigot-api:1.8.8-R0.1-SNAPSHOT")
     compileOnly("com.github.MilkBowl:VaultAPI:1.7")
     compileOnly("org.projectlombok:lombok:1.18.38")
-    compileOnly("com.github.NEZNAMY:TAB-API:5.2.5")
     compileOnly("me.clip:placeholderapi:2.11.6")
     compileOnly("net.luckperms:api:5.4")
     compileOnly("com.discordsrv:discordsrv:1.30.0")
-    compileOnly("com.comphenix.protocol:ProtocolLib:5.3.0")
     compileOnly("fr.xephi:authme:5.6.0-SNAPSHOT")
 
     annotationProcessor("org.projectlombok:lombok:1.18.38")

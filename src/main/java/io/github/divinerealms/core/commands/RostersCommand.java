@@ -21,6 +21,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static io.github.divinerealms.core.utilities.Constants.ROSTER_WEIGHT;
+
 public class RostersCommand implements CommandExecutor, TabCompleter {
   private final LuckPerms luckPerms;
   private final Logger logger;
@@ -32,8 +34,6 @@ public class RostersCommand implements CommandExecutor, TabCompleter {
   private static final String PERM_ADD = PERM_MAIN + ".add";
   private static final String PERM_REMOVE = PERM_MAIN + ".remove";
   private static final String PERM_NOTIFY = PERM_MAIN + ".notify";
-
-  private static final int ROSTER_WEIGHT = 200;
 
   public RostersCommand(CoreManager coreManager) {
     this.luckPerms = coreManager.getLuckPerms();
@@ -47,17 +47,37 @@ public class RostersCommand implements CommandExecutor, TabCompleter {
 
     String sub = args[0].toLowerCase();
     switch (sub) {
+      case "switch":
+        if (!sender.hasPermission(PERM_CREATE)) { logger.send(sender, Lang.NO_PERM.replace(new String[]{PERM_CREATE, label + " " + sub})); return true; }
+        if (args.length != 1) { logger.send(sender, Lang.ROSTERS_USAGE.replace(null)); return true; }
+        if (ROSTER_WEIGHT == 200) ROSTER_WEIGHT = 300;
+        else if (ROSTER_WEIGHT == 300) ROSTER_WEIGHT = 200;
+
+        logger.send(sender, "{prefix}Promenjen ROSTER_WEIGHT na " + ROSTER_WEIGHT);
+        return true;
+
       case "create":
         if (!sender.hasPermission(PERM_CREATE)) { logger.send(sender, Lang.NO_PERM.replace(new String[]{PERM_CREATE, label + " " + sub})); return true; }
-        if (args.length < 3) { logger.send(sender, Lang.ROSTERS_USAGE.replace(null)); return true; }
+        String teamType = "";
+        if (args.length == 4) teamType = args[3];
+        else if (args.length < 3) { logger.send(sender, Lang.ROSTERS_USAGE.replace(null)); return true; }
 
-        String teamName = args[1].toUpperCase(), teamTag = args[2];
+        String teamName = args[1].toUpperCase(), teamTag = "%luckperms_prefix%[" + args[2] + "%luckperms_prefix%] ";
         if (luckPerms.getGroupManager().getGroup(teamName) != null) { logger.send(sender, Lang.ROSTERS_EXISTS.replace(new String[]{teamName})); return true; }
+        int weight;
 
+        MetaNode teamPrefix = MetaNode.builder("minecraftprefix", teamTag).build();
+        if (teamType.equalsIgnoreCase("b")) {
+          teamPrefix = MetaNode.builder("minecraftprefixb", teamTag).build();
+          weight = 199;
+        } else if (teamType.equalsIgnoreCase("rep")) weight = 300;
+        else weight = ROSTER_WEIGHT;
+
+        MetaNode finalTeamPrefix = teamPrefix;
         luckPerms.getGroupManager().createAndLoadGroup(teamName).thenApplyAsync(group -> {
           group.data().add(MetaNode.builder("displayname", teamTag).build());
-          group.data().add(WeightNode.builder(ROSTER_WEIGHT).build());
-          group.data().add(MetaNode.builder("minecraftprefix", "&8[" + teamTag + "&8] ").build());
+          group.data().add(WeightNode.builder(weight).build());
+          group.data().add(finalTeamPrefix);
           return group;
         }).thenCompose(luckPerms.getGroupManager()::saveGroup);
 
@@ -137,7 +157,7 @@ public class RostersCommand implements CommandExecutor, TabCompleter {
             break;
           case "tag":
             setGroup.data().add(MetaNode.builder("displayname", value).build());
-            setGroup.data().add(MetaNode.builder("minecraftprefix", "&8[" + value + "&8] ").build());
+            setGroup.data().add(MetaNode.builder("minecraftprefix", "%luckperms_prefix%[" + value + "%luckperms_prefix%] ").build());
             break;
           case "default":
             logger.send(sender, Lang.ROSTERS_INVALID_TYPE.replace(null));
@@ -163,7 +183,7 @@ public class RostersCommand implements CommandExecutor, TabCompleter {
     List<String> completions = new ArrayList<>();
 
     if (args.length == 1) {
-      completions.addAll(Arrays.asList("create", "delete", "add", "remove", "set", "help"));
+      completions.addAll(Arrays.asList("switch", "create", "delete", "add", "remove", "set", "help"));
     } else if (args.length == 2) {
       if (args[0].equalsIgnoreCase("delete") || args[0].equalsIgnoreCase("add") || args[0].equalsIgnoreCase("set")) {
         completions.addAll(luckPerms.getGroupManager().getLoadedGroups().stream()
@@ -184,7 +204,7 @@ public class RostersCommand implements CommandExecutor, TabCompleter {
       } else if (args[0].equalsIgnoreCase("set") && sender.hasPermission(PERM_SET)) {
         completions.addAll(Arrays.asList("name", "tag"));
       }
-    }
+    } else if (args.length == 4 && args[0].equalsIgnoreCase("create")) completions.addAll(Arrays.asList("b", "rep"));
 
     if (!completions.isEmpty()) {
       String lastWord = args[args.length - 1].toLowerCase();
