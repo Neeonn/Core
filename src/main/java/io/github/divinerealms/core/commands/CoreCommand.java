@@ -56,11 +56,6 @@ public class CoreCommand implements CommandExecutor, TabCompleter {
           logger.send(sender, Lang.ADMIN_RELOAD.replace(new String[]{"books"}));
           return true;
 
-        case "channels":
-          coreManager.getChannelManager().reloadAll();
-          logger.send(sender, Lang.ADMIN_RELOAD.replace(new String[]{"channels"}));
-          return true;
-
         case "all":
           coreManager.reload();
           logger.send(sender, Lang.ADMIN_RELOAD.replace(new String[]{"everything"}));

@@ -22,7 +22,7 @@ public class Core extends JavaPlugin {
   @Override
   public void onDisable() {
     if (coreManager != null) {
-      coreManager.saveAll();
+      coreManager.getConfigManager().saveAll();
       coreManager.unregisterCommands();
       coreManager.getListenerManager().unregisterAll();
       coreManager.getLogger().info("&cSuccessfully disabled.");
