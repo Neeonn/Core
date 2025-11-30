@@ -13,12 +13,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import static io.github.divinerealms.core.utilities.Permissions.PERM_ADMIN_MAIN;
+import static io.github.divinerealms.core.utilities.Permissions.PERM_ADMIN_RELOAD;
+
 public class CoreCommand implements CommandExecutor, TabCompleter {
   private final CoreManager coreManager;
   private final Logger logger;
-
-  private static final String PERM_MAIN = "core.admin";
-  private static final String PERM_RELOAD = PERM_MAIN + ".reload";
 
   public CoreCommand(CoreManager coreManager) {
     this.coreManager = coreManager;
@@ -27,13 +27,13 @@ public class CoreCommand implements CommandExecutor, TabCompleter {
 
   @Override
   public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-    if (!sender.hasPermission(PERM_MAIN)) { logger.send(sender, Lang.NO_PERM.replace(new String[]{PERM_MAIN, label})); return true; }
+    if (!sender.hasPermission(PERM_ADMIN_MAIN)) { logger.send(sender, Lang.NO_PERM.replace(new String[]{PERM_ADMIN_MAIN, label})); return true; }
     if (args.length == 0) { logger.send(sender, Lang.HELP.replace(null)); return true; }
 
     String sub = args[0].toLowerCase();
     if (sub.equalsIgnoreCase("reload")) {
       if (args.length == 1) { logger.send(sender, Lang.HELP.replace(null)); return true; }
-      if (!sender.hasPermission(PERM_RELOAD)) { logger.send(sender, Lang.NO_PERM.replace(new String[]{PERM_RELOAD, label + " " + sub})); return true; }
+      if (!sender.hasPermission(PERM_ADMIN_RELOAD)) { logger.send(sender, Lang.NO_PERM.replace(new String[]{PERM_ADMIN_RELOAD, label + " " + sub})); return true; }
 
       switch (args[1].toLowerCase()) {
         case "menus":
@@ -78,7 +78,7 @@ public class CoreCommand implements CommandExecutor, TabCompleter {
 
   @Override
   public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
-    if (!sender.hasPermission(PERM_MAIN)) return Collections.emptyList();
+    if (!sender.hasPermission(PERM_ADMIN_MAIN)) return Collections.emptyList();
 
     List<String> completions = new ArrayList<>();
 

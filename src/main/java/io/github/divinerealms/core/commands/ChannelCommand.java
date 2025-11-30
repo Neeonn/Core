@@ -13,12 +13,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static io.github.divinerealms.core.utilities.Permissions.PERM_CHANNEL_MAIN;
+import static io.github.divinerealms.core.utilities.Permissions.PERM_CHANNEL_TOGGLE;
+
 public class ChannelCommand implements CommandExecutor, TabCompleter {
   private final Logger logger;
   private final ChannelManager channelManager;
-
-  private static final String PERM_MAIN = "core.channel";
-  private static final String PERM_TOGGLE = PERM_MAIN + ".toggle";
 
   public ChannelCommand(CoreManager coreManager) {
     this.logger = coreManager.getLogger();
@@ -32,7 +32,7 @@ public class ChannelCommand implements CommandExecutor, TabCompleter {
     String sub = args[0].toLowerCase();
     if (sub.equalsIgnoreCase("toggle")) {
       if (args.length < 2) { logger.send(sender, Lang.CHANNEL_HELP.replace(null)); return true; }
-      if (!sender.hasPermission(PERM_TOGGLE)) { logger.send(sender, Lang.NO_PERM.replace(new String[]{PERM_TOGGLE, label + " " + sub})); return true; }
+      if (!sender.hasPermission(PERM_CHANNEL_TOGGLE)) { logger.send(sender, Lang.NO_PERM.replace(new String[]{PERM_CHANNEL_TOGGLE, label + " " + sub})); return true; }
 
       boolean disabled = channelManager.toggleChannel(args[1]);
       String status = disabled ? Lang.OFF.replace(null) : Lang.ON.replace(null);
@@ -46,13 +46,13 @@ public class ChannelCommand implements CommandExecutor, TabCompleter {
 
   @Override
   public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
-    if (!sender.hasPermission(PERM_MAIN)) return Collections.emptyList();
+    if (!sender.hasPermission(PERM_CHANNEL_MAIN)) return Collections.emptyList();
 
     List<String> completions = new ArrayList<>();
 
-    if (args.length == 1 && sender.hasPermission(PERM_MAIN)) {
+    if (args.length == 1 && sender.hasPermission(PERM_CHANNEL_MAIN)) {
       completions.add("toggle");
-    } else if (args.length == 2 && sender.hasPermission(PERM_TOGGLE)) {
+    } else if (args.length == 2 && sender.hasPermission(PERM_CHANNEL_TOGGLE)) {
       if (args[0].equalsIgnoreCase("toggle")) completions.addAll(channelManager.getChannels().keySet());
     }
 

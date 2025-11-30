@@ -157,9 +157,10 @@ public class CoreManager {
   }
 
   private void registerCommand(CommandMap commandMap, String name, Command command) {
-    commandMap.register("core", command);
-    registeredCommands.add(name);
-    if (command.getAliases() != null) registeredCommands.addAll(command.getAliases());
+    commandMap.register(plugin.getName().toLowerCase(), command);
+    registeredCommands.add(name.toLowerCase());
+
+    if (command.getAliases() != null || !command.getAliases().isEmpty()) registeredCommands.addAll(command.getAliases());
     if (command instanceof BukkitCommandWrapper) {
       CommandExecutor executor = ((BukkitCommandWrapper) command).getExecutor();
       if (executor instanceof TabCompleter) ((BukkitCommandWrapper) command).setTabCompleter((TabCompleter) executor);

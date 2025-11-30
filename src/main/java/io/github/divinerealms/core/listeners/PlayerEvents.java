@@ -26,6 +26,10 @@ import org.bukkit.scheduler.BukkitScheduler;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import static io.github.divinerealms.core.utilities.Constants.NEWBIE_THRESHOLD_HOURS;
+import static io.github.divinerealms.core.utilities.Constants.PATH_PLAYER_MESSAGES;
+import static io.github.divinerealms.core.utilities.Permissions.PERM_ADMIN_SILENT_JOIN_QUIT;
+
 public class PlayerEvents implements Listener {
   private final CoreManager coreManager;
   private final Plugin plugin;
@@ -36,10 +40,6 @@ public class PlayerEvents implements Listener {
   private final PlaytimeManager playtimeManager;
   private final PlayerDataManager dataManager;
   private final BukkitScheduler scheduler;
-
-  private static final long NEWBIE_THRESHOLD_HOURS = 2;
-  private static final String PERM_SILENT_JOIN_QUIT = "core.silent-joinquit";
-  private static final String PATH_PLAYER_MESSAGES = "player_messages.custom_";
 
   public PlayerEvents(CoreManager coreManager) {
     this.coreManager = coreManager;
@@ -98,7 +98,7 @@ public class PlayerEvents implements Listener {
     });
 
     if (!Config.CONFIG.getBoolean(PATH_PLAYER_MESSAGES + "join.enabled", false)) return;
-    if (player.hasPermission(PERM_SILENT_JOIN_QUIT)) return;
+    if (player.hasPermission(PERM_ADMIN_SILENT_JOIN_QUIT)) return;
     boolean isDiscordSRV = coreManager.isDiscordSRV();
 
     String mcMsg = Config.CONFIG.getString(PATH_PLAYER_MESSAGES + "join.minecraft", ChatColor.YELLOW + player.getName() + " has joined the server");
@@ -158,7 +158,7 @@ public class PlayerEvents implements Listener {
     String finalDcMsg = isDiscordSRV ? ChatColor.translateAlternateColorCodes('&', dcMsg) : null;
 
     if (!Config.CONFIG.getBoolean(PATH_PLAYER_MESSAGES + "quit.enabled", false)) return;
-    if (player.hasPermission(PERM_SILENT_JOIN_QUIT)) return;
+    if (player.hasPermission(PERM_ADMIN_SILENT_JOIN_QUIT)) return;
     if (!AuthMeHook.isAuthenticated(player)) return;
 
     if (!clientBlocker.shouldKick(player)) {

@@ -32,6 +32,7 @@ public class ResultManager {
 
   @Getter private String prefix = Lang.RESULT_PREFIX_HOST.replace(null);
   @Getter private String home, away;
+  @Getter @Setter private String warp;
   @Getter private int homeScore;
   @Getter private int awayScore;
 
@@ -69,8 +70,8 @@ public class ResultManager {
   private void startHalf(Half half) {
     matchTimer = new Timer(plugin, () -> {
       String msgMC = half == Half.FIRST
-          ? Config.RESULT_FORMATS_MINECRAFT_START.getString(new String[]{prefix, home, away})
-          : Config.RESULT_FORMATS_MINECRAFT_SECOND_HALF.getString(new String[]{prefix, home, away});
+          ? Config.RESULT_FORMATS_MINECRAFT_START.getString(new String[]{prefix, home, away, warp})
+          : Config.RESULT_FORMATS_MINECRAFT_SECOND_HALF.getString(new String[]{prefix, home, away, warp});
 
       String msgDC = half == Half.FIRST
           ? Config.RESULT_FORMATS_DISCORD_START.getString(new String[]{formatTime(matchTimer.getSecondsElapsed()), prefix, home, away})
@@ -88,8 +89,8 @@ public class ResultManager {
 
   private void endHalf() {
     if (currentHalf == Half.FIRST) {
-      String msgMC = Config.RESULT_FORMATS_MINECRAFT_HALFTIME.getString(new String[]{prefix, home, String.valueOf(homeScore), String.valueOf(awayScore), away});
-      String msgDC = Config.RESULT_FORMATS_DISCORD_HALFTIME.getString(new String[]{formatTime(matchTimer.getSecondsElapsed()), home, String.valueOf(homeScore), String.valueOf(awayScore), away});
+      String msgMC = Config.RESULT_FORMATS_MINECRAFT_HALFTIME.getString(new String[]{prefix, home, String.valueOf(homeScore), String.valueOf(awayScore), away, warp});
+      String msgDC = Config.RESULT_FORMATS_DISCORD_HALFTIME.getString(new String[]{formatTime(matchTimer.getSecondsElapsed()), home, String.valueOf(homeScore), String.valueOf(awayScore), away, warp});
 
       broadcastBoth(msgMC, msgDC);
       paused = true;
@@ -122,12 +123,12 @@ public class ResultManager {
   }
 
   private void endMatch() {
-    String msgMC = Config.RESULT_FORMATS_MINECRAFT_END.getString(new String[]{prefix, home, String.valueOf(homeScore), String.valueOf(awayScore), away});
-    String msgDC = Config.RESULT_FORMATS_DISCORD_END.getString(new String[]{formatTime(matchTimer.getSecondsElapsed()), home, String.valueOf(homeScore), String.valueOf(awayScore), away});
+    String msgMC = Config.RESULT_FORMATS_MINECRAFT_END.getString(new String[]{prefix, home, String.valueOf(homeScore), String.valueOf(awayScore), away, warp});
+    String msgDC = Config.RESULT_FORMATS_DISCORD_END.getString(new String[]{formatTime(matchTimer.getSecondsElapsed()), home, String.valueOf(homeScore), String.valueOf(awayScore), away, warp});
 
     broadcastBoth(msgMC, msgDC);
     String winner = (homeScore == awayScore) ? null : (homeScore > awayScore ? home : away);
-    winner = ChatColor.stripColor(logger.color(winner));
+    winner = (winner != null) ? ChatColor.stripColor(logger.color(winner)) : null;
     if (winner != null) sendWinVideoToDiscord(winner.trim().toUpperCase());
 
     resetMatch();
@@ -136,6 +137,7 @@ public class ResultManager {
   public void setTeams(CommandSender sender, String home, String away) {
     this.home = resolveGroupName(home.toUpperCase());
     this.away = resolveGroupName(away.toUpperCase());
+    if (this.warp == null) setWarp(home);
 
     logger.send(sender, Lang.RESULT_TEAMS_SET.replace(new String[]{this.home, this.away}));
   }
@@ -146,6 +148,11 @@ public class ResultManager {
   }
 
   public void setTime(CommandSender sender, int totalSeconds) {
+    if (totalSeconds == defaultHalfDuration) {
+      logger.send(sender, Lang.RESULT_MATCH_TIME_ALREADY.replace(null));
+      return;
+    }
+
     defaultHalfDuration = totalSeconds;
     if (matchTimer != null && matchTimer.isRunning()) updateHalfMessage();
     logger.send(sender, Lang.RESULT_MATCH_TIME.replace(new String[]{formatTime(totalSeconds)}));
@@ -255,8 +262,8 @@ public class ResultManager {
         return;
     }
 
-    String msgMC = Config.RESULT_FORMATS_MINECRAFT_GOAL_REMOVE.getString(new String[]{prefix, teamName});
-    String msgDC = Config.RESULT_FORMATS_DISCORD_GOAL_REMOVE.getString(new String[]{formatTime(matchTimer.getSecondsElapsed()), teamName});
+    String msgMC = Config.RESULT_FORMATS_MINECRAFT_GOAL_REMOVE.getString(new String[]{prefix, teamName, warp});
+    String msgDC = Config.RESULT_FORMATS_DISCORD_GOAL_REMOVE.getString(new String[]{formatTime(matchTimer.getSecondsElapsed()), teamName, warp});
 
     broadcastBoth(msgMC, msgDC);
     updateHalfMessage();
@@ -272,7 +279,7 @@ public class ResultManager {
             prefix, home, String.valueOf(homeScore), String.valueOf(awayScore), away,
             formatColoredTime(displayTime),
             currentHalf == Half.FIRST ? " 1HT" : " 2HT",
-            currentHalfExtraTime > 0 ? "&c (ET: " + formatTime(currentHalfExtraTime) + ")" : ""
+            currentHalfExtraTime > 0 ? "&c (ET: " + formatTime(currentHalfExtraTime) + ")" : "", warp
         });
 
     logger.broadcastBar(msgMC);
@@ -301,8 +308,8 @@ public class ResultManager {
             formatColoredTime(matchTimer.getSecondsElapsed()),
             currentHalf == Half.FIRST ? " 1HT" : " 2HT",
             paused ? "&c Pauziran" : "",
-            currentHalfExtraTime > 0 ? "&c (ET: " + formatTime(currentHalfExtraTime) + ")" : "",
-    });
+            currentHalfExtraTime > 0 ? "&c (ET: " + formatTime(currentHalfExtraTime) + ")" : "", warp
+        });
   }
 
   private String resolveGroupName(String input) {
@@ -327,6 +334,7 @@ public class ResultManager {
     prefix = "&bEvent";
     currentHalfExtraTime = 0;
     matchRunning = false;
+    warp = null;
   }
 
   public int parseTime(String input) throws NumberFormatException {
@@ -377,17 +385,18 @@ public class ResultManager {
   }
 
   public String formatColoredTime(int secondsElapsed) {
-    int warningThreshold = (int) (defaultHalfDuration * 0.9);
+    int totalTime = defaultHalfDuration + currentHalfExtraTime;
+    int warningThreshold = (int) (totalTime * 0.8);
 
     int adjustedSeconds = secondsElapsed;
     if (currentHalf == Half.SECOND) {
-      adjustedSeconds -= defaultHalfDuration;
+      adjustedSeconds -= totalTime;
       if (adjustedSeconds < 0) adjustedSeconds = 0;
     }
 
     String time = formatTime(secondsElapsed);
     if (adjustedSeconds < warningThreshold) return "&a" + time;
-    else if (adjustedSeconds < defaultHalfDuration) return "&e" + time;
+    else if (adjustedSeconds < totalTime) return "&e" + time;
     else return "&c" + time;
   }
 

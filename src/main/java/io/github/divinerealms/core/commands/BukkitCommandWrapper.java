@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.logging.Level;
 
 public class BukkitCommandWrapper extends Command {
-  @Getter private final CommandExecutor executor;
+  @Getter @Setter private CommandExecutor executor;
   @Setter private TabCompleter tabCompleter;
 
   public BukkitCommandWrapper(String name, CommandExecutor executor, List<String> aliases) {

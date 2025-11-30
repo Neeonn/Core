@@ -10,6 +10,8 @@ import org.bukkit.plugin.messaging.PluginMessageListener;
 
 import java.nio.charset.StandardCharsets;
 
+import static io.github.divinerealms.core.utilities.Permissions.PERM_CLIENT_BLOCKER_NOTIFY;
+
 public class ClientBlockerListener implements Listener, PluginMessageListener {
   private final Logger logger;
   private final ClientBlocker clientBlocker;
@@ -29,10 +31,10 @@ public class ClientBlockerListener implements Listener, PluginMessageListener {
     clientBlocker.setPlayerBrand(player, brand);
     if (clientBlocker.shouldKick(player)) {
       player.kickPlayer(Lang.CLIENT_BLOCKER_KICK.replace(new String[]{brand}));
-      logger.send(ClientBlocker.NOTIFY_PERMISSION, Lang.CLIENT_BLOCKER_NOTIFY.replace(new String[]{player.getName(), ip, brand}));
+      logger.send(PERM_CLIENT_BLOCKER_NOTIFY, Lang.CLIENT_BLOCKER_NOTIFY.replace(new String[]{player.getName(), ip, brand}));
       return;
     }
 
-    logger.send(ClientBlocker.NOTIFY_PERMISSION, Lang.CLIENT_BLOCKER_BYPASS_NOTIFY.replace(new String[]{player.getName(), ip, brand}));
+    logger.send(PERM_CLIENT_BLOCKER_NOTIFY, Lang.CLIENT_BLOCKER_BYPASS_NOTIFY.replace(new String[]{player.getName(), ip, brand}));
   }
 }

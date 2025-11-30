@@ -22,8 +22,9 @@ import org.bukkit.plugin.Plugin;
 
 import java.lang.reflect.Field;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
+
+import static io.github.divinerealms.core.utilities.Constants.GUI_COOLDOWN_DURATION_MS;
 
 public class GUIManager {
   private final CoreManager coreManager;
@@ -36,8 +37,6 @@ public class GUIManager {
   @Getter private final Map<String, String> menuCommands = new HashMap<>();
   @Getter private final Map<String, String> menuPermissions = new HashMap<>();
   private final Map<UUID, Long> userCooldowns = new HashMap<>();
-
-  private static final long COOLDOWN_DURATION_MS = TimeUnit.SECONDS.toMillis(5);
 
   private CommandMap commandMap;
 
@@ -269,8 +268,8 @@ public class GUIManager {
         long lastUsedTime = userCooldowns.get(playerId);
         long timeSinceLastUse = now - lastUsedTime;
 
-        if (timeSinceLastUse < COOLDOWN_DURATION_MS) {
-          long remainingTimeMs = COOLDOWN_DURATION_MS - timeSinceLastUse;
+        if (timeSinceLastUse < GUI_COOLDOWN_DURATION_MS) {
+          long remainingTimeMs = GUI_COOLDOWN_DURATION_MS - timeSinceLastUse;
           long timeLeftSeconds = (long) Math.ceil(remainingTimeMs / 1000.0);
 
           logger.sendActionBar(player, Lang.ANTI_SPAM_COMMANDS.replace(new String[]{String.valueOf(timeLeftSeconds)}));

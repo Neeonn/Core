@@ -10,14 +10,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static io.github.divinerealms.core.utilities.Permissions.PERM_CLIENT_BLOCKER_BYPASS;
+
 public class ClientBlocker {
   private final Map<String, String> playerBrands = new HashMap<>();
   private final List<String> allowedVanillaClients = Arrays.asList("vanilla", "optifine");
 
   @Getter private boolean enabled = Config.CLIENT_BLOCKER_ENABLED.getValue(Boolean.class);
-
-  public static final String BYPASS_PERMISSION = "core.client-blocker.bypass";
-  public static final String NOTIFY_PERMISSION = "core.client-blocker.notify";
 
   public boolean toggle() {
     if (enabled) {
@@ -44,7 +43,7 @@ public class ClientBlocker {
 
   public boolean shouldKick(Player player) {
     if (!enabled) return false;
-    if (player.hasPermission(BYPASS_PERMISSION)) return false;
+    if (player.hasPermission(PERM_CLIENT_BLOCKER_BYPASS)) return false;
 
     String brand = getBrand(player);
     if (brand == null) return false;

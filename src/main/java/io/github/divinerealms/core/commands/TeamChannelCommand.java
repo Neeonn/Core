@@ -22,7 +22,7 @@ public class TeamChannelCommand implements CommandExecutor {
 
   @Override
   public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-    if (!(sender instanceof Player)) { logger.info("&cConsole can't use team chat."); return true; }
+    if (!(sender instanceof Player)) { logger.info(Lang.INGAME_ONLY.replace(null)); return true; }
 
     Player player = (Player) sender;
     String team = coreManager.getTeam(player);

@@ -15,14 +15,12 @@ import org.bukkit.entity.Player;
 
 import java.util.*;
 
+import static io.github.divinerealms.core.utilities.Permissions.*;
+
 public class PlaytimeCommand implements CommandExecutor, TabCompleter {
   private final CoreManager coreManager;
   private final Logger logger;
   private final PlaytimeManager playtimeManager;
-
-  private static final String PERM_MAIN = "core.playtime";
-  private static final String PERM_OTHER = PERM_MAIN + ".other";
-  private static final String PERM_TOP = PERM_MAIN + ".top";
 
   public PlaytimeCommand(CoreManager coreManager) {
     this.coreManager = coreManager;
@@ -32,7 +30,7 @@ public class PlaytimeCommand implements CommandExecutor, TabCompleter {
 
   @Override
   public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-    if (!sender.hasPermission(PERM_MAIN)) { logger.send(sender, Lang.NO_PERM.replace(new String[]{PERM_MAIN, label})); return true; }
+    if (!sender.hasPermission(PERM_PLAYTIME_MAIN)) { logger.send(sender, Lang.NO_PERM.replace(new String[]{PERM_PLAYTIME_MAIN, label})); return true; }
     if (args.length == 0) {
       if (!(sender instanceof Player)) { logger.send(sender, Lang.INGAME_ONLY.replace(null)); return true; }
       Player player = (Player) sender;
@@ -47,7 +45,7 @@ public class PlaytimeCommand implements CommandExecutor, TabCompleter {
       logger.send(sender, Lang.PLAYTIME_HELP.replace(null));
       return true;
     } else if (sub.equalsIgnoreCase("top")) {
-      if (!sender.hasPermission(PERM_TOP)) { logger.send(sender, Lang.NO_PERM.replace(new String[]{PERM_TOP, label + " " + sub})); return true; }
+      if (!sender.hasPermission(PERM_PLAYTIME_TOP)) { logger.send(sender, Lang.NO_PERM.replace(new String[]{PERM_PLAYTIME_TOP, label + " " + sub})); return true; }
       int page = 1, limit = 10;
 
       if (args.length >= 2) { try { page = Math.max(1, Integer.parseInt(args[1])); } catch (NumberFormatException ignored) {} }
@@ -57,7 +55,7 @@ public class PlaytimeCommand implements CommandExecutor, TabCompleter {
       return true;
     }
 
-    if (!sender.hasPermission(PERM_OTHER)) { logger.send(sender, Lang.NO_PERM.replace(new String[]{PERM_OTHER, label + " " + sub})); return true; }
+    if (!sender.hasPermission(PERM_PLAYTIME_OTHER)) { logger.send(sender, Lang.NO_PERM.replace(new String[]{PERM_PLAYTIME_OTHER, label + " " + sub})); return true; }
 
     OfflinePlayer target = Bukkit.getOfflinePlayer(args[0]);
     if (!target.hasPlayedBefore()) { logger.send(sender, Lang.PLAYER_NOT_FOUND.replace(new String[]{args[0]})); return true; }
@@ -110,16 +108,16 @@ public class PlaytimeCommand implements CommandExecutor, TabCompleter {
 
   @Override
   public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
-    if (!sender.hasPermission(PERM_MAIN)) return Collections.emptyList();
+    if (!sender.hasPermission(PERM_PLAYTIME_MAIN)) return Collections.emptyList();
 
     List<String> completions = new ArrayList<>();
 
-    if (args.length == 1 && sender.hasPermission(PERM_OTHER)) {
+    if (args.length == 1 && sender.hasPermission(PERM_PLAYTIME_OTHER)) {
       coreManager.getCachedPlayers().forEach(player -> completions.add(player.getName()));
       completions.addAll(Arrays.asList("top","?","help"));
-    } else if (args.length == 2 && args[0].equalsIgnoreCase("top") && sender.hasPermission(PERM_TOP)) {
+    } else if (args.length == 2 && args[0].equalsIgnoreCase("top") && sender.hasPermission(PERM_PLAYTIME_TOP)) {
       completions.addAll(Arrays.asList("1","2","3","4","5"));
-    } else if (args.length == 3 && args[0].equalsIgnoreCase("top") && sender.hasPermission(PERM_TOP)) {
+    } else if (args.length == 3 && args[0].equalsIgnoreCase("top") && sender.hasPermission(PERM_PLAYTIME_TOP)) {
       completions.addAll(Arrays.asList("5","10","15","20"));
     }
 

@@ -22,14 +22,14 @@ import java.net.URL;
 import java.util.*;
 import java.util.logging.Level;
 
+import static io.github.divinerealms.core.utilities.Constants.PROXY_CHECK_API_URL;
+import static io.github.divinerealms.core.utilities.Constants.PROXY_CHECK_COOLDOWN_MS;
+import static io.github.divinerealms.core.utilities.Permissions.PERM_ADMIN_PROXY_CHECK;
+
 public class ProxyCheckCommand implements CommandExecutor, TabCompleter {
   private final CoreManager coreManager;
   private final Plugin plugin;
   private final Logger logger;
-
-  private static final String PERM_PROXY_CHECK = "core.admin.proxy-check";
-  private static final String API_URL = "https://proxycheck.io/v2/";
-  private static final long COOLDOWN_MS = 30 * 1000; // 30 seconds cooldown
 
   private final Map<String, Long> lastUse = new HashMap<>();
 
@@ -41,14 +41,14 @@ public class ProxyCheckCommand implements CommandExecutor, TabCompleter {
 
   @Override
   public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-    if (!sender.hasPermission(PERM_PROXY_CHECK)) { logger.send(sender, Lang.NO_PERM.replace(new String[]{PERM_PROXY_CHECK, label})); return true; }
+    if (!sender.hasPermission(PERM_ADMIN_PROXY_CHECK)) { logger.send(sender, Lang.NO_PERM.replace(new String[]{PERM_ADMIN_PROXY_CHECK, label})); return true; }
     if (args.length != 1) { logger.send(sender, Lang.USAGE.replace(new String[]{label + " <player|IP>"})); return true; }
 
     String cooldownKey = (sender instanceof Player) ? ((Player) sender).getUniqueId().toString() : "CONSOLE";
     long now = System.currentTimeMillis();
     long last = lastUse.getOrDefault(cooldownKey, 0L);
-    if (now - last < COOLDOWN_MS) {
-      double seconds = (double) (COOLDOWN_MS - (now - last)) / 1000;
+    if (now - last < PROXY_CHECK_COOLDOWN_MS) {
+      double seconds = (double) (PROXY_CHECK_COOLDOWN_MS - (now - last)) / 1000;
       logger.send(sender, Lang.PROXY_CHECK_COOLDOWN.replace(new String[]{String.format("%.0f", seconds)}));
       return true;
     }
@@ -117,7 +117,7 @@ public class ProxyCheckCommand implements CommandExecutor, TabCompleter {
   }
 
   private static JSONObject getJsonObject(String targetIP) throws IOException, ParseException, NullPointerException {
-    URL url = new URL(API_URL + targetIP + "?vpn=1&asn=1");
+    URL url = new URL(PROXY_CHECK_API_URL + targetIP + "?vpn=1&asn=1");
     HttpURLConnection connection = (HttpURLConnection) url.openConnection();
     connection.setRequestMethod("GET");
     connection.setConnectTimeout(5000);
@@ -135,7 +135,7 @@ public class ProxyCheckCommand implements CommandExecutor, TabCompleter {
 
   @Override
   public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
-    if (!sender.hasPermission(PERM_PROXY_CHECK)) return Collections.emptyList();
+    if (!sender.hasPermission(PERM_ADMIN_PROXY_CHECK)) return Collections.emptyList();
 
     List<String> completions = new ArrayList<>();
 
