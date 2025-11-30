@@ -44,8 +44,10 @@ public class Logger {
 
   public void send(String permission, String message) {
     String formattedMc = message.replace("{prefix}", Lang.PREFIX.replace(null));
+    String formattedConsole = message.replace("{prefix}", "");
+
     server.broadcast(color(formattedMc), permission);
-    info(message);
+    consoleSender.sendMessage(consolePrefix + color(formattedConsole));
   }
 
   public void broadcast(String message) {

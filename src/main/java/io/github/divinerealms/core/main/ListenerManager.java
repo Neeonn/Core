@@ -1,8 +1,7 @@
 package io.github.divinerealms.core.main;
 
-import io.github.divinerealms.core.listeners.ClientBlockerListener;
-import io.github.divinerealms.core.listeners.GUIListener;
-import io.github.divinerealms.core.listeners.PlayerEvents;
+import github.scarsz.discordsrv.DiscordSRV;
+import io.github.divinerealms.core.listeners.*;
 import lombok.Getter;
 import org.bukkit.Server;
 import org.bukkit.event.HandlerList;
@@ -15,6 +14,7 @@ public class ListenerManager {
   private final Server server;
 
   private ClientBlockerListener clientBlockerListener;
+  private DiscordMessageListener discordMessageListener;
   private GUIListener guiListener;
 
   public ListenerManager(CoreManager coreManager) {
@@ -25,12 +25,26 @@ public class ListenerManager {
 
   public void registerAll() {
     unregisterAll();
+
+    server.getPluginManager().registerEvents(new ChatChannelListener(coreManager), plugin);
     server.getPluginManager().registerEvents(new PlayerEvents(coreManager), plugin);
+
+    if (coreManager.isDiscordSRV() && discordMessageListener == null) {
+      DiscordSRV.api.subscribe(discordMessageListener = new DiscordMessageListener(coreManager));
+      coreManager.getLogger().info("&a✔ &dDiscordSRV &9found and &eDiscord Integration &9enabled.");
+    }
+
     if (coreManager.getClientBlocker().isEnabled()) enableClientBlocker();
   }
 
   public void unregisterAll() {
     HandlerList.unregisterAll(plugin);
+
+    if (discordMessageListener != null) {
+      DiscordSRV.api.unsubscribe(discordMessageListener);
+      discordMessageListener = null;
+    }
+
     disableClientBlocker();
   }
 

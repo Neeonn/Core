@@ -24,9 +24,6 @@ import org.bukkit.scheduler.BukkitScheduler;
 
 import java.util.UUID;
 
-import static io.github.divinerealms.core.utilities.Permissions.PERM_BYPASS_DISABLED_CHANNEL;
-import static io.github.divinerealms.core.utilities.Permissions.PERM_CHAT_COLOR;
-
 public class ChatChannelListener implements Listener {
   private final CoreManager coreManager;
   private final Plugin plugin;
@@ -36,6 +33,9 @@ public class ChatChannelListener implements Listener {
   private final ChannelManager channelManager;
   private final LuckPerms luckPerms;
   private final ResultManager resultManager;
+
+  private static final String PERM_BYPASS = "core.bypass.disabled-channel";
+  private static final String PERM_COLOR = "core.chat.color";
 
   public ChatChannelListener(CoreManager coreManager) {
     this.coreManager = coreManager;
@@ -60,7 +60,7 @@ public class ChatChannelListener implements Listener {
       return;
     }
 
-    if (channelManager.isChannelDisabled(activeChannel) && !player.hasPermission(PERM_BYPASS_DISABLED_CHANNEL)) {
+    if (channelManager.isChannelDisabled(activeChannel) && !player.hasPermission(PERM_BYPASS)) {
       event.setCancelled(true);
       logger.send(player, Lang.CHANNEL_DISABLED.replace(new String[]{activeChannel}));
       return;
@@ -80,7 +80,7 @@ public class ChatChannelListener implements Listener {
     event.setCancelled(true);
 
     String message = event.getMessage();
-    if (!player.hasPermission(PERM_CHAT_COLOR)) message = ChatColor.stripColor(logger.color(message));
+    if (!player.hasPermission(PERM_COLOR)) message = ChatColor.stripColor(logger.color(message));
     final String initialMessage = message;
 
     UUID uuid = player.getUniqueId();

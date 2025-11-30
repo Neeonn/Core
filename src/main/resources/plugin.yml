@@ -5,6 +5,10 @@ author: neonsh
 description: Core plugin for FootCube Servers
 depend:
   - LuckPerms
+  - DiscordSRV
+softdepend:
   - PlaceholderAPI
+  - AuthMe
+  - Vault
 loadbefore:
   - FootCube

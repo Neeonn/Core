@@ -10,6 +10,16 @@ import java.util.stream.Collectors;
 
 @Getter
 public enum Config {
+  CHANNELS_ENABLED("channels.enabled", true),
+  CHANNELS_DEFAULT("channels.default_channel", "global"),
+  CHANNELS_DEFAULT_CHANNEL_PERMISSION("channels.list.global.permission", ""),
+  CHANNELS_DEFAULT_CHANNEL_DISCORD_ID("channels.list.global.discord_id", ""),
+  CHANNELS_DEFAULT_CHANNEL_FORMATS_MINECRAFT("channels.list.global.formats.minecraft_chat", "&r<%player_displayname%&r> %message%"),
+  CHANNELS_DEFAULT_CHANNEL_FORMATS_DISCORD_TO_MINECRAFT("channels.list.global.formats.discord_to_minecraft", "&3[Discord] &r<%player_displayname&r> %message%"),
+  CHANNELS_DEFAULT_CHANNEL_FORMATS_MINECRAFT_TO_DISCORD("channels.list.global.formats.minecraft_to_discord", "**%player_name%**: %message%"),
+  CHANNELS_ANTI_SPAM_MAX_MESSAGES("channels.anti_spam.max_messages", 5),
+  CHANNELS_ANTI_SPAM_COOLDOWN("channels.anti_spam.cooldown", 2500L),
+
   CLIENT_BLOCKER_ENABLED("client_blocker.enabled", true),
   CLIENT_BLOCKER_MODE("client_blocker.mode", "WHITELIST"),
   CLIENT_BLOCKER_LIST("client_blocker.list", Arrays.asList("vanilla", "optifine")),
@@ -19,6 +29,11 @@ public enum Config {
   PLAYER_MESSAGES_CUSTOM_JOIN_FORMATS_DISCORD("player_messages.custom_join.discord", "**%player_name%** has joined the server!"),
   PLAYER_MESSAGES_CUSTOM_QUIT_FORMATS_MINECRAFT("player_messages.custom_quit.minecraft", "&e%player_displayname%&e has left the server!"),
   PLAYER_MESSAGES_CUSTOM_QUIT_FORMATS_DISCORD("player_messages.custom_quit.discord", "**%player_name%** has left the server!"),
+
+  PRIVATE_MESSAGES_ENABLED("private_messages.enabled", true),
+  PRIVATE_MESSAGES_SENDER_FORMAT("private_messages.formats.sender", "&6(&eJa &7→ &r{0}&6) &e&o{1}"),
+  PRIVATE_MESSAGES_RECIPIENT_FORMAT("private_messages.formats.recipient", "&6(&r{0} &7→ &eJa&6) &e&o{1}"),
+  PRIVATE_MESSAGES_SPY_FORMAT("private_messages.formats.spy", "{0}&e({0} &7→ &e{1}): &f{2}"),
 
   RESULT_ENABLED("result.enabled", true),
   RESULT_DISCORD_ID("result.discord_id", ""),

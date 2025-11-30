@@ -17,13 +17,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static io.github.divinerealms.core.utilities.Permissions.PERM_COMMAND_TOGGLE;
-import static io.github.divinerealms.core.utilities.Permissions.PERM_COMMAND_TOGGLE_OTHER;
-
 public class ToggleCommand implements CommandExecutor, TabCompleter {
   private final CoreManager coreManager;
   private final Logger logger;
   private final PlayerDataManager dataManager;
+
+  private final static String PERM_MAIN = "core.toggle";
+  private final static String PERM_OTHER = PERM_MAIN + ".other";
 
   public ToggleCommand(CoreManager coreManager) {
     this.coreManager = coreManager;
@@ -33,7 +33,7 @@ public class ToggleCommand implements CommandExecutor, TabCompleter {
 
   @Override
   public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-    if (!sender.hasPermission(PERM_COMMAND_TOGGLE)) { logger.send(sender, Lang.NO_PERM.replace(new String[]{PERM_COMMAND_TOGGLE, label})); return true; }
+    if (!sender.hasPermission(PERM_MAIN)) { logger.send(sender, Lang.NO_PERM.replace(new String[]{PERM_MAIN, label})); return true; }
     if (!(sender instanceof Player)) { logger.send(sender, Lang.INGAME_ONLY.replace(null)); return true; }
 
     Player player = (Player) sender;
@@ -46,7 +46,7 @@ public class ToggleCommand implements CommandExecutor, TabCompleter {
       return true;
     }
 
-    if (!player.hasPermission(PERM_COMMAND_TOGGLE_OTHER)) { logger.send(player, Lang.NO_PERM.replace(new String[]{PERM_COMMAND_TOGGLE_OTHER, label + " <player>"})); return true; }
+    if (!player.hasPermission(PERM_OTHER)) { logger.send(player, Lang.NO_PERM.replace(new String[]{PERM_OTHER, label + " <player>"})); return true; }
 
     Player target = Bukkit.getPlayerExact(args[0]);
     if (target == null) { logger.send(player, Lang.PLAYER_NOT_FOUND.replace(new String[]{args[0]})); return true; }
@@ -64,11 +64,11 @@ public class ToggleCommand implements CommandExecutor, TabCompleter {
 
   @Override
   public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
-    if (!sender.hasPermission(PERM_COMMAND_TOGGLE)) return Collections.emptyList();
+    if (!sender.hasPermission(PERM_MAIN)) return Collections.emptyList();
 
     List<String> completions = new ArrayList<>();
 
-    if (args.length == 1 && sender.hasPermission(PERM_COMMAND_TOGGLE_OTHER)) {
+    if (args.length == 1 && sender.hasPermission(PERM_OTHER)) {
       coreManager.getCachedPlayers().forEach(player -> completions.add(player.getName()));
     }
 
