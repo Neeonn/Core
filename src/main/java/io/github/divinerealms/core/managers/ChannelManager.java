@@ -19,6 +19,8 @@ import org.bukkit.entity.Player;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static io.github.divinerealms.core.utilities.Permissions.PERM_CHAT_COLOR;
+
 public class ChannelManager {
   private final CoreManager coreManager;
   private final Logger logger;
@@ -31,6 +33,7 @@ public class ChannelManager {
   @Getter @Setter private String defaultChannel = "global";
 
   private final Map<UUID, String> lastActiveChannel = new ConcurrentHashMap<>();
+  private final Map<UUID, String> lastChannelUsed = new ConcurrentHashMap<>();
 
   @Getter private boolean mentionsEnabled;
   @Getter private String mentionColor;
@@ -58,6 +61,7 @@ public class ChannelManager {
     disabledChannels.clear();
     discordIdToMinecraft.clear();
     lastActiveChannel.clear();
+    lastChannelUsed.clear();
     mcMessageCount.clear();
     mcLastMessageTime.clear();
     discordLastMessage.clear();
@@ -83,18 +87,56 @@ public class ChannelManager {
     return getChannels(uuid).stream().findFirst().orElse(defaultChannel);
   }
 
+  public void setLastChannelUsed(UUID uuid, String channelName) {
+    lastChannelUsed.put(uuid, channelName);
+  }
+
+  public String getLastChannelUsed(Player player) {
+    UUID uuid = player.getUniqueId();
+
+    if (lastChannelUsed.containsKey(uuid)) {
+      String channel = lastChannelUsed.get(uuid);
+      if (channels.containsKey(channel)) return channel;
+    }
+
+    return getChannels(uuid).stream().findFirst().orElse(defaultChannel);
+  }
+
   public boolean switchChannel(UUID uuid, String channel) {
     Set<String> channels = playerChannels.computeIfAbsent(uuid, k -> new HashSet<>());
+
     if (channels.contains(channel)) {
       channels.remove(channel);
       if (channels.isEmpty()) playerChannels.remove(uuid);
-      lastActiveChannel.remove(uuid);
+
+      if (lastActiveChannel.containsKey(uuid) && lastActiveChannel.get(uuid).equalsIgnoreCase(channel))
+        setLastActiveChannel(uuid, defaultChannel);
+
       return false;
     } else {
       channels.add(channel);
       setLastActiveChannel(uuid, channel);
       return true;
     }
+  }
+
+  public void subscribe(UUID uuid, String channel) {
+    playerChannels.computeIfAbsent(uuid, k -> new HashSet<>()).add(channel);
+  }
+
+  public void unsubscribe(UUID uuid, String channel) {
+    Set<String> channels = playerChannels.get(uuid);
+    if (channels != null) {
+      channels.remove(channel);
+      if (channels.isEmpty()) playerChannels.remove(uuid);
+    }
+  }
+
+  public Set<UUID> getSubscribers(String channel) {
+    String lowerChannel = channel.toLowerCase();
+    Set<UUID> subscribers = new HashSet<>();
+    for (Map.Entry<UUID, Set<String>> entry : playerChannels.entrySet()) if (entry.getValue().contains(lowerChannel)) subscribers.add(entry.getKey());
+    return subscribers;
   }
 
   public boolean toggleChannel(String channel) {
@@ -136,6 +178,7 @@ public class ChannelManager {
 
     if (Config.CONFIG.isConfigurationSection("channels.list")) {
       for (String key : Config.CONFIG.getConfigurationSection("channels.list").getKeys(false)) {
+        if (key.equalsIgnoreCase("roster_template")) continue;
         String path = "channels.list." + key;
 
         ChannelFormats formats = new ChannelFormats(
@@ -170,10 +213,7 @@ public class ChannelManager {
 
   public void sendMessage(CommandSender sender, String channel, String message) {
     ChannelInfo info = channels.get(channel);
-    if (info == null) {
-      logger.send(sender, Lang.CHANNEL_NOT_FOUND.replace(new String[]{channel}));
-      return;
-    }
+    if (info == null) { logger.send(sender, Lang.CHANNEL_NOT_FOUND.replace(new String[]{channel})); return; }
 
     Player player = sender instanceof Player ? (Player) sender : null;
 
@@ -181,9 +221,7 @@ public class ChannelManager {
       if (player != null) {
         boolean nowOn = switchChannel(player.getUniqueId(), channel);
         logger.send(player, Lang.CHANNEL_TOGGLE.replace(new String[]{channel.toUpperCase(), nowOn ? Lang.ON.replace(null) : Lang.OFF.replace(null)}));
-      } else {
-        logger.send(sender, Lang.INGAME_ONLY.replace(null));
-      }
+      } else logger.send(sender, Lang.INGAME_ONLY.replace(null));
       return;
     }
 
@@ -195,6 +233,7 @@ public class ChannelManager {
 
       String formattedMessage = formatChat(player, info.formats.minecraftChat, message, true);
       boolean isBroadcast = info.broadcast || info.permission == null || info.permission.isEmpty();
+      boolean isRosterMember = getChannels(player.getUniqueId()).contains(channel);
 
       socialSpy.forEach(spyUUID -> {
         if (spyUUID.equals(player.getUniqueId())) return;
@@ -202,13 +241,18 @@ public class ChannelManager {
 
         Player spy = Bukkit.getPlayer(spyUUID);
         if (spy == null) return;
-        if (spy.hasPermission(info.permission)) return;
+        if (getSubscribers(channel).contains(spyUUID)) return;
 
-        logger.send(spy, Lang.CHANNEL_SPY_PREFIX.replace(new String[]{channel.toUpperCase()}) + formattedMessage);
+        String senderName = coreManager.getChat().getPlayerPrefix(player) + player.getDisplayName();
+        logger.send(spy, Lang.CHANNEL_SPY_FORMAT.replace(new String[]{channel.toUpperCase(), senderName, message}));
       });
 
       if (isBroadcast) logger.broadcast(formattedMessage);
-      else logger.send(info.permission, formattedMessage);
+      else if (isRosterMember) {
+        Set<UUID> subscribers = getSubscribers(channel);
+        subscribers.stream().map(Bukkit::getPlayer).filter(Objects::nonNull).forEach(p -> logger.send(p, formattedMessage));
+        if (!subscribers.contains(player.getUniqueId())) logger.send(player, formattedMessage);
+      } else logger.send(info.permission, formattedMessage);
 
       if (info.formats.minecraftToDiscord != null && !info.formats.minecraftToDiscord.isEmpty()) {
         sendToDiscord(info, formatChat(player, info.formats.minecraftToDiscord, message, false));
@@ -237,7 +281,7 @@ public class ChannelManager {
 
     formatted = logger.color(formatted);
 
-    String msgPart = colorMessage && player != null && player.hasPermission("core.chat.color") ? logger.color(message) : message;
+    String msgPart = colorMessage && player != null && player.hasPermission(PERM_CHAT_COLOR) ? logger.color(message) : message;
     return formatted.replace("{MESSAGE}", msgPart);
   }
 
@@ -260,5 +304,28 @@ public class ChannelManager {
 
     discordChannel.sendMessage(ChatColor.stripColor(message)).queue();
     discordLastMessage.put(discordId, message);
+  }
+
+  public void createRosterChannel(String rosterChannelName, String discordId) {
+    String uniqueChannelName = rosterChannelName.toLowerCase();
+    if (channels.containsKey(uniqueChannelName)) return;
+
+    String templatePath = "channels.list.roster_template";
+    if (!Config.CONFIG.isConfigurationSection(templatePath)) {
+      logger.info("Missing \"roster_template\" configuration section in config.yml");
+      return;
+    }
+
+    ChannelFormats formats = new ChannelFormats(
+        Config.CONFIG.getString(templatePath + ".formats.minecraft_chat", "%player%: %message%"),
+        Config.CONFIG.getString(templatePath + ".formats.discord_to_minecraft", "%player%: %message%"),
+        Config.CONFIG.getString(templatePath + ".formats.minecraft_to_discord", "%player%: %message%")
+    );
+
+    ChannelInfo info = new ChannelInfo(uniqueChannelName, "core.channel." + uniqueChannelName, discordId,
+        formats, Config.CONFIG.getBoolean(templatePath + ".broadcast", false), Collections.emptyList());
+
+    channels.put(uniqueChannelName, info);
+    if (discordId != null && !discordId.isEmpty()) discordIdToMinecraft.computeIfAbsent(discordId, k -> new ArrayList<>()).add(uniqueChannelName);
   }
 }

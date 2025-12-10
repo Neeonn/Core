@@ -6,6 +6,7 @@ import io.github.divinerealms.core.utilities.ChannelInfo;
 import io.github.divinerealms.core.utilities.Logger;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
 public class DynamicChannelBukkitCommand extends Command {
   private final String channel;
@@ -27,6 +28,15 @@ public class DynamicChannelBukkitCommand extends Command {
 
   @Override
   public boolean execute(CommandSender sender, String label, String[] args) {
+    String message = args.length > 0 ? String.join(" ", args) : null;
+
+    if (sender instanceof Player) {
+      Player player = (Player) sender;
+
+      if (channelManager.getChannels(player.getUniqueId()).contains(channel.toLowerCase()))
+        if (channelManager.getChannels().containsKey(channel)) { channelManager.sendMessage(sender, channel, message); return true; }
+    }
+
     if (getPermission() != null && !getPermission().isEmpty() && !sender.hasPermission(getPermission())) {
       logger.send(sender, Lang.CHANNEL_NO_PERM.replace(new String[]{getPermission(), channel}));
       return true;
@@ -37,7 +47,7 @@ public class DynamicChannelBukkitCommand extends Command {
       return true;
     }
 
-    channelManager.sendMessage(sender, channel, args.length > 0 ? String.join(" ", args) : null);
+    channelManager.sendMessage(sender, channel, message);
     return true;
   }
 }

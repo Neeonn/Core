@@ -5,17 +5,13 @@ import io.github.divinerealms.core.configs.Config;
 import io.github.divinerealms.core.configs.Lang;
 import io.github.divinerealms.core.configs.PlayerData;
 import io.github.divinerealms.core.managers.*;
-import io.github.divinerealms.core.utilities.ActionHandler;
-import io.github.divinerealms.core.utilities.AuthMeHook;
-import io.github.divinerealms.core.utilities.Logger;
-import io.github.divinerealms.core.utilities.PlayerSettings;
+import io.github.divinerealms.core.utilities.*;
 import lombok.Getter;
+import lombok.Setter;
 import net.luckperms.api.LuckPerms;
-import net.luckperms.api.model.group.Group;
-import net.luckperms.api.model.user.User;
-import net.luckperms.api.node.types.InheritanceNode;
 import net.milkbowl.vault.chat.Chat;
 import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.Sound;
 import org.bukkit.command.*;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -48,6 +44,7 @@ public class CoreManager {
   private final ActionHandler actionHandler;
   private final CommandManager commandManager;
   private final PrivateMessagesManager privateMessagesManager;
+  private final RostersManager rostersManager;
 
   private final Set<String> registeredCommands = new HashSet<>();
   private final Set<Player> cachedPlayers = ConcurrentHashMap.newKeySet();
@@ -58,6 +55,8 @@ public class CoreManager {
   private boolean authMe;
   private boolean discordSRV;
   private boolean placeholderAPI;
+
+  @Setter private boolean enabling = false, disabling = false;
 
   public CoreManager(Plugin plugin) throws IllegalStateException {
     this.plugin = plugin;
@@ -76,6 +75,7 @@ public class CoreManager {
     this.channelManager.clearAllState();
     this.listenerManager = new ListenerManager(this);
     this.clientBlocker = new ClientBlocker();
+    this.rostersManager = new RostersManager(this);
     this.resultManager = new ResultManager(this);
     this.resultManager.preloadTeamMedia();
     this.dataManager = new PlayerDataManager(this);
@@ -85,6 +85,8 @@ public class CoreManager {
     this.actionHandler = new ActionHandler(this);
     this.commandManager = new CommandManager(this);
     this.privateMessagesManager = new PrivateMessagesManager(this);
+
+    if (placeholderAPI) new Placeholders(this).register();
 
     this.reload();
   }
@@ -100,6 +102,7 @@ public class CoreManager {
     getListenerManager().registerAll();
     guiManager.reloadMenus();
     bookManager.reloadBooks();
+    rostersManager.reloadRosters();
     List<UUID> onlinePlayers = cachedPlayers.stream().map(Player::getUniqueId).collect(Collectors.toList());
     scheduler.runTaskAsynchronously(plugin, () -> onlinePlayers.forEach(uuid -> {
       Player asyncPlayer = plugin.getServer().getPlayer(uuid);
@@ -110,6 +113,7 @@ public class CoreManager {
 
       resultManager.preloadTeamMedia();
     }));
+    initializeRosterSubscriptions();
   }
 
   private void initializeCachedPlayers() {
@@ -127,15 +131,14 @@ public class CoreManager {
       CommandMap commandMap = (CommandMap) field.get(plugin.getServer());
 
       registerCommand(commandMap, "core", new BukkitCommandWrapper("core", new CoreCommand(this), null));
-      registerCommand(commandMap, "channel", new BukkitCommandWrapper("channel", new ChannelCommand(this), null));
+      registerCommand(commandMap, "channel", new BukkitCommandWrapper("channel", new ChannelCommand(this), Collections.singletonList("ch")));
       registerCommand(commandMap, "clientblocker", new BukkitCommandWrapper("clientblocker", new ClientBlockerCommand(this), Collections.singletonList("cb")));
-      registerCommand(commandMap, "team", new BukkitCommandWrapper("team", new TeamChannelCommand(this), Collections.singletonList("t")));
       registerCommand(commandMap, "result", new BukkitCommandWrapper("result", new ResultCommand(this), Collections.singletonList("rs")));
-      registerCommand(commandMap, "togglemention", new BukkitCommandWrapper("togglemention", new ToggleCommand(this), null));
-      registerCommand(commandMap, "playtime", new BukkitCommandWrapper("playtime", new PlaytimeCommand(this), null));
+      registerCommand(commandMap, "togglemention", new BukkitCommandWrapper("togglemention", new ToggleCommand(this), Collections.singletonList("tgm")));
+      registerCommand(commandMap, "playtime", new BukkitCommandWrapper("playtime", new PlaytimeCommand(this), Collections.singletonList("ptm")));
       registerCommand(commandMap, "rosters", new BukkitCommandWrapper("rosters", new RostersCommand(this), Collections.singletonList("rt")));
       registerCommand(commandMap, "proxycheck", new BukkitCommandWrapper("proxycheck", new ProxyCheckCommand(this), Collections.singletonList("proxy")));
-      registerCommand(commandMap, "socialspy", new BukkitCommandWrapper("socialspy", new SocialSpy(this), Collections.singletonList("spy")));
+      setupDynamicCommands(commandMap);
 
       if (privateMessagesManager.isEnabled()) {
         registerCommand(commandMap, "msg", new BukkitCommandWrapper("msg", new PrivateMessageCommand(this), List.of("pm", "whisper", "w")));
@@ -144,7 +147,7 @@ public class CoreManager {
 
       channelManager.getChannels().values().forEach(info -> {
         if (info.name.equalsIgnoreCase("global")) return;
-        if (info.permission.startsWith("tab.group.")) return;
+        if (info.name.equalsIgnoreCase("roster_template")) return;
 
         DynamicChannelBukkitCommand dynamicCommand = new DynamicChannelBukkitCommand(info, channelManager, logger);
         registerCommand(commandMap, dynamicCommand.getName(), dynamicCommand);
@@ -153,6 +156,22 @@ public class CoreManager {
       logger.info("&a✔ &9Registered &e" + registeredCommands.size() + " &9commands.");
     } catch (Exception exception) {
       plugin.getLogger().log(Level.SEVERE, "Failed to register commands", exception);
+    }
+  }
+
+  private void setupDynamicCommands(CommandMap commandMap) {
+    FileConfiguration config = configManager.getConfig("config.yml");
+
+    for (String league : rostersManager.getAvailableLeagues()) {
+      String commandPath = "rosters.league_settings." + league + ".command_name";
+      String aliasesPath = "rosters.league_settings." + league + ".command_aliases";
+
+      String commandName = config.getString(commandPath);
+      List<String> commandAliases = config.getStringList(aliasesPath);
+      if (commandName == null || commandName.isEmpty()) { logger.info("No command name defined for league: " + league); continue; }
+
+      TeamChannelCommand executor = new TeamChannelCommand(this, league);
+      registerCommand(commandMap, commandName, new BukkitCommandWrapper(commandName, executor, commandAliases != null ? commandAliases : Collections.emptyList()));
     }
   }
 
@@ -270,19 +289,20 @@ public class CoreManager {
     logger.info("&a✔ &9Hooked into &dLuckPerms&9, &dAuthMe &9and &dVault &9successfully!");
   }
 
-  public String getTeam(Player player) {
-    User user = luckPerms.getUserManager().getUser(player.getUniqueId());
-    if (user == null) return null;
+  @SuppressWarnings("deprecation")
+  private void initializeRosterSubscriptions() {
+    Map<String, RosterInfo> allRosters = rostersManager.getRosters();
+    if (allRosters == null || allRosters.isEmpty()) { logger.info("No active rosters found to initialize subscription."); return; }
 
-    return user.getNodes().stream()
-        .filter(node -> node instanceof InheritanceNode)
-        .map(node -> (InheritanceNode) node)
-        .map(inheritanceNode -> luckPerms.getGroupManager().getGroup(inheritanceNode.getGroupName()))
-        .filter(Objects::nonNull)
-        .filter(group -> group.getWeight().orElse(0) == 200)
-        .map(Group::getName)
-        .map(String::toUpperCase)
-        .findFirst().orElse(null);
+    for (RosterInfo roster : allRosters.values()) {
+      String channel = roster.getName().toLowerCase();
+      for (String member : roster.getMembers()) {
+        OfflinePlayer target = Bukkit.getOfflinePlayer(member);
+        if (!target.isOnline()) continue;
+        channelManager.subscribe(target.getUniqueId(), channel);
+        channelManager.setLastActiveChannel(target.getUniqueId(), channelManager.getDefaultChannel());
+      }
+    }
   }
 
   private void setDefaultIfMissing(FileConfiguration file, String path, Object value) {
@@ -290,6 +310,7 @@ public class CoreManager {
   }
 
   public void saveAll() {
+    rostersManager.saveRosters();
     configManager.saveAll();
     dataManager.saveAll();
   }

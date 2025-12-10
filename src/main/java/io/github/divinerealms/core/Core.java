@@ -12,6 +12,7 @@ public class Core extends JavaPlugin {
   public void onEnable() {
     try {
       this.coreManager = new CoreManager(this);
+      coreManager.setEnabling(true);
       coreManager.getLogger().info("&aSuccessfully enabled.");
     } catch (Exception exception) {
       getLogger().log(Level.SEVERE, "Failed to initialize Core", exception);
@@ -22,6 +23,7 @@ public class Core extends JavaPlugin {
   @Override
   public void onDisable() {
     if (coreManager != null) {
+      coreManager.setDisabling(true);
       coreManager.saveAll();
       coreManager.unregisterCommands();
       coreManager.getListenerManager().unregisterAll();

@@ -17,6 +17,10 @@ public class Permissions {
 
   public static final String PERM_CHANNEL_MAIN = PERM_MAIN + "channel";
   public static final String PERM_CHANNEL_TOGGLE = PERM_CHANNEL_MAIN + ".toggle";
+  public static final String PERM_CHANNEL_INFO = PERM_CHANNEL_MAIN + ".info";
+  public static final String PERM_CHANNEL_LIST = PERM_CHANNEL_MAIN + ".list";
+  public static final String PERM_CHANNEL_SWITCH = PERM_CHANNEL_MAIN + ".switch";
+  public static final String PERM_CHANNEL_SPY = PERM_CHANNEL_MAIN + ".spy";
 
   public static final String PERM_CLIENT_BLOCKER_MAIN = PERM_MAIN + "client-blocker";
   public static final String PERM_CLIENT_BLOCKER_TOGGLE = PERM_CLIENT_BLOCKER_MAIN + ".toggle";
@@ -31,7 +35,6 @@ public class Permissions {
 
   public static final String PERM_COMMAND_MAIN = PERM_MAIN + "command";
   public static final String PERM_COMMAND_MSG = PERM_COMMAND_MAIN + ".msg";
-  public static final String PERM_COMMAND_SPY = PERM_COMMAND_MAIN + ".spy";
   public static final String PERM_COMMAND_TOGGLE = PERM_COMMAND_MAIN + ".toggle";
   public static final String PERM_COMMAND_TOGGLE_OTHER = PERM_COMMAND_TOGGLE + ".other";
 

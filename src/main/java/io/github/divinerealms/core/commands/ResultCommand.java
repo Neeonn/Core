@@ -4,7 +4,6 @@ import io.github.divinerealms.core.configs.Lang;
 import io.github.divinerealms.core.main.CoreManager;
 import io.github.divinerealms.core.managers.ResultManager;
 import io.github.divinerealms.core.utilities.Logger;
-import net.luckperms.api.LuckPerms;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -14,21 +13,17 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
-import static io.github.divinerealms.core.utilities.Constants.ROSTER_WEIGHT;
 import static io.github.divinerealms.core.utilities.Permissions.PERM_RESULT_MAIN;
 
 public class ResultCommand implements CommandExecutor, TabCompleter {
   private final CoreManager coreManager;
   private final ResultManager resultManager;
-  private final LuckPerms luckPerms;
   private final Logger logger;
 
   public ResultCommand(CoreManager coreManager) {
     this.coreManager = coreManager;
     this.resultManager = coreManager.getResultManager();
-    this.luckPerms = coreManager.getLuckPerms();
     this.logger = coreManager.getLogger();
   }
 
@@ -133,34 +128,23 @@ public class ResultCommand implements CommandExecutor, TabCompleter {
     } else if (args.length == 2) {
       switch (sub) {
         case "teams":
-          completions.addAll(luckPerms.getGroupManager().getLoadedGroups().stream()
-              .filter(g -> g.getWeight().orElse(0) == ROSTER_WEIGHT)
-              .map(g -> g.getName().toUpperCase())
-              .collect(Collectors.toList())
-          );
+          completions.addAll(coreManager.getRostersManager().getAllRosterNames());
           break;
+
         case "add":
         case "remove":
           completions.addAll(Arrays.asList("home", "away"));
           break;
+
         case "time":
         case "extratime":
         case "extend":
           completions.addAll(Arrays.asList("10s", "30s", "1m", "5m", "10m"));
           break;
-        case "prefix":
-          break;
       }
     } else if (args.length == 3) {
-      if ("add".equals(sub)) {
-        coreManager.getCachedPlayers().forEach(player -> completions.add(player.getName()));
-      } else if ("teams".equals(sub)) {
-        completions.addAll(luckPerms.getGroupManager().getLoadedGroups().stream()
-            .filter(g -> g.getWeight().orElse(0) == ROSTER_WEIGHT)
-            .map(g -> g.getName().toUpperCase())
-            .collect(Collectors.toList())
-        );
-      }
+      if ("add".equals(sub)) coreManager.getCachedPlayers().forEach(player -> completions.add(player.getName()));
+      else if ("teams".equals(sub)) completions.addAll(coreManager.getRostersManager().getAllRosterNames());
     } else if (args.length == 4) {
       if ("add".equals(sub)) coreManager.getCachedPlayers().forEach(player -> completions.add(player.getName()));
     }

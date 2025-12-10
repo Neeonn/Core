@@ -22,7 +22,12 @@ import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitScheduler;
 
+import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
+
+import static io.github.divinerealms.core.utilities.Permissions.PERM_BYPASS_DISABLED_CHANNEL;
+import static io.github.divinerealms.core.utilities.Permissions.PERM_CHAT_COLOR;
 
 public class ChatChannelListener implements Listener {
   private final CoreManager coreManager;
@@ -33,9 +38,6 @@ public class ChatChannelListener implements Listener {
   private final ChannelManager channelManager;
   private final LuckPerms luckPerms;
   private final ResultManager resultManager;
-
-  private static final String PERM_BYPASS = "core.bypass.disabled-channel";
-  private static final String PERM_COLOR = "core.chat.color";
 
   public ChatChannelListener(CoreManager coreManager) {
     this.coreManager = coreManager;
@@ -55,19 +57,17 @@ public class ChatChannelListener implements Listener {
     ChannelInfo info = channelManager.getChannels().get(activeChannel);
     if (info == null) return;
 
-    if (!AuthMeHook.isAuthenticated(player)) {
-      event.setCancelled(true);
-      return;
-    }
+    if (!AuthMeHook.isAuthenticated(player)) { event.setCancelled(true); return; }
 
-    if (channelManager.isChannelDisabled(activeChannel) && !player.hasPermission(PERM_BYPASS)) {
+    if (channelManager.isChannelDisabled(activeChannel) && !player.hasPermission(PERM_BYPASS_DISABLED_CHANNEL)) {
       event.setCancelled(true);
       logger.send(player, Lang.CHANNEL_DISABLED.replace(new String[]{activeChannel}));
       return;
     }
 
     boolean isBroadcast = info.broadcast || info.permission == null || info.permission.isEmpty();
-    if (!isBroadcast && !player.hasPermission(info.permission)) {
+    boolean isRosterMember = channelManager.getChannels(player.getUniqueId()).contains(activeChannel);
+    if (!isBroadcast && !player.hasPermission(info.permission) && !isRosterMember) {
       String defaultChannel = channelManager.getDefaultChannel();
       if (defaultChannel == null) return;
 
@@ -80,7 +80,7 @@ public class ChatChannelListener implements Listener {
     event.setCancelled(true);
 
     String message = event.getMessage();
-    if (!player.hasPermission(PERM_COLOR)) message = ChatColor.stripColor(logger.color(message));
+    if (!player.hasPermission(PERM_CHAT_COLOR)) message = ChatColor.stripColor(logger.color(message));
     final String initialMessage = message;
 
     UUID uuid = player.getUniqueId();
@@ -151,10 +151,13 @@ public class ChatChannelListener implements Listener {
           .filter(playerId -> !playerId.equals(player.getUniqueId()) && !isBroadcast)
           .map(Bukkit::getPlayer)
           .filter(spy -> spy != null && !spy.hasPermission(info.permission))
-          .forEach(spy -> logger.send(spy, Lang.CHANNEL_SPY_PREFIX.replace(new String[]{activeChannel.toUpperCase()}) + formattedMessage));
+          .forEach(spy -> logger.send(spy, Lang.CHANNEL_SPY_FORMAT.replace(new String[]{activeChannel.toUpperCase()}) + formattedMessage));
 
       if (isBroadcast) server.broadcastMessage(logger.color(formattedMessage));
-      else server.broadcast(logger.color(formattedMessage), info.permission);
+      else if (isRosterMember) {
+        Set<UUID> subscribers = channelManager.getSubscribers(activeChannel);
+        subscribers.stream().map(Bukkit::getPlayer).filter(Objects::nonNull).forEach(p -> logger.send(p, formattedMessage));
+      } else server.broadcast(logger.color(formattedMessage), info.permission);
 
       if (coreManager.isDiscordSRV() && info.formats.minecraftToDiscord != null && !info.formats.minecraftToDiscord.isEmpty()) {
         channelManager.sendToDiscord(info, channelManager.formatChat(player,

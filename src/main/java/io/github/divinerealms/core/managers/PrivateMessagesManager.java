@@ -52,7 +52,7 @@ public class PrivateMessagesManager {
       Player spy = Bukkit.getPlayer(spyUUID);
       if (spy == null) return;
 
-      logger.send(spy, Config.PRIVATE_MESSAGES_SPY_FORMAT.getString(new String[]{Lang.CHANNEL_SPY_PREFIX.replace(null), senderName, recipientName, message}));
+      logger.send(spy, Config.PRIVATE_MESSAGES_SPY_FORMAT.getString(new String[]{Lang.CHANNEL_SPY_FORMAT.replace(null), senderName, recipientName, message}));
     });
   }
 

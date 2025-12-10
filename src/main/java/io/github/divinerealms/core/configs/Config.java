@@ -83,7 +83,11 @@ public enum Config {
       "Result: **{2} {3} - {4} {5}**",
       "Time: `{6}`"
   )),
-  RESULT_FORMATS_DISCORD_GOAL_REMOVE("result.formats.discord.goal.remove", "`{0}` __Removed__ goal for team **{1}**!");
+  RESULT_FORMATS_DISCORD_GOAL_REMOVE("result.formats.discord.goal.remove", "`{0}` __Removed__ goal for team **{1}**!"),
+
+  ROSTERS_LEAGUE_SETTINGS_DEFAULT_SUFFIX("rosters.league_settings.default.manager_suffix", "&a [M]"),
+  ROSTERS_LEAGUE_SETTINGS_DEFAULT_EXCLUSIVE("rosters.league_settings.default.is_exclusive_display", false),
+  ROSTERS_LEAGUE_SETTINGS_DEFAULT_EXCLUDED("rosters.league_settings.default.is_excluded_from_display", false);
 
   public static FileConfiguration CONFIG;
   private final String path;

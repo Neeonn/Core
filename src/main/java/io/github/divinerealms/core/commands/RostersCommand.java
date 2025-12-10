@@ -2,19 +2,17 @@ package io.github.divinerealms.core.commands;
 
 import io.github.divinerealms.core.configs.Lang;
 import io.github.divinerealms.core.main.CoreManager;
+import io.github.divinerealms.core.managers.RostersManager;
 import io.github.divinerealms.core.utilities.Logger;
-import net.luckperms.api.LuckPerms;
-import net.luckperms.api.model.group.Group;
-import net.luckperms.api.node.Node;
-import net.luckperms.api.node.types.DisplayNameNode;
-import net.luckperms.api.node.types.MetaNode;
-import net.luckperms.api.node.types.WeightNode;
+import io.github.divinerealms.core.utilities.RosterInfo;
+import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
+import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,149 +20,302 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static io.github.divinerealms.core.utilities.Constants.ROSTER_WEIGHT;
-import static io.github.divinerealms.core.utilities.Constants.ROSTER_WEIGHT_STARTING_THRESHOLD;
 import static io.github.divinerealms.core.utilities.Permissions.*;
 
 public class RostersCommand implements CommandExecutor, TabCompleter {
-  private final LuckPerms luckPerms;
+  private final RostersManager rostersManager;
   private final Logger logger;
 
   public RostersCommand(CoreManager coreManager) {
-    this.luckPerms = coreManager.getLuckPerms();
+    this.rostersManager = coreManager.getRostersManager();
     this.logger = coreManager.getLogger();
   }
 
+  @SuppressWarnings("deprecation")
   @Override
   public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
     if (!sender.hasPermission(PERM_ROSTERS_MAIN)) { logger.send(sender, Lang.NO_PERM.replace(new String[]{PERM_ROSTERS_MAIN, label})); return true; }
-    if (args.length == 0) { logger.send(sender, Lang.ROSTERS_USAGE.replace(null)); return true; }
+    String allAvailableLeagues = String.join(", ", rostersManager.getAvailableLeagues()), activeLeague = rostersManager.getActiveLeague();
+    if (args.length == 0) { logger.send(sender, Lang.ROSTERS_HELP.replace(new String[]{allAvailableLeagues, activeLeague})); return true; }
 
-    String sub = args[0].toLowerCase();
+    String sub = args[0].toLowerCase(), rosterName, playerName, league, newName;
     switch (sub) {
-      case "switch":
-        if (!sender.hasPermission(PERM_ROSTERS_CREATE)) { logger.send(sender, Lang.NO_PERM.replace(new String[]{PERM_ROSTERS_CREATE, label + " " + sub})); return true; }
-        if (args.length != 1) { logger.send(sender, Lang.ROSTERS_USAGE.replace(null)); return true; }
-        if (ROSTER_WEIGHT == 200) ROSTER_WEIGHT = 300;
-        else if (ROSTER_WEIGHT == 300) ROSTER_WEIGHT = 200;
+      case "list":
+        league = args.length > 1 ? args[1] : null;
 
-        logger.send(sender, "{prefix}Promenjen ROSTER_WEIGHT na " + ROSTER_WEIGHT);
+        if (league != null) {
+          List<String> rosterNames = rostersManager.getRostersByLeague(league);
+          if (rosterNames.isEmpty()) { Lang.ROSTERS_LIST_LEAGUE_EMPTY.replace(new String[]{StringUtils.capitalize(league)}); return true; }
+
+          logger.send(sender, Lang.ROSTERS_LIST_HEADER.replace(new String[]{StringUtils.capitalize(league)}));
+          rosterNames.forEach(name -> {
+            RosterInfo rosterList = rostersManager.getRoster(name);
+            if (rosterList == null) return;
+
+            logger.send(sender, Lang.ROSTERS_LIST_ENTRY.replace(new String[]{
+                rosterList.getTag(), rosterList.getLongName(), String.valueOf(rosterList.getMemberCount()),
+                rosterList.getManager() != null ? Lang.ROSTERS_INFO_MANAGER_DISPLAY.replace(new String[]{rosterList.getManager()}) : ""
+            }));
+          });
+          logger.send(sender, System.lineSeparator());
+        } else {
+          List<String> leagueOrder = rostersManager.getAvailableLeagues();
+          logger.send(sender, Lang.ROSTERS_LIST_HEADER.replace(new String[]{"List"}));
+
+          boolean foundAnyRoster = false;
+
+          for (String type : leagueOrder) {
+            List<String> rosterNames = rostersManager.getRostersByLeague(type);
+            if (!rosterNames.isEmpty()) {
+              foundAnyRoster = true;
+
+              logger.send(sender, Lang.ROSTERS_LIST_LEAGUE_ENTRY.replace(new String[]{StringUtils.capitalize(type)}));
+              rosterNames.forEach(name -> {
+                RosterInfo rosterList = rostersManager.getRoster(name);
+                if (rosterList == null) return;
+
+                logger.send(sender, Lang.ROSTERS_LIST_ENTRY.replace(new String[]{
+                    rosterList.getTag(), rosterList.getLongName(), String.valueOf(rosterList.getMemberCount()),
+                    rosterList.getManager() != null ? Lang.ROSTERS_INFO_MANAGER_DISPLAY.replace(new String[]{rosterList.getManager()}) : ""
+                }));
+              });
+              logger.send(sender, System.lineSeparator());
+            }
+          }
+
+          if (!foundAnyRoster) logger.send(sender, Lang.ROSTERS_LIST_ALL_EMPTY.replace(null));
+        }
+
+        logger.send(sender, Lang.ROSTERS_INFO_FOOTER.replace(new String[]{rostersManager.getActiveLeague()}));
         return true;
 
       case "create":
         if (!sender.hasPermission(PERM_ROSTERS_CREATE)) { logger.send(sender, Lang.NO_PERM.replace(new String[]{PERM_ROSTERS_CREATE, label + " " + sub})); return true; }
-        String teamType = "";
-        if (args.length == 4) teamType = args[3];
-        else if (args.length < 3) { logger.send(sender, Lang.ROSTERS_USAGE.replace(null)); return true; }
+        if (args.length < 4) { logger.send(sender, Lang.ROSTERS_USAGE.replace(null)); return true; }
 
-        String teamName = args[1].toUpperCase(), teamTag = "%luckperms_prefix%[" + args[2] + "%luckperms_prefix%] ";
-        if (luckPerms.getGroupManager().getGroup(teamName) != null) { logger.send(sender, Lang.ROSTERS_EXISTS.replace(new String[]{teamName})); return true; }
-        int weight;
+        rosterName = args[1];
+        String tag = args[2];
+        league = args[3];
+        if (!rostersManager.getAvailableLeagues().contains(league.toLowerCase())) {
+          logger.send(sender, Lang.ROSTERS_LEAGUE_INVALID.replace(new String[]{allAvailableLeagues}));
+          return true;
+        }
 
-        MetaNode teamPrefix = MetaNode.builder("minecraftprefix", teamTag).build();
-        if (teamType.equalsIgnoreCase("b")) {
-          teamPrefix = MetaNode.builder("minecraftprefixb", teamTag).build();
-          weight = 199;
-        } else if (teamType.equalsIgnoreCase("rep")) weight = 300;
-        else weight = ROSTER_WEIGHT;
+        if (rostersManager.rosterExists(rosterName)) { logger.send(sender, Lang.ROSTERS_EXISTS.replace(new String[]{rosterName})); return true; }
+        if (rostersManager.createRoster(rosterName, tag, league)) {
+          logger.send(PERM_ROSTERS_NOTIFY, Lang.ROSTERS_CREATE.replace(new String[]{rosterName.toUpperCase(), tag, league.toUpperCase()}));
+          return true;
+        }
 
-        MetaNode finalTeamPrefix = teamPrefix;
-        luckPerms.getGroupManager().createAndLoadGroup(teamName).thenApplyAsync(group -> {
-          group.data().add(DisplayNameNode.builder(args[2]).build());
-          group.data().add(WeightNode.builder(weight).build());
-          group.data().add(finalTeamPrefix);
-          return group;
-        }).thenCompose(luckPerms.getGroupManager()::saveGroup);
-
-        logger.send(PERM_ROSTERS_NOTIFY, Lang.ROSTERS_CREATE.replace(new String[]{teamName, teamTag}));
+        logger.send(sender, Lang.ROSTERS_FAIL_GENERIC.replace(null));
         return true;
 
       case "delete":
         if (!sender.hasPermission(PERM_ROSTERS_DELETE)) { logger.send(sender, Lang.NO_PERM.replace(new String[]{PERM_ROSTERS_DELETE, label + " " + sub})); return true; }
         if (args.length < 2) { logger.send(sender, Lang.ROSTERS_USAGE.replace(null)); return true; }
 
-        String deleteName = args[1].toUpperCase();
-        Group deleteGroup = luckPerms.getGroupManager().getGroup(deleteName);
-        if (deleteGroup == null) { logger.send(sender, Lang.ROSTERS_NOT_FOUND.replace(new String[]{deleteName})); return true; }
+        rosterName = args[1];
+        if (!rostersManager.rosterExists(rosterName)) { logger.send(sender, Lang.ROSTERS_NOT_FOUND.replace(new String[]{rosterName})); return true; }
+        if (rostersManager.deleteRoster(rosterName)) { logger.send(PERM_ROSTERS_NOTIFY, Lang.ROSTERS_DELETE.replace(new String[]{rosterName.toUpperCase()})); return true; }
 
-        for (OfflinePlayer offlinePlayer : Bukkit.getOfflinePlayers()) {
-          if (!offlinePlayer.hasPlayedBefore()) continue;
-          luckPerms.getUserManager().modifyUser(offlinePlayer.getUniqueId(), user ->
-              user.data().remove(Node.builder("group." + deleteName.toLowerCase()).build())
-          );
-        }
-
-        luckPerms.getGroupManager().deleteGroup(deleteGroup);
-        logger.send(PERM_ROSTERS_NOTIFY, Lang.ROSTERS_DELETE.replace(new String[]{deleteName}));
+        logger.send(sender, Lang.ROSTERS_FAIL_GENERIC.replace(null));
         return true;
 
       case "add":
         if (!sender.hasPermission(PERM_ROSTERS_ADD)) { logger.send(sender, Lang.NO_PERM.replace(new String[]{PERM_ROSTERS_ADD, label + " " + sub})); return true; }
         if (args.length < 3) { logger.send(sender, Lang.ROSTERS_USAGE.replace(null)); return true; }
 
-        String addTeam = args[1].toUpperCase(), playerName = args[2];
+        rosterName = args[1];
+        playerName = args[2];
+
+        if (!rostersManager.rosterExists(rosterName)) { logger.send(sender, Lang.ROSTERS_NOT_FOUND.replace(new String[]{rosterName})); return true; }
         OfflinePlayer addTarget = Bukkit.getOfflinePlayer(playerName);
         if (!addTarget.hasPlayedBefore()) { logger.send(sender, Lang.PLAYER_NOT_FOUND.replace(new String[]{playerName})); return true; }
 
-        luckPerms.getUserManager().modifyUser(addTarget.getUniqueId(), user -> {
-          for (Group group : luckPerms.getGroupManager().getLoadedGroups()) {
-            if (group.getWeight().orElse(0) == ROSTER_WEIGHT) {
-              user.data().remove(Node.builder("group." + group.getName().toLowerCase()).build());
-            }
-          }
-          user.data().add(Node.builder("group." + addTeam.toLowerCase()).build());
-        });
+        if (rostersManager.addPlayerToRoster(rosterName, addTarget.getName())) {
+          logger.send(PERM_ROSTERS_NOTIFY, Lang.ROSTERS_ADD.replace(new String[]{playerName, rosterName.toUpperCase()}));
+          return true;
+        }
 
-        logger.send(PERM_ROSTERS_NOTIFY, Lang.ROSTERS_ADD.replace(new String[]{playerName, addTeam}));
+        logger.send(sender, Lang.ROSTERS_FAIL_GENERIC.replace(null));
         return true;
 
       case "remove":
         if (!sender.hasPermission(PERM_ROSTERS_REMOVE)) { logger.send(sender, Lang.NO_PERM.replace(new String[]{PERM_ROSTERS_REMOVE, label + " " + sub})); return true; }
-        if (args.length < 2) { logger.send(sender, Lang.ROSTERS_USAGE.replace(null)); return true; }
+        if (args.length < 3) { logger.send(sender, Lang.ROSTERS_USAGE.replace(null)); return true; }
 
-        String removeName = args[1];
-        OfflinePlayer removeTarget = Bukkit.getOfflinePlayer(removeName);
-        if (!removeTarget.hasPlayedBefore()) { logger.send(sender, Lang.PLAYER_NOT_FOUND.replace(new String[]{removeName})); return true; }
+        playerName = args[1];
+        league = args[2];
+        OfflinePlayer removeTarget = Bukkit.getOfflinePlayer(playerName);
+        if (!removeTarget.hasPlayedBefore()) { logger.send(sender, Lang.PLAYER_NOT_FOUND.replace(new String[]{playerName})); return true; }
 
-        luckPerms.getUserManager().modifyUser(removeTarget.getUniqueId(), user -> {
-          for (Group group : luckPerms.getGroupManager().getLoadedGroups()) {
-            if (group.getWeight().orElse(0) == ROSTER_WEIGHT) {
-              user.data().remove(Node.builder("group." + group.getName().toLowerCase()).build());
-            }
-          }
-        });
+        if (rostersManager.removePlayerFromRoster(removeTarget.getName(), league)) {
+          logger.send(PERM_ROSTERS_NOTIFY, Lang.ROSTERS_REMOVE.replace(new String[]{playerName, league.toUpperCase()}));
+          return true;
+        }
 
-        logger.send(PERM_ROSTERS_NOTIFY, Lang.ROSTERS_REMOVE.replace(new String[]{removeName}));
+        logger.send(sender, Lang.ROSTERS_PLAYER_NOT_IN_ROSTER.replace(new String[]{playerName, league.toUpperCase()}));
         return true;
 
-      case "set":
+      case "view":
+      case "info":
+        if (args.length < 2) {
+          if (!(sender instanceof Player)) { logger.send(sender, Lang.USAGE.replace(new String[]{label + " " + sub + " <roster>"})); return true; }
+          Player player = (Player) sender;
+          RosterInfo rosterInfo = rostersManager.getPlayerRoster(player);
+          if (rosterInfo == null) { logger.send(player, Lang.ROSTERS_NOT_IN_ANY.replace(null)); return true; }
+
+          rosterName = rosterInfo.getName();
+        } else rosterName = args[1];
+
+        List<String> info = rostersManager.getRosterInfo(rosterName);
+        if (info.isEmpty()) { logger.send(sender, Lang.ROSTERS_NOT_FOUND.replace(new String[]{rosterName})); return true; }
+
+        info.forEach(line -> logger.send(sender, line));
+        return true;
+
+      case "manager":
+      case "setmanager":
         if (!sender.hasPermission(PERM_ROSTERS_SET)) { logger.send(sender, Lang.NO_PERM.replace(new String[]{PERM_ROSTERS_SET, label + " " + sub})); return true; }
         if (args.length < 3) { logger.send(sender, Lang.ROSTERS_USAGE.replace(null)); return true; }
 
-        String setTeam = args[1].toUpperCase(), type = args[2].toLowerCase(), value = args.length > 3 ? args[3] : null;
-        Group setGroup = luckPerms.getGroupManager().getGroup(setTeam);
-        if (setGroup == null) { logger.send(sender, Lang.ROSTERS_NOT_FOUND.replace(new String[]{setTeam})); return true; }
-        if (value == null) { logger.send(sender, Lang.ROSTERS_USAGE.replace(null)); return true; }
+        playerName = args[1];
+        league = args[2];
+        OfflinePlayer managerTarget = Bukkit.getOfflinePlayer(playerName);
+        if (!managerTarget.hasPlayedBefore()) { logger.send(sender, Lang.PLAYER_NOT_FOUND.replace(new String[]{playerName})); return true; }
 
-        switch (type) {
-          case "name":
-            setGroup.data().add(MetaNode.builder("name", value).build());
-            break;
-          case "tag":
-            setGroup.data().add(MetaNode.builder("displayname", value).build());
-            setGroup.data().add(MetaNode.builder("minecraftprefix", "%luckperms_prefix%[" + value + "%luckperms_prefix%] ").build());
-            break;
-          case "default":
-            logger.send(sender, Lang.ROSTERS_INVALID_TYPE.replace(null));
-            return true;
+        RosterInfo rosterInfo = rostersManager.getPlayerRoster(managerTarget.getName(), league);
+        if (rosterInfo == null) { logger.send(sender, Lang.ROSTERS_PLAYER_NOT_IN_ROSTER.replace(new String[]{playerName, league})); return true; }
+
+        if (rostersManager.setManager(managerTarget.getName(), league)) {
+          logger.send(PERM_ROSTERS_NOTIFY, Lang.ROSTERS_MANAGER_SET.replace(new String[]{playerName, rosterInfo.getTag() + " &f" + rosterInfo.getName()}));
+          return true;
         }
 
-        luckPerms.getGroupManager().saveGroup(setGroup);
-        logger.send(PERM_ROSTERS_NOTIFY, Lang.ROSTERS_SET.replace(new String[]{type, value, setTeam}));
+        logger.send(sender, Lang.ROSTERS_MANAGER_FAIL.replace(null));
+        return true;
+
+      case "name":
+        if (!sender.hasPermission(PERM_ROSTERS_SET)) { logger.send(sender, Lang.NO_PERM.replace(new String[]{PERM_ROSTERS_SET, label + " " + sub})); return true; }
+        if (args.length < 3) { logger.send(sender, Lang.ROSTERS_USAGE.replace(null)); return true; }
+
+        rosterName = args[1];
+        newName = String.join(" ", Arrays.copyOfRange(args, 2, args.length));
+
+        if (!rostersManager.rosterExists(rosterName)) { logger.send(sender, Lang.ROSTERS_NOT_FOUND.replace(new String[]{rosterName})); return true; }
+        if (rostersManager.updateLongName(rosterName, newName)) {
+          logger.send(PERM_ROSTERS_NOTIFY, Lang.ROSTERS_SET.replace(new String[]{"name", newName, rosterName.toUpperCase()}));
+          return true;
+        }
+
+        logger.send(sender, Lang.ROSTERS_FAIL_GENERIC.replace(null));
+        return true;
+
+      case "tag":
+        if (!sender.hasPermission(PERM_ROSTERS_SET)) { logger.send(sender, Lang.NO_PERM.replace(new String[]{PERM_ROSTERS_SET, label + " " + sub})); return true; }
+        if (args.length < 3) { logger.send(sender, Lang.ROSTERS_USAGE.replace(null)); return true; }
+
+        rosterName = args[1];
+        String newTag = args[2];
+
+        if (!rostersManager.rosterExists(rosterName)) { logger.send(sender, Lang.ROSTERS_NOT_FOUND.replace(new String[]{rosterName})); return true; }
+        if (rostersManager.updateTag(rosterName, newTag)) {
+          logger.send(PERM_ROSTERS_NOTIFY, Lang.ROSTERS_SET.replace(new String[]{"tag", newTag, rosterName.toUpperCase()}));
+          return true;
+        }
+
+        logger.send(sender, Lang.ROSTERS_FAIL_GENERIC.replace(null));
+        return true;
+
+      case "league":
+        if (!sender.hasPermission(PERM_ROSTERS_SET)) { logger.send(sender, Lang.NO_PERM.replace(new String[]{PERM_ROSTERS_SET, label + " " + sub})); return true; }
+        if (args.length < 3) { logger.send(sender, Lang.ROSTERS_USAGE.replace(null)); return true; }
+
+        rosterName = args[1];
+        String newLeague = args[2];
+        if (!rostersManager.getAvailableLeagues().contains(newLeague.toLowerCase())) {
+          logger.send(sender, Lang.ROSTERS_LEAGUE_INVALID.replace(new String[]{allAvailableLeagues}));
+          return true;
+        }
+
+        if (!rostersManager.rosterExists(rosterName)) { logger.send(sender, Lang.ROSTERS_NOT_FOUND.replace(new String[]{rosterName})); return true; }
+        if (rostersManager.updateLeague(rosterName, newLeague)) { logger.send(PERM_ROSTERS_NOTIFY, Lang.ROSTERS_SET.replace(new String[]{"league", newLeague.toUpperCase(), rosterName.toUpperCase()})); return true; }
+
+        logger.send(sender, Lang.ROSTERS_FAIL_GENERIC.replace(null));
+        return true;
+
+      case "switch":
+      case "setleague":
+        if (!sender.hasPermission(PERM_ROSTERS_SET)) { logger.send(sender, Lang.NO_PERM.replace(new String[]{PERM_ROSTERS_SET, label + " " + sub})); return true; }
+        if (args.length < 2) { logger.send(sender, Lang.ROSTERS_USAGE.replace(null)); return true; }
+
+        String switchedLeague = args[1];
+        if (!rostersManager.getAvailableLeagues().contains(switchedLeague.toLowerCase())) {
+          logger.send(sender, Lang.ROSTERS_LEAGUE_INVALID.replace(new String[]{allAvailableLeagues}));
+          return true;
+        }
+
+        rostersManager.setActiveLeague(switchedLeague);
+        logger.send(PERM_ROSTERS_NOTIFY, Lang.ROSTERS_LEAGUE_SWITCHED.replace(new String[]{switchedLeague.toUpperCase()}));
+        return true;
+
+      case "addleague":
+        if (!sender.hasPermission(PERM_ROSTERS_SET)) { logger.send(sender, Lang.NO_PERM.replace(new String[]{PERM_ROSTERS_SET, label + " " + sub})); return true; }
+        if (args.length < 2) { logger.send(sender, Lang.ROSTERS_USAGE.replace(null)); return true; }
+
+        league = args[1];
+        if (rostersManager.getAvailableLeagues().contains(league.toLowerCase())) {
+          logger.send(sender, Lang.ROSTERS_LEAGUE_INVALID.replace(new String[]{allAvailableLeagues}));
+          return true;
+        }
+
+        rostersManager.addAvailableLeague(league);
+        logger.send(PERM_ROSTERS_NOTIFY, Lang.ROSTERS_LEAGUE_ADDED.replace(new String[]{league.toUpperCase()}));
+        return true;
+
+      case "removeleague":
+        if (!sender.hasPermission(PERM_ROSTERS_SET)) { logger.send(sender, Lang.NO_PERM.replace(new String[]{PERM_ROSTERS_SET, label + " " + sub})); return true; }
+        if (args.length < 2) { logger.send(sender, Lang.ROSTERS_USAGE.replace(null)); return true; }
+
+        league = args[1];
+        if (!rostersManager.getAvailableLeagues().contains(league.toLowerCase())) {
+          logger.send(sender, Lang.ROSTERS_LEAGUE_NOT_FOUND.replace(new String[]{league}));
+          return true;
+        }
+
+        if (!rostersManager.getRostersByLeague(league).isEmpty()) {
+          logger.send(sender, Lang.ROSTERS_LEAGUE_NON_EMPTY_REMOVE.replace(new String[]{league.toUpperCase()}));
+          return true;
+        }
+
+        rostersManager.removeAvailableLeague(league);
+        logger.send(PERM_ROSTERS_NOTIFY, Lang.ROSTERS_LEAGUE_REMOVED.replace(new String[]{league.toUpperCase()}));
+        return true;
+
+      case "renameleague":
+        if (!sender.hasPermission(PERM_ROSTERS_SET)) { logger.send(sender, Lang.NO_PERM.replace(new String[]{PERM_ROSTERS_SET, label + " " + sub})); return true; }
+        if (args.length < 3) { logger.send(sender, Lang.ROSTERS_USAGE.replace(null)); return true; }
+
+        String oldName = args[1];
+        newName = args[2];
+
+        if (rostersManager.renameLeague(oldName, newName)) {
+          logger.send(PERM_ROSTERS_NOTIFY, Lang.ROSTERS_LEAGUE_RENAMED.replace(new String[]{oldName.toUpperCase(), newName.toUpperCase()}));
+        } else logger.send(sender, Lang.ROSTERS_LEAGUE_RENAME_FAIL.replace(null));
+        return true;
+
+      case "reload":
+        if (!sender.hasPermission(PERM_ADMIN_RELOAD)) { logger.send(sender, Lang.NO_PERM.replace(new String[]{PERM_ADMIN_RELOAD, label + " " + sub})); return true; }
+
+        rostersManager.reloadRosters();
+        logger.send(sender, Lang.ADMIN_RELOAD.replace(new String[]{"rosters"}));
         return true;
 
       case "help":
       case "?":
+        logger.send(sender, Lang.ROSTERS_HELP.replace(new String[]{allAvailableLeagues, activeLeague}));
+        return true;
+
       default:
         logger.send(sender, Lang.ROSTERS_USAGE.replace(null));
         return true;
@@ -178,28 +329,52 @@ public class RostersCommand implements CommandExecutor, TabCompleter {
     List<String> completions = new ArrayList<>();
 
     if (args.length == 1) {
-      completions.addAll(Arrays.asList("switch", "create", "delete", "add", "remove", "set", "help"));
+      completions.addAll(Arrays.asList("list", "info", "create", "delete", "add",
+          "remove", "setmanager", "manager", "name", "tag", "league", "switch",
+          "addleague", "removeleague", "renameleague", "reload", "help"));
     } else if (args.length == 2) {
-      if (args[0].equalsIgnoreCase("delete") || args[0].equalsIgnoreCase("add") || args[0].equalsIgnoreCase("set")) {
-        completions.addAll(luckPerms.getGroupManager().getLoadedGroups().stream()
-            .filter(g -> g.getWeight().orElse(0) >= ROSTER_WEIGHT_STARTING_THRESHOLD)
-            .map(g -> g.getName().toUpperCase())
-            .collect(Collectors.toList())
-        );
-      } else if (args[0].equalsIgnoreCase("remove") && sender.hasPermission(PERM_ROSTERS_REMOVE)) {
-        for (OfflinePlayer offlinePlayer : Bukkit.getOfflinePlayers()) {
-          if (offlinePlayer.hasPlayedBefore()) completions.add(offlinePlayer.getName());
-        }
+      String sub = args[0].toLowerCase();
+      switch (sub) {
+        case "list":
+        case "switch":
+        case "setleague":
+        case "removeleague":
+        case "renameleague":
+          completions.addAll(rostersManager.getAvailableLeagues());
+          break;
+
+        case "delete":
+        case "info":
+        case "view":
+        case "tag":
+        case "name":
+        case "league":
+        case "add":
+          completions.addAll(rostersManager.getAllRosterNames());
+          break;
+
+        case "remove":
+        case "manager":
+        case "setmanager":
+          Bukkit.getOnlinePlayers().forEach(player -> completions.add(player.getName()));
+          break;
       }
     } else if (args.length == 3) {
-      if (args[0].equalsIgnoreCase("add") && sender.hasPermission(PERM_ROSTERS_ADD)) {
-        for (OfflinePlayer offlinePlayer : Bukkit.getOfflinePlayers()) {
-          if (offlinePlayer.hasPlayedBefore()) completions.add(offlinePlayer.getName());
-        }
-      } else if (args[0].equalsIgnoreCase("set") && sender.hasPermission(PERM_ROSTERS_SET)) {
-        completions.addAll(Arrays.asList("name", "tag"));
+      String sub = args[0].toLowerCase();
+      switch (sub) {
+        case "add":
+          completions.addAll(Arrays.stream(Bukkit.getOfflinePlayers()).filter(OfflinePlayer::hasPlayedBefore).map(OfflinePlayer::getName).collect(Collectors.toSet()));
+          break;
+
+        case "remove":
+        case "manager":
+        case "setmanager":
+        case "league":
+        case "renameleague":
+          completions.addAll(rostersManager.getAvailableLeagues());
+          break;
       }
-    } else if (args.length == 4 && args[0].equalsIgnoreCase("create")) completions.addAll(Arrays.asList("b", "rep"));
+    } else if (args.length == 4 && args[0].equalsIgnoreCase("create")) completions.addAll(rostersManager.getAvailableLeagues());
 
     if (!completions.isEmpty()) {
       String lastWord = args[args.length - 1].toLowerCase();

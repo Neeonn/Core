@@ -3,7 +3,6 @@ package io.github.divinerealms.core.managers;
 import io.github.divinerealms.core.configs.PlayerData;
 import io.github.divinerealms.core.main.CoreManager;
 import io.github.divinerealms.core.utilities.Logger;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
@@ -13,36 +12,28 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
 
 public class PlayerDataManager {
+  private final CoreManager coreManager;
   private final Plugin plugin;
   private final ConfigManager configManager;
   private final Logger logger;
   private final Map<String, PlayerData> playerCache = new ConcurrentHashMap<>();
 
-  private final FileConfiguration uuidConfig;
   private final Map<String, String> uuidCache = new ConcurrentHashMap<>();
-  private volatile boolean uuidsChanged = false;
 
   private final Queue<String> dataQueue = new ConcurrentLinkedQueue<>();
   private final Set<String> dataQueueSet = Collections.newSetFromMap(new ConcurrentHashMap<>());
   private volatile boolean saveScheduled = false;
 
   public PlayerDataManager(CoreManager coreManager) {
+    this.coreManager = coreManager;
     this.plugin = coreManager.getPlugin();
     this.configManager = coreManager.getConfigManager();
     this.logger = coreManager.getLogger();
-    configManager.createNewFile("player_uuids.yml", "Cache of player UUIDs");
-    this.uuidConfig = configManager.getConfig("player_uuids.yml");
-
-    for (String key : uuidConfig.getKeys(false)) {
-      uuidCache.put(key, uuidConfig.getString(key));
-    }
   }
 
   public PlayerData get(Player player) {
     uuidCache.computeIfAbsent(player.getName(), name -> {
       String uuid = player.getUniqueId().toString();
-      uuidConfig.set(name, uuid);
-      uuidsChanged = true;
       queueAdd(name);
       return uuid;
     });
@@ -54,12 +45,6 @@ public class PlayerDataManager {
     String uuid = uuidCache.get(playerName);
     if (uuid == null) return null;
     return playerCache.computeIfAbsent(playerName, name -> new PlayerData(name, configManager, this));
-  }
-
-  public UUID getUUID(String playerName) {
-    String uuidString = uuidCache.get(playerName);
-    if (uuidString == null) return null;
-    return UUID.fromString(uuidString);
   }
 
   public void queueAdd(String playerName) {
@@ -79,7 +64,7 @@ public class PlayerDataManager {
   }
 
   public void saveQueue() {
-    if (dataQueue.isEmpty() && !uuidsChanged) return;
+    if (dataQueue.isEmpty()) return;
 
     plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
       int chunkSize = 20;
@@ -101,16 +86,6 @@ public class PlayerDataManager {
 
       logger.info("Auto saved " + totalSaved + " player data file(s) this batch.");
 
-      if (uuidsChanged) {
-        uuidsChanged = false;
-        try {
-          configManager.saveConfig("player_uuids.yml");
-          logger.info("Saved updated player UUIDs.");
-        } catch (Exception exception) {
-          plugin.getLogger().log(Level.SEVERE, "Failed to save UUID config", exception);
-        }
-      }
-
       if (!dataQueue.isEmpty()) {
         logger.info(dataQueue.size() + " player data file(s) remaining in queue, scheduling next batch...");
         scheduleSave();
@@ -121,17 +96,6 @@ public class PlayerDataManager {
   public void saveAll() {
     playerCache.values().forEach(PlayerData::save);
     dataQueue.clear();
-
-    if (uuidsChanged) {
-      try {
-        configManager.saveConfig("player_uuids.yml");
-        uuidsChanged = false;
-        logger.info("Saved all player UUIDs.");
-      } catch (Exception exception) {
-        plugin.getLogger().log(Level.SEVERE, "Failed to save UUID config.", exception);
-      }
-    }
-
     logger.info("Saved all player data.");
   }
 
@@ -142,6 +106,7 @@ public class PlayerDataManager {
   }
 
   private void scheduleSave() {
+    if (coreManager.isDisabling()) return;
     if (saveScheduled) return;
     saveScheduled = true;
 

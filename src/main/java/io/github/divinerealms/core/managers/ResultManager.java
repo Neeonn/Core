@@ -7,11 +7,10 @@ import io.github.divinerealms.core.configs.Config;
 import io.github.divinerealms.core.configs.Lang;
 import io.github.divinerealms.core.main.CoreManager;
 import io.github.divinerealms.core.utilities.Logger;
+import io.github.divinerealms.core.utilities.RosterInfo;
 import io.github.divinerealms.core.utilities.Timer;
 import lombok.Getter;
 import lombok.Setter;
-import net.luckperms.api.LuckPerms;
-import net.luckperms.api.model.group.Group;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
@@ -22,8 +21,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ResultManager {
+  private final RostersManager rostersManager;
   private final Logger logger;
-  private final LuckPerms luckPerms;
   private final Plugin plugin;
 
   @Getter @Setter private int defaultHalfDuration = 10 * 60;
@@ -48,8 +47,8 @@ public class ResultManager {
   @Getter private final Map<String, Map<String, String>> cachedTeamMedia = new ConcurrentHashMap<>();
 
   public ResultManager(CoreManager coreManager) {
+    this.rostersManager = coreManager.getRostersManager();
     this.logger = coreManager.getLogger();
-    this.luckPerms = coreManager.getLuckPerms();
     this.plugin = coreManager.getPlugin();
   }
 
@@ -135,8 +134,8 @@ public class ResultManager {
   }
 
   public void setTeams(CommandSender sender, String home, String away) {
-    this.home = resolveGroupName(home.toUpperCase());
-    this.away = resolveGroupName(away.toUpperCase());
+    this.home = resolveRosterName(home);
+    this.away = resolveRosterName(away);
     if (this.warp == null) setWarp(home);
 
     logger.send(sender, Lang.RESULT_TEAMS_SET.replace(new String[]{this.home, this.away}));
@@ -312,11 +311,11 @@ public class ResultManager {
         });
   }
 
-  private String resolveGroupName(String input) {
-    Group group = luckPerms.getGroupManager().getGroup(input.toLowerCase());
-    if (group != null) {
+  private String resolveRosterName(String input) {
+    RosterInfo roster = rostersManager.getRoster(input.toLowerCase());
+    if (roster != null) {
       shouldSendToDiscord = true;
-      return group.getDisplayName() != null ? group.getDisplayName() : group.getName().toUpperCase();
+      return roster.getTag() != null ? roster.getTag() : roster.getName().toUpperCase();
     }
 
     shouldSendToDiscord = false;

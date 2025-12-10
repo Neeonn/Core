@@ -9,9 +9,17 @@ import io.github.divinerealms.core.main.CoreManager;
 import io.github.divinerealms.core.managers.ChannelManager;
 import io.github.divinerealms.core.utilities.ChannelInfo;
 import io.github.divinerealms.core.utilities.Logger;
+import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.HoverEvent;
+import net.md_5.bungee.api.chat.TextComponent;
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 public class DiscordMessageListener {
   private final CoreManager coreManager;
@@ -40,20 +48,40 @@ public class DiscordMessageListener {
     String messageRaw = resolveDiscordMentions(event.getMessage());
     String replyName = getReplyName(event);
 
-    if (messageRaw.trim().isEmpty() && !event.getMessage().getAttachments().isEmpty()) {
-      messageRaw = event.getMessage().getAttachments().get(0).getUrl();
+    List<Message.Attachment> attachments = event.getMessage().getAttachments();
+    BaseComponent[] attachmentComponent = null;
+    if (!attachments.isEmpty()) {
+      String attachmentText = attachments.size() == 1 ? logger.color("&9 &l[ATTACHMENT]&r ") : logger.color("&9 &l[" + attachments.size() + "x ATTACHMENTS] &r");
+      TextComponent component = new TextComponent(attachmentText);
+      component.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, attachments.get(0).getUrl()));
+      component.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new TextComponent[]{new TextComponent(logger.color("&eKliknite da vidite attachment(s)"))}));
+      attachmentComponent = new BaseComponent[]{component};
     }
+
+    if (messageRaw.trim().isEmpty() && attachmentComponent != null) messageRaw = "";
 
     for (String minecraftChannel : minecraftChannels) {
       ChannelInfo info = channelManager.getChannels().get(minecraftChannel);
       if (info == null) continue;
       if (info.discordId.equals(globalInfo.discordId) && !minecraftChannel.equals(channelManager.getDefaultChannel())) continue;
 
-      String formattedMessage = getFormatted(info, displayName, replyName, messageRaw);
+      String formattedMessage = getFormatted(info, displayName, replyName, messageRaw, minecraftChannel.toUpperCase());
+      String[] parts = formattedMessage.split("\\{ATTACHMENTS}", 2);
+
+      TextComponent prefixComponent = new TextComponent(logger.color(parts[0]));
+      TextComponent suffixComponent = parts.length > 1 ? new TextComponent(logger.color(parts[1])) : new TextComponent("");
+
+      if (attachmentComponent != null) prefixComponent.addExtra(attachmentComponent[0]);
+      prefixComponent.addExtra(suffixComponent);
+
       if (info.permission != null && !info.permission.isEmpty()) {
-        logger.send(info.permission, formattedMessage);
+        Set<UUID> subscribers = channelManager.getSubscribers(minecraftChannel);
+
+        for (Player player : Bukkit.getOnlinePlayers()) {
+          if (player.hasPermission(info.permission) || subscribers.contains(player.getUniqueId())) player.spigot().sendMessage(prefixComponent);
+        }
       } else {
-        logger.broadcast(formattedMessage);
+        for (Player player : Bukkit.getOnlinePlayers()) player.spigot().sendMessage(prefixComponent);
       }
     }
   }
@@ -66,11 +94,17 @@ public class DiscordMessageListener {
         : Lang.CHANNEL_REPLY.replace(new String[]{referenced.getAuthor().getName().trim()});
   }
 
-  private static @NotNull String getFormatted(ChannelInfo info, String displayName, String replyName, String message) {
+  private static @NotNull String getFormatted(ChannelInfo info, String displayName, String replyName, String message, String channelName) {
     String format = info.formats.discordToMinecraft;
     if (format == null || format.trim().isEmpty()) format = "%name%: %message%";
 
-    return format.replace("%name%", displayName).replace("%reply%", replyName).replace("%message%", message).replaceAll("%[^%]+%", "").trim();
+    return format
+        .replace("%channelName%", channelName)
+        .replace("%name%", displayName)
+        .replace("%reply%", replyName)
+        .replace("%message%", message)
+        .replaceAll("%[^%]+%", "")
+        .trim();
   }
 
   private static String resolveDiscordMentions(Message message) {
