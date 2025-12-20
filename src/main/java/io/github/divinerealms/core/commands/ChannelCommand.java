@@ -90,9 +90,14 @@ public class ChannelCommand implements CommandExecutor, TabCompleter {
         Player switchingPlayer = (Player) sender;
         String channelToSwitchTo = args[1];
         if (!channelManager.getChannels().containsKey(channelToSwitchTo.toLowerCase())) { logger.send(sender, Lang.CHANNEL_NOT_FOUND.replace(new String[]{channelToSwitchTo})); return true; }
+        if (channelManager.isChannelDisabled(channelToSwitchTo)) { logger.send(sender, Lang.CHANNEL_DISABLED.replace(new String[]{channelToSwitchTo.toUpperCase()})); return true; }
+        if (!channelManager.getChannels(switchingPlayer.getUniqueId()).contains(channelToSwitchTo.toLowerCase())) { logger.send(sender, Lang.CHANNEL_NOT_SUBSCRIBED.replace(new String[]{channelToSwitchTo.toUpperCase()})); return true; }
+        channelManager.setLastChannelUsed(switchingPlayer.getUniqueId(), channelToSwitchTo.toLowerCase());
+        String currentChannel = channelManager.getActiveChannel(switchingPlayer);
+        boolean alreadyActive = channelToSwitchTo.equalsIgnoreCase(currentChannel);
 
-        boolean switchedStatus = channelManager.switchChannel(switchingPlayer.getUniqueId(), channelToSwitchTo.toLowerCase());
-        logger.send(switchingPlayer, Lang.CHANNEL_TOGGLE.replace(new String[]{channelToSwitchTo.toUpperCase(), switchedStatus ? Lang.ON.replace(null) : Lang.OFF.replace(null)}));
+        channelManager.setLastActiveChannel(switchingPlayer.getUniqueId(), alreadyActive ? channelManager.getDefaultChannel() : channelToSwitchTo.toLowerCase());
+        logger.send(switchingPlayer, Lang.CHANNEL_TOGGLE.replace(new String[]{channelToSwitchTo.toUpperCase(), alreadyActive ? Lang.OFF.replace(null) : Lang.ON.replace(null)}));
         break;
 
       case "status":
@@ -101,6 +106,7 @@ public class ChannelCommand implements CommandExecutor, TabCompleter {
         if (args.length < 2) { logger.send(sender, Lang.CHANNEL_HELP.replace(null)); return true; }
 
         Player statusPlayer = Bukkit.getPlayer(args[1]);
+        if (statusPlayer == null || !statusPlayer.isOnline()) { logger.send(sender, Lang.PLAYER_NOT_FOUND.replace(new String[]{args[1]})); return true; }
         Set<String> subscribedChannels = channelManager.getChannels(statusPlayer.getUniqueId());
         String activeChannel = channelManager.getActiveChannel(statusPlayer);
         String subsList = subscribedChannels.stream()
