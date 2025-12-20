@@ -5,6 +5,7 @@ import io.github.divinerealms.core.main.CoreManager;
 import io.github.divinerealms.core.managers.ChannelManager;
 import io.github.divinerealms.core.utilities.ChannelInfo;
 import io.github.divinerealms.core.utilities.Logger;
+import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -17,10 +18,12 @@ import java.util.stream.Collectors;
 import static io.github.divinerealms.core.utilities.Permissions.*;
 
 public class ChannelCommand implements CommandExecutor, TabCompleter {
+  private final CoreManager coreManager;
   private final Logger logger;
   private final ChannelManager channelManager;
 
   public ChannelCommand(CoreManager coreManager) {
+    this.coreManager = coreManager;
     this.logger = coreManager.getLogger();
     this.channelManager = coreManager.getChannelManager();
   }
@@ -68,8 +71,11 @@ public class ChannelCommand implements CommandExecutor, TabCompleter {
 
         String isBroadcast = info.broadcast ? Lang.YES.replace(null) : Lang.NO.replace(null);
         String definedDiscordId = info.discordId != null && !info.discordId.isEmpty() ? info.discordId : Lang.UNDEFINED.replace(null);
+        Set<UUID> subscribers = channelManager.getSubscribers(channelName);
+        String subscribersList = subscribers.stream().map(uuid -> Bukkit.getOfflinePlayer(uuid).getName()).filter(Objects::nonNull).collect(Collectors.joining("&7, &f"));
+        if (subscribersList.isEmpty()) subscribersList = "&7---";
 
-        logger.send(sender, Lang.CHANNEL_INFO.replace(new String[]{ channelName.toUpperCase(), disabledStatus, hasPermission, isBroadcast, definedDiscordId }));
+        logger.send(sender, Lang.CHANNEL_INFO.replace(new String[]{ channelName.toUpperCase(), disabledStatus, hasPermission, isBroadcast, definedDiscordId, subscribersList }));
         break;
 
       case "switch":
@@ -89,6 +95,33 @@ public class ChannelCommand implements CommandExecutor, TabCompleter {
         logger.send(switchingPlayer, Lang.CHANNEL_TOGGLE.replace(new String[]{channelToSwitchTo.toUpperCase(), switchedStatus ? Lang.ON.replace(null) : Lang.OFF.replace(null)}));
         break;
 
+      case "status":
+      case "subs":
+        if (!sender.hasPermission(PERM_CHANNEL_INFO)) { logger.send(sender, Lang.NO_PERM.replace(new String[]{PERM_CHANNEL_INFO, label + " " + sub})); return true; }
+        if (args.length < 2) { logger.send(sender, Lang.CHANNEL_HELP.replace(null)); return true; }
+
+        Player statusPlayer = Bukkit.getPlayer(args[1]);
+        Set<String> subscribedChannels = channelManager.getChannels(statusPlayer.getUniqueId());
+        String activeChannel = channelManager.getActiveChannel(statusPlayer);
+        String subsList = subscribedChannels.stream()
+            .map(channel -> channel.equalsIgnoreCase(activeChannel)
+                ? "&a&l" + channel.toUpperCase() + "&f"
+                : "&e" + channel.toUpperCase() + "&f")
+            .collect(Collectors.joining("&7, "));
+        if (subsList.isEmpty()) subsList = "&7---";
+
+        String rosterList = coreManager.getRostersManager().getPlayerRosters(statusPlayer.getName()).values().stream()
+            .map(roster -> "&b" + roster.getName() + " &7[" + roster.getLeague() + "]&f")
+            .collect(Collectors.joining("&7, "));
+        if (rosterList.isEmpty()) rosterList = "&7---";
+
+        logger.send(sender, String.join(System.lineSeparator(),
+            "{prefix}&aStatus kanala za &b" + statusPlayer.getDisplayName() + "&a:",
+            "&aRosters: &r" + rosterList,
+            "&aSubscribed channels: &r" + subsList,
+            "&aAktivni kanal: &r" + activeChannel));
+        break;
+
       case "spy":
         if (!(sender instanceof Player)) { logger.send(sender, Lang.INGAME_ONLY.replace(null)); return true; }
         if (!sender.hasPermission(PERM_CHANNEL_SPY)) { logger.send(sender, Lang.NO_PERM.replace(new String[]{PERM_CHANNEL_SPY, label + " " + sub})); return true; }
@@ -99,11 +132,11 @@ public class ChannelCommand implements CommandExecutor, TabCompleter {
 
         String spyStatus = spyingStatus ? Lang.ON.replace(null) : Lang.OFF.replace(null);
         logger.send(spyingPlayer, Lang.CHANNEL_SPY_TOGGLED.replace(new String[]{spyStatus}));
-        return true;
+        break;
 
       default:
         logger.send(sender, Lang.CHANNEL_HELP.replace(null));
-        return true;
+        break;
     }
     return true;
   }
@@ -115,7 +148,10 @@ public class ChannelCommand implements CommandExecutor, TabCompleter {
     List<String> completions = new ArrayList<>();
 
     if (args.length == 1 && sender.hasPermission(PERM_CHANNEL_MAIN)) {
-      completions.addAll(List.of("toggle", "list", "info", "switch", "join", "leave", "spy"));
+      completions.addAll(List.of("toggle", "list", "info", "switch", "join", "leave", "spy", "status", "subs"));
+    } else if (args.length == 2 && sender.hasPermission(PERM_CHANNEL_MAIN) &&
+        (args[0].equalsIgnoreCase("status") || args[0].equalsIgnoreCase("subs"))) {
+      Bukkit.getOnlinePlayers().forEach(player -> completions.add(player.getName()));
     } else if (args.length == 2 && sender.hasPermission(PERM_CHANNEL_MAIN)) {
       completions.addAll(channelManager.getChannels().keySet());
     }

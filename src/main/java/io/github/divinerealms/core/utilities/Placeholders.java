@@ -103,7 +103,11 @@ public class Placeholders extends PlaceholderExpansion {
 
       if (isActiveExclusive) {
         RosterInfo activeLeagueRoster = playerRosters.get(activeLeague);
-        if (activeLeagueRoster != null) return config.getString("rosters.league_settings." + activeLeague + ".manager_suffix", "&a [M]");
+        if (activeLeagueRoster != null && activeLeagueRoster.isManager(playerName)) {
+          String path = "rosters.league_settings." + activeLeague + ".manager_suffix";
+          String defaultPath = "rosters.league_settings.default.manager_suffix";
+          return config.getString(path, config.getString(defaultPath, "&a [M]"));
+        }
       } else {
         for (String league : rostersManager.getAvailableLeagues()) {
           String exclusionPath = "rosters.league_settings." + league + ".is_excluded_from_display";

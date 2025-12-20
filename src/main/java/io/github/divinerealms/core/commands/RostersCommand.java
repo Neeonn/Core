@@ -304,13 +304,6 @@ public class RostersCommand implements CommandExecutor, TabCompleter {
         } else logger.send(sender, Lang.ROSTERS_LEAGUE_RENAME_FAIL.replace(null));
         return true;
 
-      case "reload":
-        if (!sender.hasPermission(PERM_ADMIN_RELOAD)) { logger.send(sender, Lang.NO_PERM.replace(new String[]{PERM_ADMIN_RELOAD, label + " " + sub})); return true; }
-
-        rostersManager.reloadRosters();
-        logger.send(sender, Lang.ADMIN_RELOAD.replace(new String[]{"rosters"}));
-        return true;
-
       case "help":
       case "?":
         logger.send(sender, Lang.ROSTERS_HELP.replace(new String[]{allAvailableLeagues, activeLeague}));

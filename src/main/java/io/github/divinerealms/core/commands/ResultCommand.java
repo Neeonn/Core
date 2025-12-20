@@ -37,7 +37,7 @@ public class ResultCommand implements CommandExecutor, TabCompleter {
       case "start":
         if (resultManager.isMatchRunning()) { logger.send(sender, Lang.RESULT_MATCH_RUNNING.replace(null)); return true; }
         if (resultManager.getWarp() == null) {
-          resultManager.setWarp(resultManager.getHome());
+          resultManager.setWarp(sender, resultManager.getHome().toUpperCase());
           logger.send(sender, Lang.RESULT_WARP_MISSING.replace(null));
           return true;
         }
@@ -62,7 +62,7 @@ public class ResultCommand implements CommandExecutor, TabCompleter {
 
       case "setwarp":
       case "sw":
-        if (args.length == 2) { resultManager.setWarp(args[1]); logger.send(sender, Lang.RESULT_WARP_SET.replace(new String[]{args[1].toUpperCase()})); }
+        if (args.length == 2) resultManager.setWarp(sender, args[1]);
         else logger.send(sender, Lang.RESULT_HELP.replace(null));
         break;
 

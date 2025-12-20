@@ -11,7 +11,6 @@ import lombok.Setter;
 import net.luckperms.api.LuckPerms;
 import net.milkbowl.vault.chat.Chat;
 import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.Sound;
 import org.bukkit.command.*;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -112,8 +111,8 @@ public class CoreManager {
       if (playerData != null) preloadSettings(asyncPlayer, playerData);
 
       resultManager.preloadTeamMedia();
+      channelManager.handlePlayerSubscriptions(asyncPlayer);
     }));
-    initializeRosterSubscriptions();
   }
 
   private void initializeCachedPlayers() {
@@ -287,22 +286,6 @@ public class CoreManager {
     if (chat == null) throw new IllegalStateException("Vault not found!");
 
     logger.info("&a✔ &9Hooked into &dLuckPerms&9, &dAuthMe &9and &dVault &9successfully!");
-  }
-
-  @SuppressWarnings("deprecation")
-  private void initializeRosterSubscriptions() {
-    Map<String, RosterInfo> allRosters = rostersManager.getRosters();
-    if (allRosters == null || allRosters.isEmpty()) { logger.info("No active rosters found to initialize subscription."); return; }
-
-    for (RosterInfo roster : allRosters.values()) {
-      String channel = roster.getName().toLowerCase();
-      for (String member : roster.getMembers()) {
-        OfflinePlayer target = Bukkit.getOfflinePlayer(member);
-        if (!target.isOnline()) continue;
-        channelManager.subscribe(target.getUniqueId(), channel);
-        channelManager.setLastActiveChannel(target.getUniqueId(), channelManager.getDefaultChannel());
-      }
-    }
   }
 
   private void setDefaultIfMissing(FileConfiguration file, String path, Object value) {

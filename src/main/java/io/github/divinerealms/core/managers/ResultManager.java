@@ -31,7 +31,7 @@ public class ResultManager {
 
   @Getter private String prefix = Lang.RESULT_PREFIX_HOST.replace(null);
   @Getter private String home, away;
-  @Getter @Setter private String warp;
+  @Getter private String warp;
   @Getter private int homeScore;
   @Getter private int awayScore;
 
@@ -136,7 +136,7 @@ public class ResultManager {
   public void setTeams(CommandSender sender, String home, String away) {
     this.home = resolveRosterName(home);
     this.away = resolveRosterName(away);
-    if (this.warp == null) setWarp(home);
+    if (this.warp == null) this.warp = home.toUpperCase();
 
     logger.send(sender, Lang.RESULT_TEAMS_SET.replace(new String[]{this.home, this.away}));
   }
@@ -144,6 +144,11 @@ public class ResultManager {
   public void setPrefix(CommandSender sender, String prefix) {
     this.prefix = logger.color(prefix);
     logger.send(sender, Lang.RESULT_MATCH_PREFIX.replace(new String[]{this.prefix}));
+  }
+
+  public void setWarp(CommandSender sender, String warp) {
+    this.warp = warp;
+    logger.send(sender, Lang.RESULT_WARP_SET.replace(new String[]{warp.toUpperCase()}));
   }
 
   public void setTime(CommandSender sender, int totalSeconds) {

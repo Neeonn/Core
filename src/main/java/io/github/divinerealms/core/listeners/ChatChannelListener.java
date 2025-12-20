@@ -65,9 +65,11 @@ public class ChatChannelListener implements Listener {
       return;
     }
 
-    boolean isBroadcast = info.broadcast || info.permission == null || info.permission.isEmpty();
-    boolean isRosterMember = channelManager.getChannels(player.getUniqueId()).contains(activeChannel);
-    if (!isBroadcast && !player.hasPermission(info.permission) && !isRosterMember) {
+    boolean isBroadcast = info.broadcast;
+    boolean isSenderSubscribed = channelManager.getChannels(player.getUniqueId()).contains(activeChannel);
+    boolean hasPermission = info.permission != null && !info.permission.isEmpty() && player.hasPermission(info.permission);
+
+    if (!isBroadcast && !isSenderSubscribed && !hasPermission) {
       String defaultChannel = channelManager.getDefaultChannel();
       if (defaultChannel == null) return;
 
@@ -147,17 +149,24 @@ public class ChatChannelListener implements Listener {
           channelManager.formatChat(player, info.formats.minecraftChat.replace("{prefix-host}", resultManager.getPrefix()), messageToSend, true) :
           channelManager.formatChat(player, info.formats.minecraftChat, messageToSend, true);
 
-      channelManager.getSocialSpy().stream()
-          .filter(playerId -> !playerId.equals(player.getUniqueId()) && !isBroadcast)
-          .map(Bukkit::getPlayer)
-          .filter(spy -> spy != null && !spy.hasPermission(info.permission))
-          .forEach(spy -> logger.send(spy, Lang.CHANNEL_SPY_FORMAT.replace(new String[]{activeChannel.toUpperCase()}) + formattedMessage));
+      channelManager.getSocialSpy().forEach(spyUUID -> {
+        if (spyUUID.equals(player.getUniqueId())) return;
+        if (isBroadcast) return;
+
+        Player spy = Bukkit.getPlayer(spyUUID);
+        if (spy == null) return;
+        if (channelManager.getSubscribers(activeChannel).contains(spyUUID)) return;
+
+        String senderName = coreManager.getChat().getPlayerPrefix(player) + player.getDisplayName();
+        logger.send(spy, Lang.CHANNEL_SPY_FORMAT.replace(new String[]{activeChannel.toUpperCase(), senderName, formattedMessage}));
+      });
 
       if (isBroadcast) server.broadcastMessage(logger.color(formattedMessage));
-      else if (isRosterMember) {
+      else if (isSenderSubscribed) {
         Set<UUID> subscribers = channelManager.getSubscribers(activeChannel);
         subscribers.stream().map(Bukkit::getPlayer).filter(Objects::nonNull).forEach(p -> logger.send(p, formattedMessage));
-      } else server.broadcast(logger.color(formattedMessage), info.permission);
+        logger.info(formattedMessage);
+      } else logger.send(info.permission, formattedMessage);
 
       if (coreManager.isDiscordSRV() && info.formats.minecraftToDiscord != null && !info.formats.minecraftToDiscord.isEmpty()) {
         channelManager.sendToDiscord(info, channelManager.formatChat(player,

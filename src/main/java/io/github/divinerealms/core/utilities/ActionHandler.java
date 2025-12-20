@@ -33,7 +33,8 @@ public class ActionHandler {
       if (action == null || action.isEmpty()) continue;
 
       String processed = replaceArgs(action.trim(), args);
-      if (coreManager.isPlaceholderAPI()) processed = PlaceholderAPI.setPlaceholders(target, processed);
+
+      if (coreManager.isPlaceholderAPI()) processed = resolveDualPAPI(executor, target, processed);
       String lower = processed.toLowerCase();
 
       if (lower.startsWith("perm:")) {
@@ -72,6 +73,19 @@ public class ActionHandler {
       return;
     }
 
+    if (lower.startsWith("pmsg:")) {
+      String content = action.substring("pmsg:".length()).trim();
+      if (content.contains("|")) {
+        String[] parts = content.split("\\|", 2);
+        String perm = parts[0].trim(), msg = parts[1].trim();
+        logger.send(perm, msg);
+        return;
+      }
+
+      logger.send(player, "Invalid pmsg: action format. Expected: pmsg:<permission>|<message> in: " + action);
+      return;
+    }
+
     if (lower.startsWith("menu:")) {
       String menu = action.substring("menu:".length()).trim();
       guiManager.openMenu(player, menu);
@@ -103,6 +117,25 @@ public class ActionHandler {
     result = result.replace("%args%", joined);
     result = result.replace("%raw_args%", joined);
 
+    Pattern restArgsPattern = Pattern.compile("%rest_args(\\d+)%");
+    Matcher restArgsMatcher = restArgsPattern.matcher(result);
+
+    StringBuilder sb = new StringBuilder();
+    while (restArgsMatcher.find()) {
+      int startIndex = Integer.parseInt(restArgsMatcher.group(1)) - 1;
+      String replacement = "";
+
+      if (args != null && startIndex < args.length) {
+        String[] subArray = new String[args.length - startIndex];
+        System.arraycopy(args, startIndex, subArray, 0, subArray.length);
+        replacement = String.join(" ", subArray);
+      }
+      restArgsMatcher.appendReplacement(sb, Matcher.quoteReplacement(replacement));
+    }
+
+    restArgsMatcher.appendTail(sb);
+    result = sb.toString();
+
     Pattern pattern = Pattern.compile("%arg(\\d+)%");
     Matcher matcher = pattern.matcher(result);
 
@@ -112,6 +145,7 @@ public class ActionHandler {
       String replacement = (args != null && index < args.length) ? args[index] : "";
       matcher.appendReplacement(stringBuilder, replacement);
     }
+
     matcher.appendTail(stringBuilder);
 
     return stringBuilder.toString();
@@ -165,5 +199,45 @@ public class ActionHandler {
     if (input == null || input.isEmpty()) return 0;
     try { return Double.parseDouble(input); }
     catch (Exception ignored) { return 0; }
+  }
+
+  private String resolveDualPAPI(Player executor, Player target, String input) {
+    if (input == null || !coreManager.isPlaceholderAPI()) return input;
+
+    String result = input;
+    if (target != null && result.contains("%target_")) {
+      Pattern targetPattern = Pattern.compile("%target_([a-zA-Z0-9_-]+)%");
+      Matcher targetMatcher = targetPattern.matcher(result);
+
+      StringBuilder sb = new StringBuilder();
+      while (targetMatcher.find()) {
+        String placeholder = "%" + targetMatcher.group(1) + "%";
+        String resolvedValue = PlaceholderAPI.setPlaceholders(target, placeholder);
+        targetMatcher.appendReplacement(sb, Matcher.quoteReplacement(resolvedValue));
+      }
+
+      targetMatcher.appendTail(sb);
+      result = sb.toString();
+    }
+
+    if (executor != null && result.contains("%executor_")) {
+      Pattern executorPattern = Pattern.compile("%executor_([a-zA-Z0-9_-]+)%");
+      Matcher executorMatcher = executorPattern.matcher(result);
+
+      StringBuilder sb = new StringBuilder();
+      while (executorMatcher.find()) {
+        String placeholder = "%" + executorMatcher.group(1) + "%";
+        String resolvedValue = PlaceholderAPI.setPlaceholders(executor, placeholder);
+        executorMatcher.appendReplacement(sb, Matcher.quoteReplacement(resolvedValue));
+      }
+
+      executorMatcher.appendTail(sb);
+      result = sb.toString();
+    }
+
+    Player standardPAPIContext = (target != null) ? target : executor;
+    if (standardPAPIContext != null) result = PlaceholderAPI.setPlaceholders(standardPAPIContext, result);
+
+    return result;
   }
 }

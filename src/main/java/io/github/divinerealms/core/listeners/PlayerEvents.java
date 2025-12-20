@@ -63,6 +63,8 @@ public class PlayerEvents implements Listener {
       return;
     }
 
+    channelManager.handlePlayerSubscriptions(player);
+
     scheduler.runTaskAsynchronously(coreManager.getPlugin(), () -> {
       Player asyncPlayer = plugin.getServer().getPlayer(playerId);
       if (asyncPlayer == null || !asyncPlayer.isOnline()) return;

@@ -11,7 +11,7 @@ public class Permissions {
   public static final String PERM_ADMIN_SILENT_JOIN_QUIT = PERM_MAIN + ".silent-joinquit";
 
   public static final String PERM_CHAT_COLOR = PERM_MAIN + "chat.color";
-  public static final String PERM_BYPASS_DISABLED_CHANNEL = PERM_MAIN + ".bypass.disabled-channel";
+  public static final String PERM_BYPASS_DISABLED_CHANNEL = PERM_MAIN + "bypass.disabled-channel";
 
   public static final String PERM_RESULT_MAIN = PERM_MAIN + "result";
 

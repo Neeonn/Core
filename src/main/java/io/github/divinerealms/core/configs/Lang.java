@@ -36,6 +36,7 @@ public enum Lang {
   CHANNEL_INFO("channels.info", String.join(System.lineSeparator(),
       "{prefix}&aInformacije o kanalu &e{0}&a:",
       "&eStatus: {1} &6| &ePermisija: {2} &6| &eBroadcast: {3} &6| &eDiscord ID: {4}")),
+  CHANNEL_NOT_SUBSCRIBED("channels.not-subscribed", "{prefix}&cNemate pretplatu da koristite &e\"{0}\"&c kanal!"),
 
   PRIVATE_MESSAGES_SELF("private-messages.self", "&cNe možete poslati poruku samom sebi."),
   PRIVATE_MESSAGES_NO_REPLY_TARGET("private-messages.reply.no-target", "&cNemate kome poslati poruku."),
