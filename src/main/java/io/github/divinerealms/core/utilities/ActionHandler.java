@@ -27,31 +27,45 @@ public class ActionHandler {
   }
 
   public void handleActions(Player executor, List<String> actions, String[] args, Player target) {
-    if (actions == null || actions.isEmpty()) return;
+    if (actions == null || actions.isEmpty()) {
+      return;
+    }
 
     for (String action : actions) {
-      if (action == null || action.isEmpty()) continue;
+      if (action == null || action.isEmpty()) {
+        continue;
+      }
 
       String processed = replaceArgs(action.trim(), args);
 
-      if (coreManager.isPlaceholderAPI()) processed = resolveDualPAPI(executor, target, processed);
+      if (coreManager.isPlaceholderAPI()) {
+        processed = resolveDualPAPI(executor, target, processed);
+      }
+
       String lower = processed.toLowerCase();
 
       if (lower.startsWith("perm:")) {
         String perm = processed.substring("perm:".length()).trim();
-        if (!executor.hasPermission(perm)) return;
+        if (!executor.hasPermission(perm)) {
+          return;
+        }
+
         continue;
       }
 
       String condition = processed.substring("if:".length()).trim();
-      if (lower.startsWith("if:") && !checkCondition(condition)) continue;
+      if (lower.startsWith("if:") && !checkCondition(condition)) {
+        continue;
+      }
 
       runAction(executor, processed);
     }
   }
 
   private void runAction(Player player, String action) {
-    if (action == null || action.isEmpty()) return;
+    if (action == null || action.isEmpty()) {
+      return;
+    }
 
     String lower = action.toLowerCase();
 
@@ -103,16 +117,22 @@ public class ActionHandler {
       return;
     }
 
-    if (lower.equalsIgnoreCase("stop")) return;
+    if (lower.equalsIgnoreCase("stop")) {
+      return;
+    }
 
     player.performCommand(action);
   }
 
   private String replaceArgs(String input, String[] args) {
-    if (input == null || input.isEmpty()) return input;
+    if (input == null || input.isEmpty()) {
+      return input;
+    }
 
     String result = input;
-    String joined = args != null && args.length > 0 ? String.join(" ", args) : "";
+    String joined = args != null && args.length > 0
+                    ? String.join(" ", args)
+                    : "";
 
     result = result.replace("%args%", joined);
     result = result.replace("%raw_args%", joined);
@@ -130,6 +150,7 @@ public class ActionHandler {
         System.arraycopy(args, startIndex, subArray, 0, subArray.length);
         replacement = String.join(" ", subArray);
       }
+
       restArgsMatcher.appendReplacement(sb, Matcher.quoteReplacement(replacement));
     }
 
@@ -142,7 +163,9 @@ public class ActionHandler {
     StringBuilder stringBuilder = new StringBuilder();
     while (matcher.find()) {
       int index = Integer.parseInt(matcher.group(1)) - 1;
-      String replacement = (args != null && index < args.length) ? args[index] : "";
+      String replacement = (args != null && index < args.length)
+                           ? args[index]
+                           : "";
       matcher.appendReplacement(stringBuilder, replacement);
     }
 
@@ -153,7 +176,9 @@ public class ActionHandler {
 
   @SuppressWarnings("BooleanMethodIsAlwaysInverted")
   private boolean checkCondition(String condition) {
-    if (condition == null || condition.isEmpty()) return false;
+    if (condition == null || condition.isEmpty()) {
+      return false;
+    }
 
     String normalized = condition.replace(":", " ").replaceAll("\\s+", " ").trim();
 
@@ -168,41 +193,65 @@ public class ActionHandler {
       }
     }
 
-    if (used == null) return false;
+    if (used == null) {
+      return false;
+    }
 
     String[] parts = normalized.split("\\s" + Pattern.quote(used) + "\\s", 2);
-    if (parts.length < 2) return false;
+    if (parts.length < 2) {
+      return false;
+    }
 
     String left = parts[0].trim();
     String right = parts[1].trim();
 
-    if (right.equalsIgnoreCase("null")) right = "";
-    if (left.equalsIgnoreCase("null")) left = "";
+    if (right.equalsIgnoreCase("null")) {
+      right = "";
+    }
+    if (left.equalsIgnoreCase("null")) {
+      left = "";
+    }
 
     switch (used) {
-      case "=": return left.equals(right);
-      case "!=": return !left.equals(right);
+      case "=":
+        return left.equals(right);
+      case "!=":
+        return !left.equals(right);
 
-      case "contains": return left.contains(right);
-      case "!contains": return !left.contains(right);
+      case "contains":
+        return left.contains(right);
+      case "!contains":
+        return !left.contains(right);
 
-      case ">": return parseDouble(left) > parseDouble(right);
-      case "<": return parseDouble(left) < parseDouble(right);
-      case ">=": return parseDouble(left) >= parseDouble(right);
-      case "<=": return parseDouble(left) <= parseDouble(right);
+      case ">":
+        return parseDouble(left) > parseDouble(right);
+      case "<":
+        return parseDouble(left) < parseDouble(right);
+      case ">=":
+        return parseDouble(left) >= parseDouble(right);
+      case "<=":
+        return parseDouble(left) <= parseDouble(right);
 
-      default: return false;
+      default:
+        return false;
     }
   }
 
   private double parseDouble(String input) {
-    if (input == null || input.isEmpty()) return 0;
-    try { return Double.parseDouble(input); }
-    catch (Exception ignored) { return 0; }
+    if (input == null || input.isEmpty()) {
+      return 0;
+    }
+    try {
+      return Double.parseDouble(input);
+    } catch (Exception ignored) {
+      return 0;
+    }
   }
 
   private String resolveDualPAPI(Player executor, Player target, String input) {
-    if (input == null || !coreManager.isPlaceholderAPI()) return input;
+    if (input == null || !coreManager.isPlaceholderAPI()) {
+      return input;
+    }
 
     String result = input;
     if (target != null && result.contains("%target_")) {
@@ -235,8 +284,12 @@ public class ActionHandler {
       result = sb.toString();
     }
 
-    Player standardPAPIContext = (target != null) ? target : executor;
-    if (standardPAPIContext != null) result = PlaceholderAPI.setPlaceholders(standardPAPIContext, result);
+    Player standardPAPIContext = (target != null)
+                                 ? target
+                                 : executor;
+    if (standardPAPIContext != null) {
+      result = PlaceholderAPI.setPlaceholders(standardPAPIContext, result);
+    }
 
     return result;
   }

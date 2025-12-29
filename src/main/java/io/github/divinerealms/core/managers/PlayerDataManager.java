@@ -6,7 +6,10 @@ import io.github.divinerealms.core.utilities.Logger;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
@@ -43,7 +46,10 @@ public class PlayerDataManager {
 
   public PlayerData get(String playerName) {
     String uuid = uuidCache.get(playerName);
-    if (uuid == null) return null;
+    if (uuid == null) {
+      return null;
+    }
+
     return playerCache.computeIfAbsent(playerName, name -> new PlayerData(name, configManager, this));
   }
 
@@ -60,11 +66,15 @@ public class PlayerDataManager {
   }
 
   public void addDefaults(PlayerData playerData) {
-    if (!playerData.has("mention_sound.enabled")) playerData.set("mention_sound.enabled", false);
+    if (!playerData.has("mention_sound.enabled")) {
+      playerData.set("mention_sound.enabled", false);
+    }
   }
 
   public void saveQueue() {
-    if (dataQueue.isEmpty()) return;
+    if (dataQueue.isEmpty()) {
+      return;
+    }
 
     plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
       int chunkSize = 20;
@@ -73,7 +83,9 @@ public class PlayerDataManager {
 
       while (processed < chunkSize) {
         String playerName = dataQueue.poll();
-        if (playerName == null) break;
+        if (playerName == null) {
+          break;
+        }
 
         try {
           savePlayerData(playerName);
@@ -101,13 +113,22 @@ public class PlayerDataManager {
 
   public void savePlayerData(String playerName) {
     PlayerData data = playerCache.get(playerName);
-    if (data != null) data.save();
+    if (data != null) {
+      data.save();
+    }
+
     dataQueueSet.remove(playerName);
   }
 
   private void scheduleSave() {
-    if (coreManager.isDisabling()) return;
-    if (saveScheduled) return;
+    if (coreManager.isDisabling()) {
+      return;
+    }
+
+    if (saveScheduled) {
+      return;
+    }
+
     saveScheduled = true;
 
     plugin.getServer().getScheduler().runTaskLaterAsynchronously(plugin, () -> {

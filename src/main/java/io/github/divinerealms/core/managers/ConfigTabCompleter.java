@@ -13,16 +13,22 @@ public class ConfigTabCompleter implements TabCompleter {
   private final List<String> rules;
 
   public ConfigTabCompleter(List<String> rules) {
-    this.rules = rules == null ? Collections.emptyList() : rules;
+    this.rules = rules == null
+                 ? Collections.emptyList()
+                 : rules;
   }
 
   @Override
   public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
-    if (rules.isEmpty()) return Collections.emptyList();
+    if (rules.isEmpty()) {
+      return Collections.emptyList();
+    }
 
     List<String> result = new ArrayList<>();
     for (String rule : rules) {
-      if (rule == null || rule.isEmpty()) continue;
+      if (rule == null || rule.isEmpty()) {
+        continue;
+      }
 
       String trimmed = rule.trim();
       if (trimmed.equalsIgnoreCase("@online")) {
@@ -36,7 +42,11 @@ public class ConfigTabCompleter implements TabCompleter {
     if (args != null && args.length > 0) {
       String last = args[args.length - 1].toLowerCase();
       List<String> filtered = new ArrayList<>();
-      for (String string : result) if (string.toLowerCase().startsWith(last)) filtered.add(string);
+      for (String string : result) {
+        if (string.toLowerCase().startsWith(last)) {
+          filtered.add(string);
+        }
+      }
       return filtered;
     }
 

@@ -16,7 +16,8 @@ public class ClientBlocker {
   private final Map<String, String> playerBrands = new HashMap<>();
   private final List<String> allowedVanillaClients = Arrays.asList("vanilla", "optifine");
 
-  @Getter private boolean enabled = Config.CLIENT_BLOCKER_ENABLED.getValue(Boolean.class);
+  @Getter
+  private boolean enabled = Config.CLIENT_BLOCKER_ENABLED.getValue(Boolean.class);
 
   public boolean toggle() {
     if (enabled) {
@@ -30,7 +31,9 @@ public class ClientBlocker {
 
   public void setPlayerBrand(Player player, String brand) {
     String current = playerBrands.get(player.getName());
-    if (current == null || !current.equalsIgnoreCase(brand)) playerBrands.put(player.getName(), brand);
+    if (current == null || !current.equalsIgnoreCase(brand)) {
+      playerBrands.put(player.getName(), brand);
+    }
   }
 
   public void removePlayer(Player player) {
@@ -42,14 +45,25 @@ public class ClientBlocker {
   }
 
   public boolean shouldKick(Player player) {
-    if (!enabled) return false;
-    if (player.hasPermission(PERM_CLIENT_BLOCKER_BYPASS)) return false;
+    if (!enabled) {
+      return false;
+    }
+
+    if (player.hasPermission(PERM_CLIENT_BLOCKER_BYPASS)) {
+      return false;
+    }
 
     String brand = getBrand(player);
-    if (brand == null) return false;
+    if (brand == null) {
+      return false;
+    }
 
     String brandLower = brand.toLowerCase();
-    for (String allowed : allowedVanillaClients) if (brandLower.contains(allowed)) return false;
+    for (String allowed : allowedVanillaClients) {
+      if (brandLower.contains(allowed)) {
+        return false;
+      }
+    }
 
     List<?> rawList = Config.CLIENT_BLOCKER_LIST.getValue(List.class);
     List<String> checks = rawList.stream().map(Object::toString).collect(Collectors.toList());
@@ -57,16 +71,18 @@ public class ClientBlocker {
 
     switch (mode) {
       case "BLACKLIST":
-        for (String blocked : checks)
+        for (String blocked : checks) {
           if (brandLower.contains(blocked.toLowerCase())) {
             return true;
           }
+        }
         break;
       case "WHITELIST":
-        for (String allowed : checks)
+        for (String allowed : checks) {
           if (brandLower.contains(allowed.toLowerCase())) {
             return false;
           }
+        }
         return true;
     }
 

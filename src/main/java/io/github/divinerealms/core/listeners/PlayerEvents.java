@@ -67,7 +67,9 @@ public class PlayerEvents implements Listener {
 
     scheduler.runTaskAsynchronously(coreManager.getPlugin(), () -> {
       Player asyncPlayer = plugin.getServer().getPlayer(playerId);
-      if (asyncPlayer == null || !asyncPlayer.isOnline()) return;
+      if (asyncPlayer == null || !asyncPlayer.isOnline()) {
+        return;
+      }
 
       PlayerData playerData = dataManager.get(asyncPlayer);
       dataManager.addDefaults(playerData);
@@ -77,7 +79,8 @@ public class PlayerEvents implements Listener {
       long hoursPlayed = playtime / 20 / 3600;
 
       luckPerms.getUserManager().modifyUser(playerId, user -> {
-        Node newbieNode = user.getNodes().stream().filter(node -> node.getKey().equalsIgnoreCase("group.newbie")).findFirst().orElse(null);
+        Node newbieNode = user.getNodes().stream().filter(
+            node -> node.getKey().equalsIgnoreCase("group.newbie")).findFirst().orElse(null);
 
         boolean removed = false, added = false;
         if (hoursPlayed >= NEWBIE_THRESHOLD_HOURS) {
@@ -85,33 +88,48 @@ public class PlayerEvents implements Listener {
             user.data().remove(newbieNode);
             removed = true;
           }
-        } else if (newbieNode == null) {
-          Node node = Node.builder("group.newbie").expiry(5, TimeUnit.DAYS).build();
-          user.data().add(node);
-          added = true;
+        } else {
+          if (newbieNode == null) {
+            Node node = Node.builder("group.newbie").expiry(5, TimeUnit.DAYS).build();
+            user.data().add(node);
+            added = true;
+          }
         }
 
         if (removed || added) {
           logger.info(removed
-              ? "&fPlayer &b" + player.getDisplayName() + "&f reached &c" + NEWBIE_THRESHOLD_HOURS + "&f hours and had the newbie rank automatically removed."
-              : "&fNew/low-playtime player &b" + player.getDisplayName() + "&f got assigned the newbie rank.");
+                      ? "&fPlayer &b" + player.getDisplayName() + "&f reached &c" + NEWBIE_THRESHOLD_HOURS +
+                        "&f hours and had the newbie rank automatically removed."
+                      : "&fNew/low-playtime player &b" + player.getDisplayName() + "&f got assigned the newbie rank.");
         }
       });
     });
 
-    if (!Config.CONFIG.getBoolean(PATH_PLAYER_MESSAGES + "join.enabled", false)) return;
-    if (player.hasPermission(PERM_ADMIN_SILENT_JOIN_QUIT)) return;
+    if (!Config.CONFIG.getBoolean(PATH_PLAYER_MESSAGES + "join.enabled", false)) {
+      return;
+    }
+
+    if (player.hasPermission(PERM_ADMIN_SILENT_JOIN_QUIT)) {
+      return;
+    }
+
     boolean isDiscordSRV = coreManager.isDiscordSRV();
 
-    String mcMsg = Config.CONFIG.getString(PATH_PLAYER_MESSAGES + "join.minecraft", ChatColor.YELLOW + player.getName() + " has joined the server");
+    String mcMsg = Config.CONFIG.getString(PATH_PLAYER_MESSAGES + "join.minecraft",
+        ChatColor.YELLOW + player.getName() + " has joined the server");
     String dcMsg = Config.CONFIG.getString(PATH_PLAYER_MESSAGES + "join.discord", ":green_square: " + player.getName());
 
     if (coreManager.isPlaceholderAPI()) {
       mcMsg = PlaceholderAPI.setPlaceholders(player, mcMsg);
-      if (mcMsg.contains("%")) mcMsg = PlaceholderAPI.setPlaceholders(player, mcMsg);
+      if (mcMsg.contains("%")) {
+        mcMsg = PlaceholderAPI.setPlaceholders(player, mcMsg);
+      }
+
       if (isDiscordSRV) {
         dcMsg = PlaceholderAPI.setPlaceholders(player, dcMsg);
-        if (dcMsg.contains("%")) dcMsg = PlaceholderAPI.setPlaceholders(player, dcMsg);
+        if (dcMsg.contains("%")) {
+          dcMsg = PlaceholderAPI.setPlaceholders(player, dcMsg);
+        }
       }
     }
 
@@ -127,7 +145,10 @@ public class PlayerEvents implements Listener {
 
   @EventHandler
   public void onJoin(PlayerJoinEvent event) {
-    if (Config.CONFIG.getBoolean(PATH_PLAYER_MESSAGES + "join.enabled", false)) event.setJoinMessage(null);
+    if (Config.CONFIG.getBoolean(PATH_PLAYER_MESSAGES + "join.enabled", false)) {
+      event.setJoinMessage(null);
+    }
+
     coreManager.getCachedPlayers().add(event.getPlayer());
   }
 
@@ -136,7 +157,9 @@ public class PlayerEvents implements Listener {
     Player player = event.getPlayer();
     UUID playerId = player.getUniqueId();
 
-    if (Config.CONFIG.getBoolean(PATH_PLAYER_MESSAGES + "quit.enabled", false)) event.setQuitMessage(null);
+    if (Config.CONFIG.getBoolean(PATH_PLAYER_MESSAGES + "quit.enabled", false)) {
+      event.setQuitMessage(null);
+    }
 
     coreManager.getCachedPlayers().remove(player);
     scheduler.runTaskAsynchronously(plugin, () -> dataManager.unload(player));
@@ -144,31 +167,50 @@ public class PlayerEvents implements Listener {
 
     boolean isDiscordSRV = coreManager.isDiscordSRV();
 
-    String mcMsg = Config.CONFIG.getString(PATH_PLAYER_MESSAGES + "quit.minecraft", ChatColor.YELLOW + player.getName() + " left the server");
-    String dcMsg = isDiscordSRV ? Config.CONFIG.getString(PATH_PLAYER_MESSAGES + "quit.discord", ":red_square: " + player.getName()) : null;
+    String mcMsg = Config.CONFIG.getString(PATH_PLAYER_MESSAGES + "quit.minecraft",
+        ChatColor.YELLOW + player.getName() + " left the server");
+
+    String dcMsg = isDiscordSRV
+                   ? Config.CONFIG.getString(PATH_PLAYER_MESSAGES + "quit.discord", ":red_square: " + player.getName())
+                   : null;
 
     if (coreManager.isPlaceholderAPI()) {
       mcMsg = PlaceholderAPI.setPlaceholders(player, mcMsg);
-      if (mcMsg.contains("%")) mcMsg = PlaceholderAPI.setPlaceholders(player, mcMsg);
+      if (mcMsg.contains("%")) {
+        mcMsg = PlaceholderAPI.setPlaceholders(player, mcMsg);
+      }
+
       if (isDiscordSRV) {
         dcMsg = PlaceholderAPI.setPlaceholders(player, dcMsg);
-        if (dcMsg.contains("%")) dcMsg = PlaceholderAPI.setPlaceholders(player, dcMsg);
+        if (dcMsg.contains("%")) {
+          dcMsg = PlaceholderAPI.setPlaceholders(player, dcMsg);
+        }
       }
     }
 
     String finalMcMsg = mcMsg;
-    String finalDcMsg = isDiscordSRV ? ChatColor.translateAlternateColorCodes('&', dcMsg) : null;
+    String finalDcMsg = isDiscordSRV
+                        ? ChatColor.translateAlternateColorCodes('&', dcMsg)
+                        : null;
 
-    if (!Config.CONFIG.getBoolean(PATH_PLAYER_MESSAGES + "quit.enabled", false)) return;
-    if (player.hasPermission(PERM_ADMIN_SILENT_JOIN_QUIT)) return;
-    if (!AuthMeHook.isAuthenticated(player)) return;
+    if (!Config.CONFIG.getBoolean(PATH_PLAYER_MESSAGES + "quit.enabled", false)) {
+      return;
+    }
+
+    if (player.hasPermission(PERM_ADMIN_SILENT_JOIN_QUIT)) {
+      return;
+    }
+
+    if (AuthMeHook.notAuthenticated(player)) {
+      return;
+    }
 
     if (!clientBlocker.shouldKick(player)) {
-        logger.broadcast(finalMcMsg);
-        if (isDiscordSRV) {
-          ChannelInfo info = channelManager.getChannels().get(channelManager.getDefaultChannel());
-          channelManager.sendToDiscord(info, finalDcMsg);
-        }
+      logger.broadcast(finalMcMsg);
+      if (isDiscordSRV) {
+        ChannelInfo info = channelManager.getChannels().get(channelManager.getDefaultChannel());
+        channelManager.sendToDiscord(info, finalDcMsg);
       }
+    }
   }
 }

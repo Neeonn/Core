@@ -13,16 +13,24 @@ import java.util.List;
 import java.util.logging.Level;
 
 public class BukkitCommandWrapper extends Command {
-  @Getter @Setter private CommandExecutor executor;
-  @Setter private TabCompleter tabCompleter;
+  @Getter
+  @Setter
+  private CommandExecutor executor;
+  @Setter
+  private TabCompleter tabCompleter;
 
   public BukkitCommandWrapper(String name, CommandExecutor executor, List<String> aliases) {
     super(name);
     this.executor = executor;
-    if (aliases != null && !aliases.isEmpty()) this.setAliases(aliases);
+    if (aliases != null && !aliases.isEmpty()) {
+      this.setAliases(aliases);
+    }
+
     this.setDescription("Command " + name);
     this.setUsage("/" + name);
-    if (executor instanceof TabCompleter) this.tabCompleter = (TabCompleter) executor;
+    if (executor instanceof TabCompleter) {
+      this.tabCompleter = (TabCompleter) executor;
+    }
   }
 
   @Override
@@ -35,7 +43,9 @@ public class BukkitCommandWrapper extends Command {
     if (tabCompleter != null) {
       try {
         List<String> completions = tabCompleter.onTabComplete(sender, this, alias, args);
-        return completions != null ? completions : Collections.emptyList();
+        return completions != null
+               ? completions
+               : Collections.emptyList();
       } catch (Exception ex) {
         Bukkit.getLogger().log(Level.SEVERE, "Error on tab complete", ex);
         return Collections.emptyList();

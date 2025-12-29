@@ -1,6 +1,5 @@
 package io.github.divinerealms.core.commands;
 
-import io.github.divinerealms.core.configs.Lang;
 import io.github.divinerealms.core.main.CoreManager;
 import io.github.divinerealms.core.managers.ClientBlocker;
 import io.github.divinerealms.core.utilities.Logger;
@@ -19,6 +18,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import static io.github.divinerealms.core.configs.Lang.*;
 import static io.github.divinerealms.core.utilities.Constants.CLIENT_BLOCKER_EXEMPT_DURATION;
 import static io.github.divinerealms.core.utilities.Permissions.*;
 
@@ -37,82 +37,136 @@ public class ClientBlockerCommand implements CommandExecutor, TabCompleter {
 
   @Override
   public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-    if (!sender.hasPermission(PERM_CLIENT_BLOCKER_MAIN)) { logger.send(sender, Lang.NO_PERM.replace(new String[]{PERM_CLIENT_BLOCKER_MAIN, label})); return true; }
+    if (!sender.hasPermission(PERM_CLIENT_BLOCKER_MAIN)) {
+      logger.send(sender, NO_PERM, PERM_CLIENT_BLOCKER_MAIN, label);
+      return true;
+    }
+
     if (args.length == 0) {
-      logger.send(sender, Lang.CLIENT_BLOCKER_TOGGLE.replace(new String[]{clientBlocker.isEnabled() ? Lang.ON.replace(null) : Lang.OFF.replace(null)}));
+      logger.send(sender, CLIENT_BLOCKER_TOGGLE, clientBlocker.isEnabled()
+      ? ON.toString()
+      : OFF.toString());
       return true;
     }
 
     String sub = args[0].toLowerCase();
     switch (sub) {
       case "toggle":
-        if (!sender.hasPermission(PERM_CLIENT_BLOCKER_TOGGLE)) { logger.send(sender, Lang.NO_PERM.replace(new String[]{PERM_CLIENT_BLOCKER_TOGGLE, label + " " + sub})); return true; }
+        if (!sender.hasPermission(PERM_CLIENT_BLOCKER_TOGGLE)) {
+          logger.send(sender, NO_PERM, PERM_CLIENT_BLOCKER_TOGGLE, label + " " + sub);
+          return true;
+        }
+
         boolean enabled = clientBlocker.toggle();
-        logger.send(PERM_CLIENT_BLOCKER_NOTIFY, Lang.CLIENT_BLOCKER_TOGGLE.replace(new String[]{enabled ? Lang.ON.replace(null) : Lang.OFF.replace(null)}));
+        logger.send(PERM_CLIENT_BLOCKER_NOTIFY, CLIENT_BLOCKER_TOGGLE,
+            enabled
+            ? ON.toString()
+            : OFF.toString()
+        );
         return true;
 
       case "exempt":
-        if (!sender.hasPermission(PERM_CLIENT_BLOCKER_EXEMPT)) { logger.send(sender, Lang.NO_PERM.replace(new String[]{PERM_CLIENT_BLOCKER_EXEMPT, label + " " + sub})); return true; }
-        if (args.length < 2) { logger.send(sender, Lang.CLIENT_BLOCKER_USAGE.replace(null)); return true; }
+        if (!sender.hasPermission(PERM_CLIENT_BLOCKER_EXEMPT)) {
+          logger.send(sender, NO_PERM, PERM_CLIENT_BLOCKER_EXEMPT, label + " " + sub);
+          return true;
+        }
+
+        if (args.length < 2) {
+          logger.send(sender, CLIENT_BLOCKER_USAGE);
+          return true;
+        }
 
         String targetName = args[1];
+        //noinspection deprecation
         OfflinePlayer offlineTarget = Bukkit.getOfflinePlayer(targetName);
-        if (!offlineTarget.hasPlayedBefore()) { logger.send(sender, Lang.PLAYER_NOT_FOUND.replace(new String[]{targetName})); return true; }
+        if (!offlineTarget.hasPlayedBefore()) {
+          logger.send(sender, PLAYER_NOT_FOUND, targetName);
+          return true;
+        }
 
         luckPerms.getUserManager().modifyUser(offlineTarget.getUniqueId(), user -> {
-          PermissionNode existing = user.getNodes().stream().filter(PermissionNode.class::isInstance).map(PermissionNode.class::cast)
+          PermissionNode existing = user.getNodes().stream().filter(PermissionNode.class::isInstance).map(
+                  PermissionNode.class::cast)
               .filter(permissionNode -> permissionNode.getPermission().equalsIgnoreCase(PERM_CLIENT_BLOCKER_BYPASS))
               .findFirst().orElse(null);
 
           if (existing != null) {
             user.data().remove(existing);
-            logger.send(PERM_CLIENT_BLOCKER_NOTIFY, Lang.CLIENT_BLOCKER_EXEMPT.replace(new String[]{Lang.OFF.replace(null), targetName}));
+            logger.send(PERM_CLIENT_BLOCKER_NOTIFY,
+                CLIENT_BLOCKER_EXEMPT, OFF.toString(), targetName);
           } else {
-            user.data().add(PermissionNode.builder(PERM_CLIENT_BLOCKER_BYPASS).value(true).expiry(CLIENT_BLOCKER_EXEMPT_DURATION).build());
-            logger.send(PERM_CLIENT_BLOCKER_NOTIFY, Lang.CLIENT_BLOCKER_EXEMPT.replace(new String[]{Lang.ON.replace(null), targetName}));
+            user.data().add(PermissionNode.builder(PERM_CLIENT_BLOCKER_BYPASS).value(true).expiry(
+                CLIENT_BLOCKER_EXEMPT_DURATION).build());
+            logger.send(PERM_CLIENT_BLOCKER_NOTIFY,
+                CLIENT_BLOCKER_EXEMPT, ON.toString(), targetName);
           }
         });
 
         return true;
 
       case "check":
-        if (!sender.hasPermission(PERM_CLIENT_BLOCKER_CHECK)) { logger.send(sender, Lang.NO_PERM.replace(new String[]{PERM_CLIENT_BLOCKER_CHECK, label + " " + sub})); return true; }
-        if (args.length < 2) { logger.send(sender, Lang.CLIENT_BLOCKER_USAGE.replace(null)); return true; }
+        if (!sender.hasPermission(PERM_CLIENT_BLOCKER_CHECK)) {
+          logger.send(sender, NO_PERM, PERM_CLIENT_BLOCKER_CHECK, label + " " + sub);
+          return true;
+        }
+
+        if (args.length < 2) {
+          logger.send(sender, CLIENT_BLOCKER_USAGE);
+          return true;
+        }
 
         String checkName = args[1];
         Player target = Bukkit.getPlayer(checkName);
-        if (target == null) { logger.send(sender, Lang.PLAYER_NOT_FOUND.replace(new String[]{checkName})); return true; }
+        if (target == null) {
+          logger.send(sender, PLAYER_NOT_FOUND, checkName);
+          return true;
+        }
 
         String brand = clientBlocker.getBrand(target);
-        if (brand == null) brand = "&c???";
-        boolean blocked = clientBlocker.shouldKick(target);
-        String exempt = target.hasPermission(PERM_CLIENT_BLOCKER_BYPASS) ? Lang.ON.replace(null) : Lang.OFF.replace(null);
+        if (brand == null) {
+          brand = "&c???";
+        }
 
-        logger.send(sender, Lang.CLIENT_BLOCKER_CHECK_RESULT.replace(new String[]{target.getDisplayName(), (blocked ? "&c" : "&a") + brand, exempt}));
+        boolean blocked = clientBlocker.shouldKick(target);
+        String exempt = target.hasPermission(PERM_CLIENT_BLOCKER_BYPASS)
+                        ? ON.toString()
+                        : OFF.toString();
+
+        logger.send(sender, CLIENT_BLOCKER_CHECK_RESULT, target.getDisplayName(), (blocked
+                                  ? "&c"
+                                  : "&a") + brand, exempt);
         return true;
 
       case "help":
       case "?":
       default:
-        logger.send(sender, Lang.CLIENT_BLOCKER_USAGE.replace(null));
+        logger.send(sender, CLIENT_BLOCKER_USAGE);
         return true;
     }
   }
 
   @Override
   public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
-    if (!sender.hasPermission(PERM_CLIENT_BLOCKER_MAIN)) return Collections.emptyList();
+    if (!sender.hasPermission(PERM_CLIENT_BLOCKER_MAIN)) {
+      return Collections.emptyList();
+    }
 
     List<String> completions = new ArrayList<>();
 
     if (args.length == 1) {
       completions.addAll(Arrays.asList("toggle", "check", "exempt", "help", "?"));
-    } else if (args.length == 2) {
-      if (args[0].equalsIgnoreCase("check") && sender.hasPermission(PERM_CLIENT_BLOCKER_CHECK)) {
-        coreManager.getCachedPlayers().forEach(player -> completions.add(player.getName()));
-      } else if (args[0].equalsIgnoreCase("exempt") && sender.hasPermission(PERM_CLIENT_BLOCKER_EXEMPT)) {
-        for (OfflinePlayer offlinePlayer : Bukkit.getOfflinePlayers()) {
-          if (offlinePlayer.hasPlayedBefore()) completions.add(offlinePlayer.getName());
+    } else {
+      if (args.length == 2) {
+        if (args[0].equalsIgnoreCase("check") && sender.hasPermission(PERM_CLIENT_BLOCKER_CHECK)) {
+          coreManager.getCachedPlayers().forEach(player -> completions.add(player.getName()));
+        } else {
+          if (args[0].equalsIgnoreCase("exempt") && sender.hasPermission(PERM_CLIENT_BLOCKER_EXEMPT)) {
+            for (OfflinePlayer offlinePlayer : Bukkit.getOfflinePlayers()) {
+              if (offlinePlayer.hasPlayedBefore()) {
+                completions.add(offlinePlayer.getName());
+              }
+            }
+          }
         }
       }
     }

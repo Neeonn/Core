@@ -43,12 +43,18 @@ public class RosterInfo {
   }
 
   public void removeMember(String playerName) {
-    if (isManager(playerName)) manager = null;
+    if (isManager(playerName)) {
+      manager = null;
+    }
+
     members.remove(playerName);
   }
 
   public void setManager(String playerName) {
-    if (playerName != null && !hasMember(playerName)) members.add(playerName);
+    if (playerName != null && !hasMember(playerName)) {
+      members.add(playerName);
+    }
+
     this.manager = playerName;
   }
 

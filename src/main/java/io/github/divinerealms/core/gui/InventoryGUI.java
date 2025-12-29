@@ -18,8 +18,10 @@ import java.util.Map;
 import java.util.function.Function;
 
 public abstract class InventoryGUI implements InventoryHandler, InventoryHolder {
-  @Getter private final Inventory inventory;
-  @Getter private final Map<Integer, InventoryButton> buttonMap = new HashMap<>();
+  @Getter
+  private final Inventory inventory;
+  @Getter
+  private final Map<Integer, InventoryButton> buttonMap = new HashMap<>();
 
   public InventoryGUI() {
     this.inventory = this.createInventory();
@@ -31,20 +33,30 @@ public abstract class InventoryGUI implements InventoryHandler, InventoryHolder 
 
   public void decorate(Player player) {
     this.buttonMap.forEach((slot, button) -> {
-      if (slot < 0 || slot >= this.inventory.getSize()) return;
+      if (slot < 0 || slot >= this.inventory.getSize()) {
+        return;
+      }
 
       Function<Player, ItemStack> creator = button.getIconCreator();
-      if (creator == null) return;
+      if (creator == null) {
+        return;
+      }
 
       ItemStack stack = creator.apply(player);
-      if (stack == null) return;
+      if (stack == null) {
+        return;
+      }
 
       ItemMeta meta = stack.getItemMeta();
       if (meta != null) {
-        if (meta.hasDisplayName()) meta.setDisplayName(applyPlaceholders(player, meta.getDisplayName()));
+        if (meta.hasDisplayName()) {
+          meta.setDisplayName(applyPlaceholders(player, meta.getDisplayName()));
+        }
         if (meta.hasLore()) {
           List<String> newLore = new ArrayList<>();
-          for (String line : meta.getLore()) newLore.add(applyPlaceholders(player, line));
+          for (String line : meta.getLore()) {
+            newLore.add(applyPlaceholders(player, line));
+          }
           meta.setLore(newLore);
         }
         stack.setItemMeta(meta);
@@ -55,7 +67,9 @@ public abstract class InventoryGUI implements InventoryHandler, InventoryHolder 
   }
 
   public String applyPlaceholders(Player player, String text) {
-    if (player == null) return text;
+    if (player == null) {
+      return text;
+    }
     try {
       return PlaceholderAPI.setPlaceholders(player, text);
     } catch (Throwable ignored) {
@@ -68,7 +82,9 @@ public abstract class InventoryGUI implements InventoryHandler, InventoryHolder 
     event.setCancelled(true);
     int slot = event.getSlot();
     InventoryButton button = this.buttonMap.get(slot);
-    if (button != null && button.getEventConsumer() != null) button.getEventConsumer().accept(event);
+    if (button != null && button.getEventConsumer() != null) {
+      button.getEventConsumer().accept(event);
+    }
   }
 
   @Override

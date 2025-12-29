@@ -8,7 +8,7 @@ public class Permissions {
   public static final String PERM_ADMIN_MAIN = PERM_MAIN + "admin";
   public static final String PERM_ADMIN_RELOAD = PERM_ADMIN_MAIN + ".reload";
   public static final String PERM_ADMIN_PROXY_CHECK = PERM_ADMIN_MAIN + ".proxy-check";
-  public static final String PERM_ADMIN_SILENT_JOIN_QUIT = PERM_MAIN + ".silent-joinquit";
+  public static final String PERM_ADMIN_SILENT_JOIN_QUIT = PERM_MAIN + "silent-joinquit";
 
   public static final String PERM_CHAT_COLOR = PERM_MAIN + "chat.color";
   public static final String PERM_BYPASS_DISABLED_CHANNEL = PERM_MAIN + "bypass.disabled-channel";

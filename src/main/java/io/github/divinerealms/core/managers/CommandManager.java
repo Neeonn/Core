@@ -1,7 +1,6 @@
 package io.github.divinerealms.core.managers;
 
 import io.github.divinerealms.core.commands.BukkitCommandWrapper;
-import io.github.divinerealms.core.configs.Lang;
 import io.github.divinerealms.core.main.CoreManager;
 import io.github.divinerealms.core.utilities.ActionHandler;
 import io.github.divinerealms.core.utilities.Logger;
@@ -18,8 +17,11 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
+import static io.github.divinerealms.core.configs.Lang.*;
+
 public class CommandManager {
-  @Getter private final Map<String, String> customCommands = new HashMap<>();
+  @Getter
+  private final Map<String, String> customCommands = new HashMap<>();
   private final Map<String, BukkitCommandWrapper> registeredWrappers = new ConcurrentHashMap<>();
   private final Map<String, Map<UUID, Long>> cooldowns = new ConcurrentHashMap<>();
 
@@ -59,16 +61,22 @@ public class CommandManager {
     registeredWrappers.clear();
 
     var config = configManager.getConfig("commands.yml");
-    if (config == null) return;
+    if (config == null) {
+      return;
+    }
 
     var commandSection = config.getConfigurationSection("commands");
-    if (commandSection == null) return;
+    if (commandSection == null) {
+      return;
+    }
 
     Set<String> presentCommands = new HashSet<>();
 
     commandSection.getKeys(false).forEach(commandKey -> {
       ConfigurationSection cmdSec = commandSection.getConfigurationSection(commandKey);
-      if (cmdSec == null) return;
+      if (cmdSec == null) {
+        return;
+      }
 
       String commandName = commandKey.toLowerCase();
       presentCommands.add(commandName);
@@ -79,12 +87,15 @@ public class CommandManager {
       List<String> aliases = cmdSec.getStringList("aliases");
       List<String> actions = new ArrayList<>();
       List<String> actionList = cmdSec.getStringList("actions");
-      if (actionList != null && !actionList.isEmpty()) actions.addAll(actionList);
+      if (actionList != null && !actionList.isEmpty()) {
+        actions.addAll(actionList);
+      }
 
       List<String> tabRules = cmdSec.getStringList("tab");
       String cooldownRaw = cmdSec.getString("cooldown", "");
 
-      registerOrUpdateCustomCommand(commandName, permission, description, usage, aliases, tabRules, cooldownRaw, actions);
+      registerOrUpdateCustomCommand(commandName, permission, description, usage, aliases, tabRules, cooldownRaw,
+          actions);
       customCommands.put(commandName, permission);
     });
 
@@ -100,7 +111,8 @@ public class CommandManager {
           knownMap.remove(removed);
           knownMap.remove(plugin.getName().toLowerCase() + ":" + removed);
         } catch (Exception exception) {
-          plugin.getLogger().log(Level.WARNING, "Failed to fully remove command " + removed + " from CommandMap: " + exception.getMessage());
+          plugin.getLogger().log(Level.WARNING,
+              "Failed to fully remove command " + removed + " from CommandMap: " + exception.getMessage());
         }
       }
     }
@@ -109,22 +121,32 @@ public class CommandManager {
   private void registerOrUpdateCustomCommand(String commandName, String permission, String description,
                                              String usage, List<String> aliases, List<String> tabRules,
                                              String cooldownRaw, List<String> actions) {
-    if (commandMap == null) return;
+    if (commandMap == null) {
+      return;
+    }
 
     long cooldownMillis = parseCooldownToMillis(cooldownRaw);
 
     CommandExecutor executor = (sender, command, label, args) -> {
-      if (!(sender instanceof Player)) { logger.send(sender, Lang.INGAME_ONLY.replace(null)); return true; }
+      if (!(sender instanceof Player)) {
+        logger.send(sender, INGAME_ONLY);
+        return true;
+      }
 
       Player player = (Player) sender;
       Player target = player;
 
       if (args.length > 0) {
         Player possibleTarget = plugin.getServer().getPlayerExact(args[0]);
-        if (possibleTarget != null) target = possibleTarget;
+        if (possibleTarget != null) {
+          target = possibleTarget;
+        }
       }
 
-      if (!permission.isEmpty() && !player.hasPermission(permission)) { logger.send(player, Lang.NO_PERM.replace(new String[]{permission, label})); return true; }
+      if (!permission.isEmpty() && !player.hasPermission(permission)) {
+        logger.send(player, NO_PERM, permission, label);
+        return true;
+      }
 
       if (cooldownMillis > 0) {
         Map<UUID, Long> map = cooldowns.computeIfAbsent(commandName, k -> new ConcurrentHashMap<>());
@@ -132,15 +154,18 @@ public class CommandManager {
         Long expires = map.get(player.getUniqueId());
         if (expires != null && expires > now) {
           long remaining = (expires - now) / 1000;
-          logger.sendActionBar(player, Lang.ANTI_SPAM_COMMANDS.replace(new String[]{String.valueOf(remaining)}));
+          logger.sendActionBar(player, ANTI_SPAM_COMMANDS, String.valueOf(remaining));
           return true;
         }
 
         map.put(player.getUniqueId(), now + cooldownMillis);
       }
 
-      if (actions != null && !actions.isEmpty()) actionHandler.handleActions(player, actions, args, target);
-      else logger.send(player, "&cNo actions defined for this command!");
+      if (actions != null && !actions.isEmpty()) {
+        actionHandler.handleActions(player, actions, args, target);
+      } else {
+        logger.send(player, "&cNo actions defined for this command!");
+      }
       return true;
     };
 
@@ -149,12 +174,18 @@ public class CommandManager {
       wrapper.setExecutor(executor);
       wrapper.setDescription(description);
       wrapper.setUsage(usage);
-      if (aliases != null) wrapper.setAliases(aliases);
+      if (aliases != null) {
+        wrapper.setAliases(aliases);
+      }
+
       wrapper.setTabCompleter(new ConfigTabCompleter(tabRules));
       return;
     }
 
-    if (aliases == null) aliases = new ArrayList<>();
+    if (aliases == null) {
+      aliases = new ArrayList<>();
+    }
+
     BukkitCommandWrapper cmd = new BukkitCommandWrapper(commandName, executor, aliases);
     cmd.setDescription(description);
     cmd.setUsage(usage);
@@ -173,15 +204,29 @@ public class CommandManager {
   }
 
   private long parseCooldownToMillis(String raw) {
-    if (raw == null || raw.isEmpty()) return 0;
+    if (raw == null || raw.isEmpty()) {
+      return 0;
+    }
+
     raw = raw.trim().toLowerCase();
     try {
-      if (raw.endsWith("ms")) return Long.parseLong(raw.substring(0, raw.length() - 2).trim());
+      if (raw.endsWith("ms")) {
+        return Long.parseLong(raw.substring(0, raw.length() - 2).trim());
+      }
+
       long singleLetter = Long.parseLong(raw.substring(0, raw.length() - 1).trim());
-      if (raw.endsWith("s")) return singleLetter * 1000;
-      if (raw.endsWith("m")) return singleLetter * 60_000;
+      if (raw.endsWith("s")) {
+        return singleLetter * 1000;
+      }
+
+      if (raw.endsWith("m")) {
+        return singleLetter * 60_000;
+      }
+
       return Long.parseLong(raw) * 1000;
-    } catch (NumberFormatException exception) { return 0; }
+    } catch (NumberFormatException exception) {
+      return 0;
+    }
   }
 
   public void reloadCommands() {

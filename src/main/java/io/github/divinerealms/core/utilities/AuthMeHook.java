@@ -5,14 +5,17 @@ import lombok.Getter;
 import org.bukkit.entity.Player;
 
 public class AuthMeHook {
-  @Getter private static AuthMeApi authMeApi;
+  @Getter
+  private static AuthMeApi authMeApi;
 
   public static void initializeHook() {
     authMeApi = AuthMeApi.getInstance();
   }
 
-  public static boolean isAuthenticated(Player player) {
-    if (authMeApi != null) return authMeApi.isAuthenticated(player);
-    return false;
+  public static boolean notAuthenticated(Player player) {
+    if (authMeApi != null) {
+      return !authMeApi.isAuthenticated(player);
+    }
+    return true;
   }
 }

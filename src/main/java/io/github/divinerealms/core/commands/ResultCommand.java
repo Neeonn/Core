@@ -1,6 +1,5 @@
 package io.github.divinerealms.core.commands;
 
-import io.github.divinerealms.core.configs.Lang;
 import io.github.divinerealms.core.main.CoreManager;
 import io.github.divinerealms.core.managers.ResultManager;
 import io.github.divinerealms.core.utilities.Logger;
@@ -14,6 +13,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import static io.github.divinerealms.core.configs.Lang.*;
 import static io.github.divinerealms.core.utilities.Permissions.PERM_RESULT_MAIN;
 
 public class ResultCommand implements CommandExecutor, TabCompleter {
@@ -29,16 +29,27 @@ public class ResultCommand implements CommandExecutor, TabCompleter {
 
   @Override
   public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-    if (!sender.hasPermission(PERM_RESULT_MAIN)) { logger.send(sender, Lang.NO_PERM.replace(new String[]{PERM_RESULT_MAIN, label})); return true; }
-    if (args.length == 0) { logger.send(sender, Lang.RESULT_HELP.replace(null)); return true; }
+    if (!sender.hasPermission(PERM_RESULT_MAIN)) {
+      logger.send(sender, NO_PERM, PERM_RESULT_MAIN, label);
+      return true;
+    }
+    
+    if (args.length == 0) {
+      logger.send(sender, RESULT_HELP);
+      return true;
+    }
 
     String sub = args[0].toLowerCase();
     switch (sub) {
       case "start":
-        if (resultManager.isMatchRunning()) { logger.send(sender, Lang.RESULT_MATCH_RUNNING.replace(null)); return true; }
+        if (resultManager.isMatchRunning()) {
+          logger.send(sender, RESULT_MATCH_RUNNING);
+          return true;
+        }
+
         if (resultManager.getWarp() == null) {
           resultManager.setWarp(sender, resultManager.getHome().toUpperCase());
-          logger.send(sender, Lang.RESULT_WARP_MISSING.replace(null));
+          logger.send(sender, RESULT_WARP_MISSING);
           return true;
         }
 
@@ -46,24 +57,37 @@ public class ResultCommand implements CommandExecutor, TabCompleter {
         break;
 
       case "stop":
-        if (!resultManager.isMatchRunning()) { logger.send(sender, Lang.RESULT_STATUS_NONE.replace(null)); return true; }
+        if (!resultManager.isMatchRunning()) {
+          logger.send(sender, RESULT_STATUS_NONE);
+          return true;
+        }
+
         resultManager.stopMatch();
         break;
 
       case "teams":
-        if (args.length == 3) resultManager.setTeams(sender, args[1], args[2]);
-        else logger.send(sender, Lang.RESULT_HELP.replace(null));
+        if (args.length == 3) {
+          resultManager.setTeams(sender, args[1], args[2]);
+        } else {
+          logger.send(sender, RESULT_HELP);
+        }
         break;
 
       case "prefix":
-        if (args.length >= 2) resultManager.setPrefix(sender, String.join(" ", Arrays.copyOfRange(args, 1, args.length)));
-        else logger.send(sender, Lang.RESULT_HELP.replace(null));
+        if (args.length >= 2) {
+          resultManager.setPrefix(sender, String.join(" ", Arrays.copyOfRange(args, 1, args.length)));
+        } else {
+          logger.send(sender, RESULT_HELP);
+        }
         break;
 
       case "setwarp":
       case "sw":
-        if (args.length == 2) resultManager.setWarp(sender, args[1]);
-        else logger.send(sender, Lang.RESULT_HELP.replace(null));
+        if (args.length == 2) {
+          resultManager.setWarp(sender, args[1]);
+        } else {
+          logger.send(sender, RESULT_HELP);
+        }
         break;
 
       case "time":
@@ -71,37 +95,65 @@ public class ResultCommand implements CommandExecutor, TabCompleter {
           try {
             resultManager.setTime(sender, resultManager.parseTime(args[1]));
           } catch (NumberFormatException exception) {
-            logger.send(sender, Lang.RESULT_MATCH_INVALID_TIME.replace(null));
+            logger.send(sender, RESULT_MATCH_INVALID_TIME);
             logger.info("Error: " + exception.getMessage());
           }
-        } else logger.send(sender, Lang.RESULT_HELP.replace(null));
+        } else {
+          logger.send(sender, RESULT_HELP);
+        }
         break;
 
       case "add":
-        if (!resultManager.isMatchRunning()) { logger.send(sender, Lang.RESULT_STATUS_NONE.replace(null)); return true; }
-        if (args.length == 3 || args.length == 4) resultManager.addScore(sender, args[1], args[2], args.length == 4 ? args[3] : null);
-        else logger.send(sender, Lang.RESULT_HELP.replace(null));
+        if (!resultManager.isMatchRunning()) {
+          logger.send(sender, RESULT_STATUS_NONE);
+          return true;
+        }
+        if (args.length == 3 || args.length == 4) {
+          resultManager.addScore(sender, args[1], args[2], args.length == 4
+                                                           ? args[3]
+                                                           : null);
+        } else {
+          logger.send(sender, RESULT_HELP);
+        }
         break;
 
       case "remove":
       case "rm":
-        if (!resultManager.isMatchRunning()) { logger.send(sender, Lang.RESULT_STATUS_NONE.replace(null)); return true; }
-        if (args.length == 2) resultManager.removeScore(sender, args[1]);
-        else logger.send(sender, Lang.RESULT_HELP.replace(null));
+        if (!resultManager.isMatchRunning()) {
+          logger.send(sender, RESULT_STATUS_NONE);
+          return true;
+        }
+
+        if (args.length == 2) {
+          resultManager.removeScore(sender, args[1]);
+        } else {
+          logger.send(sender, RESULT_HELP);
+        }
         break;
 
       case "extratime":
       case "extend":
       case "et":
-        if (!resultManager.isMatchRunning()) { logger.send(sender, Lang.RESULT_STATUS_NONE.replace(null)); return true; }
-        if (args.length == 2) resultManager.addExtraTime(sender, args[1]);
-        else logger.send(sender, Lang.RESULT_HELP.replace(null));
+        if (!resultManager.isMatchRunning()) {
+          logger.send(sender, RESULT_STATUS_NONE);
+          return true;
+        }
+
+        if (args.length == 2) {
+          resultManager.addExtraTime(sender, args[1]);
+        } else {
+          logger.send(sender, RESULT_HELP);
+        }
         break;
 
       case "stophalf":
       case "sh":
       case "pause":
-        if (!resultManager.isMatchRunning()) { logger.send(sender, Lang.RESULT_STATUS_NONE.replace(null)); return true; }
+        if (!resultManager.isMatchRunning()) {
+          logger.send(sender, RESULT_STATUS_NONE);
+          return true;
+        }
+
         resultManager.stopHalf(sender);
         break;
 
@@ -115,38 +167,55 @@ public class ResultCommand implements CommandExecutor, TabCompleter {
 
   @Override
   public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
-    if (!sender.hasPermission(PERM_RESULT_MAIN)) return Collections.emptyList();
+    if (!sender.hasPermission(PERM_RESULT_MAIN)) {
+      return Collections.emptyList();
+    }
 
     List<String> completions = new ArrayList<>();
-    String sub = args.length > 0 ? args[0].toLowerCase() : "";
+    String sub = args.length > 0
+                 ? args[0].toLowerCase()
+                 : "";
 
     if (args.length == 1) {
       completions.addAll(Arrays.asList(
           "start", "stop", "teams", "prefix", "time", "add", "remove", "rm", "setwarp",
           "sw", "extratime", "extend", "et", "stophalf", "sh", "pause", "status"
       ));
-    } else if (args.length == 2) {
-      switch (sub) {
-        case "teams":
-          completions.addAll(coreManager.getRostersManager().getAllRosterNames());
-          break;
+    } else {
+      if (args.length == 2) {
+        switch (sub) {
+          case "teams":
+            completions.addAll(coreManager.getRostersManager().getAllRosterNames());
+            break;
 
-        case "add":
-        case "remove":
-          completions.addAll(Arrays.asList("home", "away"));
-          break;
+          case "add":
+          case "remove":
+            completions.addAll(Arrays.asList("home", "away"));
+            break;
 
-        case "time":
-        case "extratime":
-        case "extend":
-          completions.addAll(Arrays.asList("10s", "30s", "1m", "5m", "10m"));
-          break;
+          case "time":
+          case "extratime":
+          case "extend":
+            completions.addAll(Arrays.asList("10s", "30s", "1m", "5m", "10m"));
+            break;
+        }
+      } else {
+        if (args.length == 3) {
+          if ("add".equals(sub)) {
+            coreManager.getCachedPlayers().forEach(player -> completions.add(player.getName()));
+          } else {
+            if ("teams".equals(sub)) {
+              completions.addAll(coreManager.getRostersManager().getAllRosterNames());
+            }
+          }
+        } else {
+          if (args.length == 4) {
+            if ("add".equals(sub)) {
+              coreManager.getCachedPlayers().forEach(player -> completions.add(player.getName()));
+            }
+          }
+        }
       }
-    } else if (args.length == 3) {
-      if ("add".equals(sub)) coreManager.getCachedPlayers().forEach(player -> completions.add(player.getName()));
-      else if ("teams".equals(sub)) completions.addAll(coreManager.getRostersManager().getAllRosterNames());
-    } else if (args.length == 4) {
-      if ("add".equals(sub)) coreManager.getCachedPlayers().forEach(player -> completions.add(player.getName()));
     }
 
     if (!completions.isEmpty()) {

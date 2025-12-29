@@ -55,7 +55,8 @@ public class CoreManager {
   private boolean discordSRV;
   private boolean placeholderAPI;
 
-  @Setter private boolean enabling = false, disabling = false;
+  @Setter
+  private boolean enabling = false, disabling = false;
 
   public CoreManager(Plugin plugin) throws IllegalStateException {
     this.plugin = plugin;
@@ -85,7 +86,9 @@ public class CoreManager {
     this.commandManager = new CommandManager(this);
     this.privateMessagesManager = new PrivateMessagesManager(this);
 
-    if (placeholderAPI) new Placeholders(this).register();
+    if (placeholderAPI) {
+      new Placeholders(this).register();
+    }
 
     this.reload();
   }
@@ -105,10 +108,14 @@ public class CoreManager {
     List<UUID> onlinePlayers = cachedPlayers.stream().map(Player::getUniqueId).collect(Collectors.toList());
     scheduler.runTaskAsynchronously(plugin, () -> onlinePlayers.forEach(uuid -> {
       Player asyncPlayer = plugin.getServer().getPlayer(uuid);
-      if (asyncPlayer == null || !asyncPlayer.isOnline()) return;
+      if (asyncPlayer == null || !asyncPlayer.isOnline()) {
+        return;
+      }
 
       PlayerData playerData = dataManager.get(asyncPlayer);
-      if (playerData != null) preloadSettings(asyncPlayer, playerData);
+      if (playerData != null) {
+        preloadSettings(asyncPlayer, playerData);
+      }
 
       resultManager.preloadTeamMedia();
       channelManager.handlePlayerSubscriptions(asyncPlayer);
@@ -130,23 +137,37 @@ public class CoreManager {
       CommandMap commandMap = (CommandMap) field.get(plugin.getServer());
 
       registerCommand(commandMap, "core", new BukkitCommandWrapper("core", new CoreCommand(this), null));
-      registerCommand(commandMap, "channel", new BukkitCommandWrapper("channel", new ChannelCommand(this), Collections.singletonList("ch")));
-      registerCommand(commandMap, "clientblocker", new BukkitCommandWrapper("clientblocker", new ClientBlockerCommand(this), Collections.singletonList("cb")));
-      registerCommand(commandMap, "result", new BukkitCommandWrapper("result", new ResultCommand(this), Collections.singletonList("rs")));
-      registerCommand(commandMap, "togglemention", new BukkitCommandWrapper("togglemention", new ToggleCommand(this), Collections.singletonList("tgm")));
-      registerCommand(commandMap, "playtime", new BukkitCommandWrapper("playtime", new PlaytimeCommand(this), Collections.singletonList("ptm")));
-      registerCommand(commandMap, "rosters", new BukkitCommandWrapper("rosters", new RostersCommand(this), Collections.singletonList("rt")));
-      registerCommand(commandMap, "proxycheck", new BukkitCommandWrapper("proxycheck", new ProxyCheckCommand(this), Collections.singletonList("proxy")));
+      registerCommand(commandMap, "channel",
+          new BukkitCommandWrapper("channel", new ChannelCommand(this), Collections.singletonList("ch")));
+      registerCommand(commandMap, "clientblocker",
+          new BukkitCommandWrapper("clientblocker", new ClientBlockerCommand(this), Collections.singletonList("cb")));
+      registerCommand(commandMap, "result",
+          new BukkitCommandWrapper("result", new ResultCommand(this), Collections.singletonList("rs")));
+      registerCommand(commandMap, "togglemention",
+          new BukkitCommandWrapper("togglemention", new ToggleCommand(this), Collections.singletonList("tgm")));
+      registerCommand(commandMap, "playtime",
+          new BukkitCommandWrapper("playtime", new PlaytimeCommand(this), Collections.singletonList("ptm")));
+      registerCommand(commandMap, "rosters",
+          new BukkitCommandWrapper("rosters", new RostersCommand(this), Collections.singletonList("rt")));
+      registerCommand(commandMap, "proxycheck",
+          new BukkitCommandWrapper("proxycheck", new ProxyCheckCommand(this), Collections.singletonList("proxy")));
       setupDynamicCommands(commandMap);
 
       if (privateMessagesManager.isEnabled()) {
-        registerCommand(commandMap, "msg", new BukkitCommandWrapper("msg", new PrivateMessageCommand(this), List.of("pm", "whisper", "w")));
-        registerCommand(commandMap, "reply", new BukkitCommandWrapper("reply", new ReplyCommand(this), Collections.singletonList("r")));
+        registerCommand(commandMap, "msg",
+            new BukkitCommandWrapper("msg", new PrivateMessageCommand(this), List.of("pm", "whisper", "w")));
+        registerCommand(commandMap, "reply",
+            new BukkitCommandWrapper("reply", new ReplyCommand(this), Collections.singletonList("r")));
       }
 
       channelManager.getChannels().values().forEach(info -> {
-        if (info.name.equalsIgnoreCase("global")) return;
-        if (info.name.equalsIgnoreCase("roster_template")) return;
+        if (info.name.equalsIgnoreCase("global")) {
+          return;
+        }
+
+        if (info.name.equalsIgnoreCase("roster_template")) {
+          return;
+        }
 
         DynamicChannelBukkitCommand dynamicCommand = new DynamicChannelBukkitCommand(info, channelManager, logger);
         registerCommand(commandMap, dynamicCommand.getName(), dynamicCommand);
@@ -167,10 +188,16 @@ public class CoreManager {
 
       String commandName = config.getString(commandPath);
       List<String> commandAliases = config.getStringList(aliasesPath);
-      if (commandName == null || commandName.isEmpty()) { logger.info("No command name defined for league: " + league); continue; }
+      if (commandName == null || commandName.isEmpty()) {
+        logger.info("No command name defined for league: " + league);
+        continue;
+      }
 
       TeamChannelCommand executor = new TeamChannelCommand(this, league);
-      registerCommand(commandMap, commandName, new BukkitCommandWrapper(commandName, executor, commandAliases != null ? commandAliases : Collections.emptyList()));
+      registerCommand(commandMap, commandName, new BukkitCommandWrapper(commandName, executor, commandAliases != null
+                                                                                               ? commandAliases
+                                                                                               :
+                                                                                               Collections.emptyList()));
     }
   }
 
@@ -178,16 +205,22 @@ public class CoreManager {
     commandMap.register(plugin.getName().toLowerCase(), command);
     registeredCommands.add(name.toLowerCase());
 
-    if (command.getAliases() != null || !command.getAliases().isEmpty()) registeredCommands.addAll(command.getAliases());
+    if (command.getAliases() != null || !command.getAliases().isEmpty()) {
+      registeredCommands.addAll(command.getAliases());
+    }
 
     if (command instanceof BukkitCommandWrapper) {
       CommandExecutor executor = ((BukkitCommandWrapper) command).getExecutor();
-      if (executor instanceof TabCompleter) ((BukkitCommandWrapper) command).setTabCompleter((TabCompleter) executor);
+      if (executor instanceof TabCompleter) {
+        ((BukkitCommandWrapper) command).setTabCompleter((TabCompleter) executor);
+      }
     }
   }
 
   public void unregisterCommands() {
-    if (registeredCommands.isEmpty()) return;
+    if (registeredCommands.isEmpty()) {
+      return;
+    }
 
     try {
       Field field = plugin.getServer().getClass().getDeclaredField("commandMap");
@@ -262,34 +295,58 @@ public class CoreManager {
       playerSettings.put(player.getUniqueId(), settings);
     }
 
-    if (playerData.has("mention_sound.enabled")) settings.setMentionSoundEnabled((Boolean) playerData.get("mention_sound.enabled"));
-    if (playerData.has("mention_sound.sound")) settings.setMentionSound(Sound.valueOf((String) playerData.get("mention_sound.sound")));
+    if (playerData.has("mention_sound.enabled")) {
+      settings.setMentionSoundEnabled((Boolean) playerData.get("mention_sound.enabled"));
+    }
+
+    if (playerData.has("mention_sound.sound")) {
+      settings.setMentionSound(Sound.valueOf((String) playerData.get("mention_sound.sound")));
+    }
   }
 
   private void setupDependencies() throws IllegalStateException {
     RegisteredServiceProvider<LuckPerms> rsp = plugin.getServer().getServicesManager().getRegistration(LuckPerms.class);
-    this.luckPerms = rsp == null ? null : rsp.getProvider();
-    if (luckPerms == null) throw new IllegalStateException("LuckPerms not found!");
+    this.luckPerms = rsp == null
+                     ? null
+                     : rsp.getProvider();
+
+    if (luckPerms == null) {
+      throw new IllegalStateException("LuckPerms not found!");
+    }
 
     this.discordSRV = plugin.getServer().getPluginManager().getPlugin("DiscordSRV") != null;
-    if (!discordSRV) logger.info("&cDiscordSRV not found! Discord Integration disabled.");
+    if (!discordSRV) {
+      logger.info("&cDiscordSRV not found! Discord Integration disabled.");
+    }
 
     this.placeholderAPI = plugin.getServer().getPluginManager().getPlugin("PlaceholderAPI") != null;
-    if (!placeholderAPI) logger.info("&cPlaceholderAPI not found! Placeholders features disabled.");
+    if (!placeholderAPI) {
+      logger.info("&cPlaceholderAPI not found! Placeholders features disabled.");
+    }
 
     this.authMe = plugin.getServer().getPluginManager().getPlugin("AuthMe") != null;
-    if (!authMe) logger.info("&cAuthMe not found! We won't check if the player is logged in.");
-    else AuthMeHook.initializeHook();
+    if (!authMe) {
+      logger.info("&cAuthMe not found! We won't check if the player is logged in.");
+    } else {
+      AuthMeHook.initializeHook();
+    }
 
     RegisteredServiceProvider<Chat> chatRsp = plugin.getServer().getServicesManager().getRegistration(Chat.class);
-    this.chat = chatRsp == null ? null : chatRsp.getProvider();
-    if (chat == null) throw new IllegalStateException("Vault not found!");
+    this.chat = chatRsp == null
+                ? null
+                : chatRsp.getProvider();
+
+    if (chat == null) {
+      throw new IllegalStateException("Vault not found!");
+    }
 
     logger.info("&a✔ &9Hooked into &dLuckPerms&9, &dAuthMe &9and &dVault &9successfully!");
   }
 
   private void setDefaultIfMissing(FileConfiguration file, String path, Object value) {
-    if (!file.isSet(path)) file.set(path, value);
+    if (!file.isSet(path)) {
+      file.set(path, value);
+    }
   }
 
   public void saveAll() {
@@ -299,7 +356,13 @@ public class CoreManager {
   }
 
   private void sendBanner() {
-    String[] banner = new String[] {"┏┓┏┓┳┓┏┓" + "&8 -+------------------------------------+-", "┃ ┃┃┣┫┣ " + "&7  Created by &b" + plugin.getDescription().getAuthors().stream().map(String::valueOf).collect(Collectors.joining(", ")) + "&7, version &f" + plugin.getDescription().getVersion(), "┗┛┗┛┛┗┗┛" + "&8 -+------------------------------------+-"};
+    String[] banner = new String[]{"┏┓┏┓┳┓┏┓" + "&8 -+------------------------------------+-",
+                                   "┃ ┃┃┣┫┣ " + "&7  Created by &b" +
+                                   plugin.getDescription().getAuthors().stream().map(String::valueOf).collect(
+                                       Collectors.joining(", ")) + "&7, version &f" +
+                                   plugin.getDescription().getVersion(),
+                                   "┗┛┗┛┛┗┗┛" + "&8 -+------------------------------------+-"
+    };
 
     for (String line : banner) {
       plugin.getServer().getConsoleSender().sendMessage(logger.getConsolePrefix() + logger.color(line));

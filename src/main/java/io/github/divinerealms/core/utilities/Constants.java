@@ -7,8 +7,6 @@ import java.util.concurrent.TimeUnit;
 
 @AllArgsConstructor
 public class Constants {
-  public static int ROSTER_WEIGHT = 200;
-  public static final int ROSTER_WEIGHT_STARTING_THRESHOLD = 190;
   public static final long NEWBIE_THRESHOLD_HOURS = 2;
   public static final Duration CLIENT_BLOCKER_EXEMPT_DURATION = Duration.ofMinutes(30);
   public static final String PROXY_CHECK_API_URL = "https://proxycheck.io/v2/";

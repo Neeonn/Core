@@ -11,7 +11,8 @@ public class PlayerData {
   private final String playerName;
   private final ConfigManager configManager;
   private final PlayerDataManager dataManager;
-  @Getter private final FileConfiguration config;
+  @Getter
+  private final FileConfiguration config;
 
   public PlayerData(String playerName, ConfigManager configManager, PlayerDataManager dataManager) {
     this.configManager = configManager;
@@ -46,7 +47,9 @@ public class PlayerData {
 
   public void remove(String key) {
     int current = (int) get(key);
-    set(key, current > 0 ? current - 1 : 0);
+    set(key, current > 0
+             ? current - 1
+             : 0);
   }
 
   public void save() {

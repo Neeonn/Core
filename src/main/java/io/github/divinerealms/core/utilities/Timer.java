@@ -13,8 +13,10 @@ public class Timer {
   private final Consumer<Timer> everySecond;
   private final Runnable beforeTimer;
 
-  @Setter private int secondsElapsed;
-  @Setter private boolean isRunning = false;
+  @Setter
+  private int secondsElapsed;
+  @Setter
+  private boolean isRunning = false;
 
   private BukkitRunnable task;
 
@@ -25,16 +27,23 @@ public class Timer {
   }
 
   public void start() {
-    if (isRunning) return;
+    if (isRunning) {
+      return;
+    }
+
     isRunning = true;
 
-    if (beforeTimer != null) beforeTimer.run();
+    if (beforeTimer != null) {
+      beforeTimer.run();
+    }
 
     task = new BukkitRunnable() {
       @Override
       public void run() {
         secondsElapsed++;
-        if (everySecond != null) everySecond.accept(Timer.this);
+        if (everySecond != null) {
+          everySecond.accept(Timer.this);
+        }
       }
     };
 
@@ -42,13 +51,10 @@ public class Timer {
   }
 
   public void cancel() {
-    if (task != null) task.cancel();
-    isRunning = false;
-  }
+    if (task != null) {
+      task.cancel();
+    }
 
-  public String getFormattedTime() {
-    int min = secondsElapsed / 60;
-    int sec = secondsElapsed % 60;
-    return String.format("%02d:%02d", min, sec);
+    isRunning = false;
   }
 }

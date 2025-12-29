@@ -14,9 +14,12 @@ public enum Config {
   CHANNELS_DEFAULT("channels.default_channel", "global"),
   CHANNELS_DEFAULT_CHANNEL_PERMISSION("channels.list.global.permission", ""),
   CHANNELS_DEFAULT_CHANNEL_DISCORD_ID("channels.list.global.discord_id", ""),
-  CHANNELS_DEFAULT_CHANNEL_FORMATS_MINECRAFT("channels.list.global.formats.minecraft_chat", "&r<%player_displayname%&r> %message%"),
-  CHANNELS_DEFAULT_CHANNEL_FORMATS_DISCORD_TO_MINECRAFT("channels.list.global.formats.discord_to_minecraft", "&3[Discord] &r<%player_displayname&r> %message%"),
-  CHANNELS_DEFAULT_CHANNEL_FORMATS_MINECRAFT_TO_DISCORD("channels.list.global.formats.minecraft_to_discord", "**%player_name%**: %message%"),
+  CHANNELS_DEFAULT_CHANNEL_FORMATS_MINECRAFT("channels.list.global.formats.minecraft_chat",
+      "&r<%player_displayname%&r> %message%"),
+  CHANNELS_DEFAULT_CHANNEL_FORMATS_DISCORD_TO_MINECRAFT("channels.list.global.formats.discord_to_minecraft",
+      "&3[Discord] &r<%player_displayname&r> %message%"),
+  CHANNELS_DEFAULT_CHANNEL_FORMATS_MINECRAFT_TO_DISCORD("channels.list.global.formats.minecraft_to_discord",
+      "**%player_name%**: %message%"),
   CHANNELS_ANTI_SPAM_MAX_MESSAGES("channels.anti_spam.max_messages", 5),
   CHANNELS_ANTI_SPAM_COOLDOWN("channels.anti_spam.cooldown", 2500L),
 
@@ -25,10 +28,14 @@ public enum Config {
   CLIENT_BLOCKER_LIST("client_blocker.list", Arrays.asList("vanilla", "optifine")),
 
   PLAYER_MESSAGES_CUSTOM_JOIN_ENABLED("player_messages.custom_join.enabled", true),
-  PLAYER_MESSAGES_CUSTOM_JOIN_FORMATS_MINECRAFT("player_messages.custom_join.minecraft", "&e%player_displayname%&e has joined the server!"),
-  PLAYER_MESSAGES_CUSTOM_JOIN_FORMATS_DISCORD("player_messages.custom_join.discord", "**%player_name%** has joined the server!"),
-  PLAYER_MESSAGES_CUSTOM_QUIT_FORMATS_MINECRAFT("player_messages.custom_quit.minecraft", "&e%player_displayname%&e has left the server!"),
-  PLAYER_MESSAGES_CUSTOM_QUIT_FORMATS_DISCORD("player_messages.custom_quit.discord", "**%player_name%** has left the server!"),
+  PLAYER_MESSAGES_CUSTOM_JOIN_FORMATS_MINECRAFT("player_messages.custom_join.minecraft",
+      "&e%player_displayname%&e has joined the server!"),
+  PLAYER_MESSAGES_CUSTOM_JOIN_FORMATS_DISCORD("player_messages.custom_join.discord",
+      "**%player_name%** has joined the server!"),
+  PLAYER_MESSAGES_CUSTOM_QUIT_FORMATS_MINECRAFT("player_messages.custom_quit.minecraft",
+      "&e%player_displayname%&e has left the server!"),
+  PLAYER_MESSAGES_CUSTOM_QUIT_FORMATS_DISCORD("player_messages.custom_quit.discord",
+      "**%player_name%** has left the server!"),
 
   PRIVATE_MESSAGES_ENABLED("private_messages.enabled", true),
   PRIVATE_MESSAGES_SENDER_FORMAT("private_messages.formats.sender", "&6(&eJa &7→ &r{0}&6) &e&o{1}"),
@@ -58,7 +65,8 @@ public enum Config {
   RESULT_FORMATS_MINECRAFT_GOAL_REMOVE("result.formats.minecraft.remove_goal", "{0} &8| &cRemoved goal for team {1}"),
   RESULT_FORMATS_DISCORD_START("result.formats.discord.start", "`{0}` Starting **{1}**, match **{2} - {3}**!"),
   RESULT_FORMATS_DISCORD_HALFTIME("result.formats.discord.half", "`{0}` Halftime! **{1} {2} - {3} {4}**"),
-  RESULT_FORMATS_DISCORD_SECOND_HALF("result.formats.discord.resume", "`{0}` Second Half Time starting! **{1} {2} - {3} {4}**"),
+  RESULT_FORMATS_DISCORD_SECOND_HALF("result.formats.discord.resume",
+      "`{0}` Second Half Time starting! **{1} {2} - {3} {4}**"),
   RESULT_FORMATS_DISCORD_END("result.formats.discord.end", "`{0}` Match ended! **{1} {2} - {3} {4}**"),
   RESULT_FORMATS_DISCORD_GOAL_TYPE("result.formats.discord.goal.type", "regular"),
   RESULT_FORMATS_DISCORD_GOAL_EMBED_TITLE("result.formats.discord.goal.embed.title", "GOOOOOOL for {0}"),
@@ -68,21 +76,24 @@ public enum Config {
       "`{0}` **GOOOOOOL! {1}** scored for **{2}** team!",
       "`{0}` Result: **{3} {4} - {5} {6}**"
   )),
-  RESULT_FORMATS_DISCORD_GOAL_ADD_EMBED_DESCRIPTION("result.formats.discord.goal.add.embed_description", String.join(System.lineSeparator(),
-      "Scorer: **{0}**",
-      "Result: **{1} {2} - {3} {4}**",
-      "Time: `{5}`"
-  )),
-  RESULT_FORMATS_DISCORD_GOAL_ASSIST_REGULAR("result.formats.discord.goal.assist.regular", String.join(System.lineSeparator(),
-      "`{0}` **GOOOOOOL! {1}** scored for **{2}** team! Assist: **{3}**",
-      "`{0}` Result: **{4} {5} - {6} {7}**"
-  )),
-  RESULT_FORMATS_DISCORD_GOAL_ASSIST_EMBED_DESCRIPTION("result.formats.discord.goal.assist.embed_description", String.join(System.lineSeparator(),
-      "Scorer: **{0}**",
-      "Assist: **{1}**",
-      "Result: **{2} {3} - {4} {5}**",
-      "Time: `{6}`"
-  )),
+  RESULT_FORMATS_DISCORD_GOAL_ADD_EMBED_DESCRIPTION("result.formats.discord.goal.add.embed_description",
+      String.join(System.lineSeparator(),
+          "Scorer: **{0}**",
+          "Result: **{1} {2} - {3} {4}**",
+          "Time: `{5}`"
+      )),
+  RESULT_FORMATS_DISCORD_GOAL_ASSIST_REGULAR("result.formats.discord.goal.assist.regular",
+      String.join(System.lineSeparator(),
+          "`{0}` **GOOOOOOL! {1}** scored for **{2}** team! Assist: **{3}**",
+          "`{0}` Result: **{4} {5} - {6} {7}**"
+      )),
+  RESULT_FORMATS_DISCORD_GOAL_ASSIST_EMBED_DESCRIPTION("result.formats.discord.goal.assist.embed_description",
+      String.join(System.lineSeparator(),
+          "Scorer: **{0}**",
+          "Assist: **{1}**",
+          "Result: **{2} {3} - {4} {5}**",
+          "Time: `{6}`"
+      )),
   RESULT_FORMATS_DISCORD_GOAL_REMOVE("result.formats.discord.goal.remove", "`{0}` __Removed__ goal for team **{1}**!"),
 
   ROSTERS_LEAGUE_SETTINGS_DEFAULT_SUFFIX("rosters.league_settings.default.manager_suffix", "&a [M]"),
@@ -126,15 +137,17 @@ public enum Config {
     String value = ChatColor.translateAlternateColorCodes('&', CONFIG.getString(this.path, (String) this.def));
     if (args == null) {
       return value;
-    } else if (args.length == 0) {
-      return value;
     } else {
-      for (int i = 0; i < args.length; ++i) {
-        value = value.replace("{" + i + "}", args[i]);
-      }
+      if (args.length == 0) {
+        return value;
+      } else {
+        for (int i = 0; i < args.length; ++i) {
+          value = value.replace("{" + i + "}", args[i]);
+        }
 
-      value = ChatColor.translateAlternateColorCodes('&', value);
-      return value;
+        value = ChatColor.translateAlternateColorCodes('&', value);
+        return value;
+      }
     }
   }
 }

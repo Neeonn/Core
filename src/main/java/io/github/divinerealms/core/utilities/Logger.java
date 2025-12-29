@@ -8,87 +8,264 @@ import net.minecraft.server.v1_8_R3.IChatBaseComponent.ChatSerializer;
 import net.minecraft.server.v1_8_R3.PacketPlayOutChat;
 import net.minecraft.server.v1_8_R3.PacketPlayOutTitle;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 
+import static io.github.divinerealms.core.configs.Lang.PREFIX;
+
+/**
+ * The Logger class provides a utility for managing formatted logging and messaging functionalities
+ * in a Minecraft server environment. It handles message customization, replacement of placeholders,
+ * and formatted broadcasting to players and the console, ensuring consistent and readable output.
+ */
 public class Logger {
   private final CoreManager coreManager;
   private final Server server;
   private final ConsoleCommandSender consoleSender;
-  @Getter private final String consolePrefix;
+  @Getter
+  private final String consolePrefix;
 
   public Logger(CoreManager coreManager) {
     this.coreManager = coreManager;
     this.server = coreManager.getPlugin().getServer();
     this.consoleSender = this.server.getConsoleSender();
-    this.consolePrefix = ChatColor.AQUA + "[" + coreManager.getPlugin().getDescription().getName() + "] " + ChatColor.BLUE;
+    this.consolePrefix =
+        ChatColor.AQUA + "[" + coreManager.getPlugin().getDescription().getName() + "] " + ChatColor.BLUE;
   }
 
-  public void info(String message) {
-    message = message.replace("{prefix}", "");
-    consoleSender.sendMessage(consolePrefix + color(message));
+  public void logChannel(String channelName, String message) {
+    consoleSender.sendMessage(color("&9[&3" + channelName + "&9] &r" + clearPrefixes(message)));
   }
 
+  /**
+   * Logs an informational message to the console.
+   * Accepts either a {@link Lang} entry or a raw string.
+   * The message is processed to remove specific prefixes (like {prefix}) to maintain
+   * a clean console log while keeping the actual text formatted.
+   *
+   * @param messageObj the message to be logged (Lang or String)
+   * @param args       optional arguments for placeholder replacement (only used with Lang entries)
+   */
+  public void info(Object messageObj, String... args) {
+    String message = formatMessage(messageObj, args);
+    consoleSender.sendMessage(consolePrefix + clearPrefixes(message));
+  }
+
+  /**
+   * Sends a formatted message to a specified {@link CommandSender}.
+   * Accepts either a {@link Lang} entry or a raw string.
+   * If the sender is a player, the message includes full prefixes. If the sender is the
+   * console, prefixes are stripped for better readability.
+   *
+   * @param sender     the recipient of the message (player or console)
+   * @param messageObj the message to send (Lang or String)
+   * @param args       optional arguments for placeholder replacement (only used with Lang entries)
+   */
+  public void send(CommandSender sender, Object messageObj, String... args) {
+    String message = formatMessage(messageObj, args);
+
+    if (sender instanceof Player) {
+      sender.sendMessage(message);
+    } else {
+      consoleSender.sendMessage(consolePrefix + clearPrefixes(message));
+    }
+  }
+
+  /**
+   * Sends a formatted message to all players with a specific permission and logs it to the console.
+   * Accepts either a {@link Lang} entry or a raw string.
+   * Placeholders are automatically handled when using Lang entries.
+   *
+   * @param permission the permission required for players to receive the message
+   * @param messageObj the message to send (Lang or String)
+   * @param args       optional arguments for placeholder replacement (only used with Lang entries)
+   */
+  public void send(String permission, Object messageObj, String... args) {
+    String formatted = formatMessage(messageObj, args);
+
+    server.broadcast(formatted, permission);
+    consoleSender.sendMessage(consolePrefix + clearPrefixes(formatted));
+  }
+
+  /**
+   * Sends a formatted message to all players within a specified radius who have the given
+   * permission, and logs the message to the console.
+   * Accepts either a {@link Lang} entry or a raw string.
+   *
+   * @param permission the permission required for players to receive the message
+   * @param center     the center location to define the area
+   * @param radius     the radius around the center
+   * @param messageObj the message to send (Lang or String)
+   * @param args       optional arguments for placeholder replacement (only used with Lang entries)
+   */
+  public void send(String permission, Location center, double radius, Object messageObj, String... args) {
+    if (center == null || radius <= 0) {
+      return;
+    }
+
+    String formatted = formatMessage(messageObj, args);
+    double radiusSquared = radius * radius;
+
+    for (Player player : coreManager.getCachedPlayers()) {
+      if (player.getWorld() != center.getWorld()) {
+        continue;
+      }
+      if (!player.hasPermission(permission)) {
+        continue;
+      }
+      if (player.getLocation().distanceSquared(center) > radiusSquared) {
+        continue;
+      }
+
+      player.sendMessage(formatted);
+    }
+
+    consoleSender.sendMessage(consolePrefix + clearPrefixes(formatted));
+  }
+
+  /**
+   * Sends a raw string message to a sender. Primarily used for dynamic/admin-only
+   * notifications that are not stored in the Lang file.
+   *
+   * @param sender  the recipient
+   * @param message the raw string message
+   */
   public void send(CommandSender sender, String message) {
     if (sender instanceof Player) {
-      message = message.replace("{prefix}", Lang.PREFIX.replace(null));
-      sender.sendMessage(color(message));
+      sender.sendMessage(color(replacePrefixes(message)));
     } else {
-      message = message.replace("{prefix}", "");
-      consoleSender.sendMessage(consolePrefix + color(message));
+      consoleSender.sendMessage(consolePrefix + color(clearPrefixes(message)));
     }
   }
 
-  public void send(String permission, String message) {
-    String formattedMc = message.replace("{prefix}", Lang.PREFIX.replace(null));
-    String formattedConsole = message.replace("{prefix}", "");
-
-    server.broadcast(color(formattedMc), permission);
-    consoleSender.sendMessage(consolePrefix + color(formattedConsole));
+  /**
+   * Sends a broadcast message to all players on the server.
+   * Accepts either a {@link Lang} entry or a raw string.
+   *
+   * @param messageObj the message to be broadcasted (Lang or String)
+   * @param args       optional arguments for placeholder replacement (only used with Lang entries)
+   */
+  public void broadcast(Object messageObj, String... args) {
+    String message = formatMessage(messageObj, args);
+    server.broadcastMessage(message);
   }
 
-  public void broadcast(String message) {
-    message = message.replace("{prefix}", Lang.PREFIX.replace(null));
-    server.broadcastMessage(color(message));
+  /**
+   * Sends an action bar message to the specified player.
+   * Accepts either a {@link Lang} entry or a raw string.
+   *
+   * @param player     the player to whom the action bar message will be sent
+   * @param messageObj the message to send (Lang or String)
+   * @param args       optional arguments for placeholder replacement (only used with Lang entries)
+   */
+  public void sendActionBar(Player player, Object messageObj, String... args) {
+    String message = formatMessage(messageObj, args);
+    IChatBaseComponent iChatBaseComponent = ChatSerializer.a("{\"text\":\"" + message + "\"}");
+    PacketPlayOutChat packet = new PacketPlayOutChat(iChatBaseComponent, (byte) 2);
+    ((CraftPlayer) player).getHandle().playerConnection.sendPacket(packet);
   }
 
-  public void sendActionBar(Player player, String message) {
-    message = color(message.replace("{prefix}", Lang.PREFIX.replace(null)));
-    IChatBaseComponent iChatBaseComponent = ChatSerializer.a("{\"text\": \"" + message + "\"}");
-    PacketPlayOutChat packetPlayOutChat = new PacketPlayOutChat(iChatBaseComponent, (byte)2);
-    ((CraftPlayer)player).getHandle().playerConnection.sendPacket(packetPlayOutChat);
-  }
+  /**
+   * Sends a formatted action bar message to all cached players on the server.
+   * Accepts either a {@link Lang} entry or a raw string.
+   *
+   * @param messageObj the message to be broadcasted in the action bar (Lang or String)
+   * @param args       optional arguments for placeholder replacement (only used with Lang entries)
+   */
+  public void broadcastBar(Object messageObj, String... args) {
+    String message = formatMessage(messageObj, args);
+    IChatBaseComponent iChatBaseComponent = ChatSerializer.a("{\"text\":\"" + message + "\"}");
+    PacketPlayOutChat packet = new PacketPlayOutChat(iChatBaseComponent, (byte) 2);
 
-  public void broadcastBar(String message) {
-    message = color(message.replace("{prefix}", Lang.PREFIX.replace(null)));
-    IChatBaseComponent iChatBaseComponent = ChatSerializer.a("{\"text\": \"" + message + "\"}");
-    PacketPlayOutChat packetPlayOutChat = new PacketPlayOutChat(iChatBaseComponent, (byte)2);
-
-    for(Player player : coreManager.getCachedPlayers()) {
-      ((CraftPlayer)player).getHandle().playerConnection.sendPacket(packetPlayOutChat);
+    for (Player player : coreManager.getCachedPlayers()) {
+      ((CraftPlayer) player).getHandle().playerConnection.sendPacket(packet);
     }
   }
 
-  public void title(Player player, String title, String subtitle, int fadeIn, int stay, int fadeOut) {
-    title = color(title);
-    subtitle = color(subtitle);
+  /**
+   * Sends a title and subtitle to a specified player with customized durations.
+   * Accepts both {@link Lang} objects and raw strings for title and subtitle.
+   *
+   * @param player      the player to whom the title and subtitle will be sent
+   * @param titleObj    the main title text (Lang or String)
+   * @param subtitleObj the subtitle text (Lang or String)
+   * @param fadeIn      the time in ticks for fade in
+   * @param stay        the time in ticks to remain on screen
+   * @param fadeOut     the time in ticks for fade out
+   */
+  @SuppressWarnings("unused")
+  public void title(Player player, Object titleObj, Object subtitleObj, int fadeIn, int stay, int fadeOut) {
+    String title = formatMessage(titleObj);
+    String subtitle = formatMessage(subtitleObj);
+
     CraftPlayer craftPlayer = (CraftPlayer) player;
-
     IChatBaseComponent titleJSON = ChatSerializer.a("{\"text\":\"" + title + "\"}");
     IChatBaseComponent subtitleJSON = ChatSerializer.a("{\"text\":\"" + subtitle + "\"}");
 
-    PacketPlayOutTitle titlePacket = new PacketPlayOutTitle(PacketPlayOutTitle.EnumTitleAction.TITLE, titleJSON);
-    PacketPlayOutTitle subtitlePacket = new PacketPlayOutTitle(PacketPlayOutTitle.EnumTitleAction.SUBTITLE, subtitleJSON);
-    PacketPlayOutTitle timesPacket = new PacketPlayOutTitle(fadeIn, stay, fadeOut);
-
-    craftPlayer.getHandle().playerConnection.sendPacket(titlePacket);
-    craftPlayer.getHandle().playerConnection.sendPacket(subtitlePacket);
-    craftPlayer.getHandle().playerConnection.sendPacket(timesPacket);
+    craftPlayer.getHandle().playerConnection.sendPacket(
+        new PacketPlayOutTitle(PacketPlayOutTitle.EnumTitleAction.TITLE, titleJSON));
+    craftPlayer.getHandle().playerConnection.sendPacket(
+        new PacketPlayOutTitle(PacketPlayOutTitle.EnumTitleAction.SUBTITLE, subtitleJSON));
+    craftPlayer.getHandle().playerConnection.sendPacket(new PacketPlayOutTitle(fadeIn, stay, fadeOut));
   }
 
+  /**
+   * Converts a message object (either Lang entry or raw String) into a formatted string.
+   * If the message is a Lang entry, it processes placeholders using the provided args.
+   * If the message is a raw String, it returns the colored string as-is.
+   *
+   * @param messageObj the message object (Lang or String)
+   * @param args       optional arguments for placeholder replacement (only used with Lang entries)
+   * @return the formatted and colored message string
+   */
+  private String formatMessage(Object messageObj, String... args) {
+    if (messageObj instanceof Lang) {
+      return ((Lang) messageObj).replace(args);
+    } else {
+      return color(replacePrefixes(messageObj.toString()));
+    }
+  }
+
+  /**
+   * Replaces prefix placeholders in a message with their actual formatted values.
+   * This method is used when sending messages to players or formatting raw strings,
+   * where the prefixes should be visible and properly colored. For example, it converts
+   * "{prefix}" into the actual colored prefix like "[Core]" that players see in chat.
+   *
+   * @param message the message containing placeholder text like "{prefix}" or "{prefix-admin}"
+   * @return the message with placeholders replaced by their formatted prefix values
+   */
+  private String replacePrefixes(String message) {
+    return message.replace("{prefix}", PREFIX.toString());
+  }
+
+  /**
+   * Removes prefix placeholders from a message entirely, returning clean text.
+   * This method is used when logging to the console, where the prefixes would be
+   * redundant since the console already shows "[Core]" at the start of each line.
+   * Removing them prevents duplicate prefixes like "[Core] [Core] message" and
+   * keeps console output clean and readable.
+   *
+   * @param message the message containing placeholder text like "{prefix}" or "{prefix-admin}"
+   * @return the message with all prefix placeholders removed (replaced with empty strings)
+   */
+  private String clearPrefixes(String message) {
+    return message
+        .replace("{prefix}", "")
+        .replace("{prefix-admin}", "");
+  }
+
+  /**
+   * Translates alternate color codes in the given message using the '&' character
+   * as the prefix for color codes.
+   *
+   * @param message the string containing alternate color codes to be translated
+   * @return the formatted string with alternate color codes translated to actual color codes
+   */
   public String color(String message) {
     return ChatColor.translateAlternateColorCodes('&', message);
   }

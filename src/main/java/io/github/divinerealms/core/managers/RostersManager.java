@@ -1,6 +1,5 @@
 package io.github.divinerealms.core.managers;
 
-import io.github.divinerealms.core.configs.Lang;
 import io.github.divinerealms.core.main.CoreManager;
 import io.github.divinerealms.core.utilities.Logger;
 import io.github.divinerealms.core.utilities.RosterInfo;
@@ -16,15 +15,21 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import static io.github.divinerealms.core.configs.Lang.*;
+
 public class RostersManager {
   private final ConfigManager configManager;
   private final ChannelManager channelManager;
   private final Logger logger;
 
-  @Getter private final Map<String, RosterInfo> rosters = new ConcurrentHashMap<>();
+  @Getter
+  private final Map<String, RosterInfo> rosters = new ConcurrentHashMap<>();
   private final Map<String, String> playerToRoster = new ConcurrentHashMap<>();
-  @Getter private String activeLeague = "main";
-  @Getter @Setter private List<String> availableLeagues;
+  @Getter
+  private String activeLeague = "main";
+  @Getter
+  @Setter
+  private List<String> availableLeagues;
 
   public RostersManager(CoreManager coreManager) {
     this.configManager = coreManager.getConfigManager();
@@ -44,10 +49,15 @@ public class RostersManager {
 
     activeLeague = config.getString("rosters.active_league", "main");
     List<String> loadedLeagues = config.getStringList("rosters.available_leagues");
-    availableLeagues = loadedLeagues.isEmpty() ? new ArrayList<>(List.of("main", "juniors", "nationals")) : loadedLeagues;
+    availableLeagues = loadedLeagues.isEmpty()
+                       ? new ArrayList<>(List.of("main", "juniors", "nationals"))
+                       : loadedLeagues;
 
     ConfigurationSection rostersSection = rtConfig.getConfigurationSection("rosters");
-    if (rostersSection == null) { logger.info("&cNo rosters found in rosters.yml"); return; }
+    if (rostersSection == null) {
+      logger.info("&cNo rosters found in rosters.yml");
+      return;
+    }
 
     for (String rosterName : rostersSection.getKeys(false)) {
       String path = "rosters." + rosterName;
@@ -62,7 +72,9 @@ public class RostersManager {
       roster.setDiscordChannelId(discordId);
 
       String managerName = rtConfig.getString(path + ".manager");
-      if (managerName != null && !managerName.isEmpty()) roster.setManager(managerName);
+      if (managerName != null && !managerName.isEmpty()) {
+        roster.setManager(managerName);
+      }
 
       List<String> members = rtConfig.getStringList(path + ".members");
       for (String playerName : members) {
@@ -72,10 +84,13 @@ public class RostersManager {
       }
 
       rosters.put(rosterName.toUpperCase(), roster);
-      if (channelManager != null) channelManager.createRosterChannel(rosterName, discordId);
+      if (channelManager != null) {
+        channelManager.createRosterChannel(rosterName, discordId);
+      }
     }
 
-    logger.info("&a✔ &9Loaded &e" + rosters.size() + " &9rosters with &e" + playerToRoster.size() + " &9total members.");
+    logger.info(
+        "&a✔ &9Loaded &e" + rosters.size() + " &9rosters with &e" + playerToRoster.size() + " &9total members.");
   }
 
   public void saveRosters() {
@@ -110,11 +125,16 @@ public class RostersManager {
 
   public boolean createRoster(String name, String tag, String league) {
     String upperName = name.toUpperCase();
-    if (rosters.containsKey(upperName)) return false;
+    if (rosters.containsKey(upperName)) {
+      return false;
+    }
 
     RosterInfo roster = new RosterInfo(name, tag, league);
     rosters.put(upperName, roster);
-    if (channelManager != null) channelManager.createRosterChannel(name, roster.getDiscordChannelId());
+    if (channelManager != null) {
+      channelManager.createRosterChannel(name, roster.getDiscordChannelId());
+    }
+
     saveRosters();
 
     return true;
@@ -123,7 +143,9 @@ public class RostersManager {
   public boolean deleteRoster(String name) {
     String upperName = name.toUpperCase();
     RosterInfo roster = rosters.remove(upperName);
-    if (roster == null) return false;
+    if (roster == null) {
+      return false;
+    }
 
     String league = roster.getLeague();
     for (String playerName : roster.getMembers()) {
@@ -142,27 +164,40 @@ public class RostersManager {
   public RosterInfo getPlayerRoster(String playerName, String league) {
     String lookupKey = playerName + ":" + league.toLowerCase();
     String rosterName = playerToRoster.get(lookupKey);
-    return rosterName != null ? rosters.get(rosterName) : null;
+    return rosterName != null
+           ? rosters.get(rosterName)
+           : null;
   }
 
   public RosterInfo getPlayerRoster(Player player) {
     for (RosterInfo roster : rosters.values()) {
-      if (roster.getMembers().contains(player.getName())) return roster;
-      if (player.getName().equalsIgnoreCase(roster.getManager())) return roster;
+      if (roster.getMembers().contains(player.getName())) {
+        return roster;
+      }
+
+      if (player.getName().equalsIgnoreCase(roster.getManager())) {
+        return roster;
+      }
     }
     return null;
   }
 
   public Map<String, RosterInfo> getPlayerRosters(String playerName) {
     Map<String, RosterInfo> playerRosters = new HashMap<>();
-    for (RosterInfo roster : rosters.values()) if (roster.hasMember(playerName)) playerRosters.put(roster.getLeague(), roster);
+    for (RosterInfo roster : rosters.values()) {
+      if (roster.hasMember(playerName)) {
+        playerRosters.put(roster.getLeague(), roster);
+      }
+    }
     return playerRosters;
   }
 
   @SuppressWarnings("deprecation")
   public boolean addPlayerToRoster(String rosterName, String playerName) {
     RosterInfo roster = getRoster(rosterName);
-    if (roster == null) return false;
+    if (roster == null) {
+      return false;
+    }
 
     String league = roster.getLeague();
 
@@ -187,7 +222,9 @@ public class RostersManager {
   public boolean removePlayerFromRoster(String playerName, String league) {
     String lookupKey = playerName + ":" + league.toLowerCase();
     String currentRoster = playerToRoster.remove(lookupKey);
-    if (currentRoster == null) return false;
+    if (currentRoster == null) {
+      return false;
+    }
 
     RosterInfo roster = rosters.get(currentRoster);
     if (roster != null) {
@@ -199,7 +236,7 @@ public class RostersManager {
     if (target != null && target.isOnline() && roster != null) {
       String channelName = roster.getName().toLowerCase();
       channelManager.unsubscribe(target.getUniqueId(), channelName);
-      logger.send(target.getPlayer(), Lang.CHANNEL_TOGGLE.replace(new String[]{channelName, Lang.OFF.replace(null)}));
+      logger.send(target.getPlayer(), CHANNEL_TOGGLE, channelName, OFF.toString());
     }
 
     return true;
@@ -208,7 +245,9 @@ public class RostersManager {
   public boolean setManager(String playerName, String league) {
     String lookupKey = playerName + ":" + league.toLowerCase();
     String rosterName = playerToRoster.get(lookupKey);
-    if (rosterName == null) return false;
+    if (rosterName == null) {
+      return false;
+    }
 
     RosterInfo roster = rosters.get(rosterName);
     if (roster != null) {
@@ -220,40 +259,31 @@ public class RostersManager {
     return false;
   }
 
-  public boolean removeManager(String playerName, String league) {
-    String lookupKey = playerName + ":" + league.toLowerCase();
-    String rosterName = playerToRoster.get(lookupKey);
-    if (rosterName == null) return false;
-
-    RosterInfo roster = rosters.get(rosterName);
-    if (roster != null && roster.isManager(playerName)) {
-      roster.setManager(null);
-      saveRosters();
-      return true;
-    }
-
-    return false;
-  }
-
   @SuppressWarnings("deprecation")
   public List<String> getRosterInfo(String rosterName) {
     RosterInfo roster = getRoster(rosterName);
-    if (roster == null) return Collections.emptyList();
+    if (roster == null) {
+      return Collections.emptyList();
+    }
 
     List<String> info = new ArrayList<>();
-    info.add(Lang.ROSTERS_INFO_HEADER.replace(new String[]{
-        roster.getTag(), roster.getLeague(), String.valueOf(roster.getMemberCount()),
-        roster.getLongName() + (roster.getManager() != null ? Lang.ROSTERS_INFO_MANAGER_DISPLAY.replace(new String[]{roster.getManager()}) : "")
-    }));
+    info.add(ROSTERS_INFO_HEADER.replace(roster.getTag(), roster.getLeague(), String.valueOf(roster.getMemberCount()),
+        roster.getLongName() + (roster.getManager() != null
+                                ? ROSTERS_INFO_MANAGER_DISPLAY.replace(roster.getManager())
+                                : "")));
 
     for (String playerName : roster.getMembers()) {
       OfflinePlayer member = Bukkit.getOfflinePlayer(playerName);
-      String status = member.isOnline() ? Lang.ONLINE.replace(null) : Lang.OFFLINE.replace(null);
-      info.add(Lang.ROSTERS_INFO_PLAYER_ENTRY.replace(new String[]{status, member.isOnline() ? member.getPlayer().getDisplayName() : member.getName()}));
+      String status = member.isOnline()
+                      ? ONLINE.toString()
+                      : OFFLINE.toString();
+      info.add(ROSTERS_INFO_PLAYER_ENTRY.replace(status, member.isOnline()
+              ? member.getPlayer().getDisplayName()
+              : member.getName()));
     }
 
     info.add(System.lineSeparator());
-    info.add(Lang.ROSTERS_INFO_FOOTER.replace(new String[]{activeLeague}));
+    info.add(ROSTERS_INFO_FOOTER.replace(activeLeague));
     return info;
   }
 
@@ -275,7 +305,9 @@ public class RostersManager {
 
   public boolean updateTag(String rosterName, String newTag) {
     RosterInfo roster = getRoster(rosterName);
-    if (roster == null) return false;
+    if (roster == null) {
+      return false;
+    }
 
     roster.setTag(newTag);
     saveRosters();
@@ -284,8 +316,12 @@ public class RostersManager {
 
   public boolean updateLongName(String rosterName, String newLongName) {
     RosterInfo roster = getRoster(rosterName);
-    if (roster == null) return false;
-    if (newLongName == null || newLongName.trim().isEmpty()) return false;
+    if (roster == null) {
+      return false;
+    }
+    if (newLongName == null || newLongName.trim().isEmpty()) {
+      return false;
+    }
 
     roster.setLongName(newLongName.trim());
     saveRosters();
@@ -294,7 +330,9 @@ public class RostersManager {
 
   public boolean updateLeague(String rosterName, String newLeague) {
     RosterInfo roster = getRoster(rosterName);
-    if (roster == null) return false;
+    if (roster == null) {
+      return false;
+    }
 
     String oldLeague = roster.getLeague();
     roster.setLeague(newLeague.toLowerCase());
@@ -326,14 +364,21 @@ public class RostersManager {
 
   public void removeAvailableLeague(String league) {
     String lowerLeague = league.toLowerCase();
-    if (this.availableLeagues.remove(lowerLeague)) saveRosters();
+    if (this.availableLeagues.remove(lowerLeague)) {
+      saveRosters();
+    }
   }
 
   public boolean renameLeague(String oldName, String newName) {
     String lowerOld = oldName.toLowerCase(), lowerNew = newName.toLowerCase();
 
-    if (!availableLeagues.contains(lowerOld)) return false;
-    if (availableLeagues.contains(lowerNew)) return false;
+    if (!availableLeagues.contains(lowerOld)) {
+      return false;
+    }
+
+    if (availableLeagues.contains(lowerNew)) {
+      return false;
+    }
 
     for (RosterInfo roster : rosters.values()) {
       if (roster.getLeague().equalsIgnoreCase(lowerOld)) {
@@ -342,7 +387,9 @@ public class RostersManager {
         for (String playerName : roster.getMembers()) {
           String oldKey = playerName + ":" + lowerOld, newKey = playerName + ":" + lowerNew;
           String rosterName = playerToRoster.remove(oldKey);
-          if (rosterName != null) playerToRoster.put(newKey, rosterName);
+          if (rosterName != null) {
+            playerToRoster.put(newKey, rosterName);
+          }
         }
       }
     }
@@ -350,7 +397,9 @@ public class RostersManager {
     availableLeagues.remove(lowerOld);
     availableLeagues.add(lowerNew);
 
-    if (activeLeague.equalsIgnoreCase(lowerOld)) activeLeague = lowerNew;
+    if (activeLeague.equalsIgnoreCase(lowerOld)) {
+      activeLeague = lowerNew;
+    }
 
     saveRosters();
     return true;

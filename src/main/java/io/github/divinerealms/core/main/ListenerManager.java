@@ -34,7 +34,9 @@ public class ListenerManager {
       coreManager.getLogger().info("&a✔ &dDiscordSRV &9found and &eDiscord Integration &9enabled.");
     }
 
-    if (coreManager.getClientBlocker().isEnabled()) enableClientBlocker();
+    if (coreManager.getClientBlocker().isEnabled()) {
+      enableClientBlocker();
+    }
   }
 
   public void unregisterAll() {
@@ -59,7 +61,9 @@ public class ListenerManager {
   }
 
   public void enableClientBlocker() {
-    if (clientBlockerListener != null) return;
+    if (clientBlockerListener != null) {
+      return;
+    }
 
     clientBlockerListener = new ClientBlockerListener(coreManager);
     server.getPluginManager().registerEvents(clientBlockerListener, plugin);
@@ -71,7 +75,9 @@ public class ListenerManager {
   }
 
   public void disableClientBlocker() {
-    if (clientBlockerListener == null) return;
+    if (clientBlockerListener == null) {
+      return;
+    }
 
     HandlerList.unregisterAll(clientBlockerListener);
 

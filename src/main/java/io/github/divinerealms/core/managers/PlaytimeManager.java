@@ -19,22 +19,31 @@ public class PlaytimeManager {
   }
 
   public void reloadCache() {
-    if (!statsFolder.exists()) return;
+    if (!statsFolder.exists()) {
+      return;
+    }
+
     Map<UUID, Long> temp = new HashMap<>();
 
     File[] files = statsFolder.listFiles((dir, name) -> name.endsWith(".json"));
-    if (files == null) return;
+    if (files == null) {
+      return;
+    }
 
     for (File file : files) {
       try (FileReader reader = new FileReader(file)) {
         JsonParser parser = new JsonParser();
         JsonObject json = parser.parse(reader).getAsJsonObject();
-        if (!json.has("stat.playOneMinute")) continue;
+        if (!json.has("stat.playOneMinute")) {
+          continue;
+        }
+
         long ticks = json.get("stat.playOneMinute").getAsLong();
 
         UUID uuid = UUID.fromString(file.getName().replace(".json", ""));
         temp.put(uuid, ticks);
-      } catch (Exception ignored) {}
+      } catch (Exception ignored) {
+      }
     }
 
     synchronized (playtimeCache) {
@@ -54,8 +63,12 @@ public class PlaytimeManager {
     synchronized (playtimeCache) {
       sorted = new ArrayList<>(playtimeCache.entrySet());
     }
+
     sorted.sort((a, b) -> Long.compare(b.getValue(), a.getValue()));
-    if (limit > 0 && sorted.size() > limit) return sorted.subList(0, limit);
+    if (limit > 0 && sorted.size() > limit) {
+      return sorted.subList(0, limit);
+    }
+
     return sorted;
   }
 
@@ -73,11 +86,26 @@ public class PlaytimeManager {
     long minutes = totalSeconds / 60;
     long seconds = totalSeconds % 60;
 
-    if (years > 0) return years + "y " + months + "mo " + days + "d";
-    if (months > 0) return months + "mo " + days + "d " + hours + "h";
-    if (days > 0) return days + "d " + hours + "h " + minutes + "m";
-    if (hours > 0) return hours + "h " + minutes + "m";
-    if (minutes > 0) return minutes + "m " + seconds + "s";
+    if (years > 0) {
+      return years + "y " + months + "mo " + days + "d";
+    }
+
+    if (months > 0) {
+      return months + "mo " + days + "d " + hours + "h";
+    }
+
+    if (days > 0) {
+      return days + "d " + hours + "h " + minutes + "m";
+    }
+
+    if (hours > 0) {
+      return hours + "h " + minutes + "m";
+    }
+
+    if (minutes > 0) {
+      return minutes + "m " + seconds + "s";
+    }
+
     return seconds + "s";
   }
 }

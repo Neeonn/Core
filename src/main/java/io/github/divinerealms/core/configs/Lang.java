@@ -31,7 +31,8 @@ public enum Lang {
   CHANNEL_REPLY("channels.reply", "&7 &o(reply -> {0})&r"),
   CHANNEL_SPY_FORMAT("channels.spy.format", "&c[SPY] [&e{0}&c] {1}&8: &c&o{2}"),
   CHANNEL_SPY_TOGGLED("channels.spy.toggled", "{prefix}Social Spy je {0}&f!"),
-  CHANNEL_RESET_PERMISSION("channels.reset-permission", "{prefix}&cPrebačeni ste u &e{1} &ckanal jer više nemate pristup &e{0} &ckanalu."),
+  CHANNEL_RESET_PERMISSION("channels.reset-permission",
+      "{prefix}&cPrebačeni ste u &e{1} &ckanal jer više nemate pristup &e{0} &ckanalu."),
   CHANNEL_LIST("channels.list", "{prefix}&aLista dostupih kanala: &e{0}"),
   CHANNEL_INFO("channels.info", String.join(System.lineSeparator(),
       "{prefix}&aInformacije o kanalu &e{0}&a:",
@@ -68,21 +69,25 @@ public enum Lang {
       "&6/result|rs extratime: &fDodaje ET (primer: 20s, 1min, 1min20s, -50s)"
   )),
   RESULT_TEAMS_SET("result.teams.set", "{prefix}&aTimovi podešeni: &9{0} &avs &c{1}&a!"),
-  RESULT_TEAMS_UNKNOWN("result.teams.unknown", "{prefix}&cTimovi nisu podešeni. Koristite: &6/result teams <home> <away>"),
+  RESULT_TEAMS_UNKNOWN("result.teams.unknown",
+      "{prefix}&cTimovi nisu podešeni. Koristite: &6/result teams <home> <away>"),
   RESULT_TEAMS_INVALID("result.teams.invalid", "{prefix}&cTim nije validan! Koristite &ehome &cili &eaway&c."),
   RESULT_MATCH_RUNNING("result.match.running", "{prefix}&cMeč je već u toku!"),
   RESULT_MATCH_FINISHED("result.match.finished", "{prefix}&cMeč je već završen!"),
   RESULT_MATCH_PREFIX("result.match.prefix", "{prefix}&aMeč prefix podešen: {0}"),
   RESULT_MATCH_TIME("result.match.time", "{prefix}&aVreme podešeno na &e{0}&a!"),
-  RESULT_MATCH_TIME_ALREADY("result.match.time-already-set", "{prefix}&cVreme je već podešeno na istu dužinu, ne menjamo..."),
-  RESULT_MATCH_INVALID_TIME("result.match.invalid-time", "{prefix}&cVreme nije validno! Koristite: 1min20s, 30s ili -20s."),
+  RESULT_MATCH_TIME_ALREADY("result.match.time-already-set",
+      "{prefix}&cVreme je već podešeno na istu dužinu, ne menjamo..."),
+  RESULT_MATCH_INVALID_TIME("result.match.invalid-time",
+      "{prefix}&cVreme nije validno! Koristite: 1min20s, 30s ili -20s."),
   RESULT_MATCH_EXTRA("result.match.extra", "{prefix}&aDodato vreme podešeno: &e{0}"),
   RESULT_HALF_STOPPED("result.half.stopped", "{prefix}&cPoluvreme stopirano!"),
   RESULT_HALF_NONE("result.half.none", "{prefix}&cNema aktivnog poluvremena."),
   RESULT_SCORE_INVALID("result.score.invalid", "{prefix}&cNepostojeći tim ili je rezultat već 0."),
   RESULT_SCORE_UPDATED("result.score.update", "{prefix}&aRezultat osvežen za tim {0}&a."),
   RESULT_WARP_SET("result.warp.set", "{prefix}&aPodešen warp na &e\"{0}\"&a."),
-  RESULT_WARP_MISSING("result.warp.not-set", "{prefix}&cNiste podesili warp. Podesili smo automatski. Kucajte ponovo komandu."),
+  RESULT_WARP_MISSING("result.warp.not-set",
+      "{prefix}&cNiste podesili warp. Podesili smo automatski. Kucajte ponovo komandu."),
   RESULT_STATUS("result.status.message", String.join(System.lineSeparator(),
       "&e---------------------------------------------",
       "{prefix}&bStatus trenutne utakmice:",
@@ -163,16 +168,20 @@ public enum Lang {
   ROSTERS_LIST_LEAGUE_EMPTY("rosters.list.league-empty", "{prefix}&cNema timova pronađenih u &e{0} &cligi."),
   ROSTERS_MANAGER_SET("rosters.manager.set", "{prefix}&fIgrač &b{0} &fje postavljen za menadžera tima &e{1}"),
   ROSTERS_MANAGER_FAIL("rosters.manager.fail", "{prefix}&cNije uspelo postavljanje menadžera!"),
-  ROSTERS_PLAYER_NOT_IN_ROSTER("rosters.player-not-in-roster", "{prefix}&cIgrač &e{0} &cnije pronađen ni u jednom timu u &e{1} &cligi!"),
+  ROSTERS_PLAYER_NOT_IN_ROSTER("rosters.player-not-in-roster",
+      "{prefix}&cIgrač &e{0} &cnije pronađen ni u jednom timu u &e{1} &cligi!"),
   ROSTERS_LEAGUE_INVALID("rosters.league.invalid", "{prefix}&cNevalidna liga! Koristite: &e{0}"),
   ROSTERS_LEAGUE_ALREADY_EXISTS("rosters.league.already-exists", "{prefix}&cLiga &e{0} &cveć postoji!"),
   ROSTERS_LEAGUE_NOT_FOUND("rosters.league.not-found", "{prefix}&cLiga &e{0} &cnije pronađena!"),
-  ROSTERS_LEAGUE_NON_EMPTY_REMOVE("rosters.league.non-empty-remove", "{prefix}&cNije moguće obrisati ligu &e{0} &cjer sadrži aktivne timove."),
+  ROSTERS_LEAGUE_NON_EMPTY_REMOVE("rosters.league.non-empty-remove",
+      "{prefix}&cNije moguće obrisati ligu &e{0} &cjer sadrži aktivne timove."),
   ROSTERS_LEAGUE_SWITCHED("rosters.league.switched", "{prefix}&aAktivna liga prebačena na: &e{0}"),
   ROSTERS_LEAGUE_ADDED("rosters.league.added", "{prefix}&aLiga &e{0} &aje dodata na listu dostupnih liga."),
   ROSTERS_LEAGUE_REMOVED("rosters.league.removed", "{prefix}&aLiga &e{0} &aje uklonjena sa liste dostupnih liga."),
-  ROSTERS_LEAGUE_RENAMED("rosters.league.renamed", "{prefix}&aLiga &e{0} &apreimenovana u &e{1}&a, i svi timovi su ažurirani."),
-  ROSTERS_LEAGUE_RENAME_FAIL("rosters.league.rename-fail", "{prefix}&cNije uspelo preimenovanje lige. Proverite da li stara liga postoji ili je novo ime zauzeto."),
+  ROSTERS_LEAGUE_RENAMED("rosters.league.renamed",
+      "{prefix}&aLiga &e{0} &apreimenovana u &e{1}&a, i svi timovi su ažurirani."),
+  ROSTERS_LEAGUE_RENAME_FAIL("rosters.league.rename-fail",
+      "{prefix}&cNije uspelo preimenovanje lige. Proverite da li stara liga postoji ili je novo ime zauzeto."),
   ROSTERS_FAIL_GENERIC("rosters.fail.generic", "{prefix}&cNije uspelo izvršavanje komande!"),
   ROSTERS_LIST_ALL_EMPTY("rosters.list.all-empty", "{prefix}&cNema timova pronađenih u svim ligama."),
   ROSTERS_NOT_IN_ANY("rosters.not-in-any", "{prefix}&cNiste ni u jednom timu!"),
@@ -229,19 +238,30 @@ public enum Lang {
     return this.def;
   }
 
-  public String replace(String[] args) {
-    String value = ChatColor.translateAlternateColorCodes('&', LANG.getString(this.path, this.def));
-    if (args == null) {
-      return value;
-    } else if (args.length == 0) {
-      return value;
-    } else {
-      for (int i = 0; i < args.length; ++i) {
-        value = value.replace("{" + i + "}", args[i]);
-      }
-
-      value = ChatColor.translateAlternateColorCodes('&', value);
-      return value;
+  public String replace(String... args) {
+    if (LANG == null) {
+      return ChatColor.translateAlternateColorCodes('&', def).trim();
     }
+
+    String value = LANG.getString(this.path, this.def);
+
+    if (value.contains("{prefix}")) {
+      value = value.replace("{prefix}", PREFIX.toString());
+    }
+
+    if (args != null && args.length > 0) {
+      for (int i = 0; i < args.length; i++) {
+        if (args[i] != null) {
+          value = value.replace("{" + i + "}", args[i]);
+        }
+      }
+    }
+
+    return ChatColor.translateAlternateColorCodes('&', value).trim();
+  }
+
+  @Override
+  public String toString() {
+    return this.replace();
   }
 }

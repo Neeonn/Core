@@ -1,7 +1,6 @@
 package io.github.divinerealms.core.managers;
 
 import io.github.divinerealms.core.configs.Config;
-import io.github.divinerealms.core.configs.Lang;
 import io.github.divinerealms.core.main.CoreManager;
 import io.github.divinerealms.core.utilities.Logger;
 import lombok.Getter;
@@ -12,14 +11,15 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static io.github.divinerealms.core.configs.Lang.PRIVATE_MESSAGES_NO_REPLY_TARGET;
+
 public class PrivateMessagesManager {
   private final CoreManager coreManager;
   private final ChannelManager channelManager;
   private final Logger logger;
-
-  @Getter private boolean enabled;
-
   private final Map<UUID, UUID> lastConvoPartner = new ConcurrentHashMap<>();
+  @Getter
+  private boolean enabled;
 
   public PrivateMessagesManager(CoreManager coreManager) {
     this.coreManager = coreManager;
@@ -27,7 +27,10 @@ public class PrivateMessagesManager {
     this.logger = coreManager.getLogger();
     this.enabled = Config.PRIVATE_MESSAGES_ENABLED.getValue(Boolean.class);
 
-    if (!this.enabled) return;
+    if (!this.enabled) {
+      return;
+    }
+
     this.clearState();
     logger.info("&a✔ &9Private Messages module loaded successfully.");
   }
@@ -47,10 +50,14 @@ public class PrivateMessagesManager {
     lastConvoPartner.put(recipient.getUniqueId(), sender.getUniqueId());
 
     channelManager.getSocialSpy().forEach(spyUUID -> {
-      if (spyUUID.equals(sender.getUniqueId()) || spyUUID.equals(recipient.getUniqueId())) return;
+      if (spyUUID.equals(sender.getUniqueId()) || spyUUID.equals(recipient.getUniqueId())) {
+        return;
+      }
 
       Player spy = Bukkit.getPlayer(spyUUID);
-      if (spy == null) return;
+      if (spy == null) {
+        return;
+      }
 
       logger.send(spy, Config.PRIVATE_MESSAGES_SPY_FORMAT.getString(new String[]{senderName, recipientName, message}));
     });
@@ -58,11 +65,14 @@ public class PrivateMessagesManager {
 
   public void reply(Player sender, String message) {
     UUID lastPartnerUUID = lastConvoPartner.get(sender.getUniqueId());
-    if (lastPartnerUUID == null) { logger.send(sender, Lang.PRIVATE_MESSAGES_NO_REPLY_TARGET.replace(null)); return; }
+    if (lastPartnerUUID == null) {
+      logger.send(sender, PRIVATE_MESSAGES_NO_REPLY_TARGET);
+      return;
+    }
 
     Player recipient = Bukkit.getPlayer(lastPartnerUUID);
     if (recipient == null || !recipient.isOnline()) {
-      logger.send(sender, Lang.PRIVATE_MESSAGES_NO_REPLY_TARGET.replace(null));
+      logger.send(sender, PRIVATE_MESSAGES_NO_REPLY_TARGET);
       lastConvoPartner.remove(sender.getUniqueId());
       return;
     }

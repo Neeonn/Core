@@ -1,7 +1,6 @@
 package io.github.divinerealms.core.managers;
 
 import io.github.divinerealms.core.commands.BukkitCommandWrapper;
-import io.github.divinerealms.core.configs.Lang;
 import io.github.divinerealms.core.gui.InventoryButton;
 import io.github.divinerealms.core.gui.InventoryGUI;
 import io.github.divinerealms.core.main.CoreManager;
@@ -24,6 +23,7 @@ import java.lang.reflect.Field;
 import java.util.*;
 import java.util.logging.Level;
 
+import static io.github.divinerealms.core.configs.Lang.*;
 import static io.github.divinerealms.core.utilities.Constants.GUI_COOLDOWN_DURATION_MS;
 
 public class GUIManager {
@@ -33,9 +33,12 @@ public class GUIManager {
   private final Logger logger;
   private final Plugin plugin;
 
-  @Getter private final Map<String, InventoryGUI> menus = new HashMap<>();
-  @Getter private final Map<String, String> menuCommands = new HashMap<>();
-  @Getter private final Map<String, String> menuPermissions = new HashMap<>();
+  @Getter
+  private final Map<String, InventoryGUI> menus = new HashMap<>();
+  @Getter
+  private final Map<String, String> menuCommands = new HashMap<>();
+  @Getter
+  private final Map<String, String> menuPermissions = new HashMap<>();
   private final Map<UUID, Long> userCooldowns = new HashMap<>();
 
   private CommandMap commandMap;
@@ -52,7 +55,10 @@ public class GUIManager {
 
     menus.keySet().forEach(menuKey -> {
       String permission = menuPermissions.get(menuKey);
-      if (permission == null) permission = "core.menu." + menuKey.toLowerCase();
+      if (permission == null) {
+        permission = "core.menu." + menuKey.toLowerCase();
+      }
+      
       registerMenuCommand(menuKey, permission);
     });
 
@@ -61,14 +67,20 @@ public class GUIManager {
 
   private void loadMenus() {
     var config = configManager.getConfig("menus.yml");
-    if (config == null) return;
+    if (config == null) {
+      return;
+    }
 
     var menusSection = config.getConfigurationSection("menus");
-    if (menusSection == null) return;
+    if (menusSection == null) {
+      return;
+    }
 
     menusSection.getKeys(false).forEach(menuKey -> {
       ConfigurationSection menuSec = menusSection.getConfigurationSection(menuKey);
-      if (menuSec == null) return;
+      if (menuSec == null) {
+        return;
+      }
 
       String title = menuSec.getString("title", "Menu");
       String command = menuSec.getString("command", menuKey.toLowerCase());
@@ -86,7 +98,9 @@ public class GUIManager {
       menuPermissions.put(menuKey, permission);
 
       var buttonSec = menuSec.getConfigurationSection("items");
-      if (buttonSec == null) return;
+      if (buttonSec == null) {
+        return;
+      }
 
       buttonSec.getKeys(false).forEach(buttonKey -> {
         int slot;
@@ -98,7 +112,9 @@ public class GUIManager {
         }
 
         var itemSec = buttonSec.getConfigurationSection(buttonKey);
-        if (itemSec == null) return;
+        if (itemSec == null) {
+          return;
+        }
 
         String materialRaw = itemSec.getString("material", "STONE");
         Material mat;
@@ -107,18 +123,25 @@ public class GUIManager {
         if (materialRaw.contains(":")) {
           String[] parts = materialRaw.split(":");
           mat = Material.matchMaterial(parts[0]);
-          if (mat == null) mat = Material.STONE;
+          if (mat == null) {
+            mat = Material.STONE;
+          }
           try {
             data = Short.parseShort(parts[1]);
-          } catch (NumberFormatException ignored) {}
+          } catch (NumberFormatException ignored) {
+          }
         } else {
           mat = Material.matchMaterial(materialRaw);
-          if (mat == null) mat = Material.STONE;
+          if (mat == null) {
+            mat = Material.STONE;
+          }
         }
 
         ItemStack stack = new ItemStack(mat, 1, data);
         ItemMeta meta = stack.getItemMeta();
-        if (meta == null) return;
+        if (meta == null) {
+          return;
+        }
 
         String rawName = itemSec.getString("name", "");
         List<String> rawLore = itemSec.getStringList("lore");
@@ -127,19 +150,31 @@ public class GUIManager {
 
         if (rawLore != null && !rawLore.isEmpty()) {
           List<String> colored = new ArrayList<>();
-          for (String line : rawLore) colored.add(logger.color(line));
+          for (String line : rawLore) {
+            colored.add(logger.color(line));
+          }
+          
           meta.setLore(colored);
-        } else meta.setLore(new ArrayList<>());
+        } else {
+          meta.setLore(new ArrayList<>());
+        }
 
-        for (ItemFlag flag : ItemFlag.values()) meta.removeItemFlags(flag);
+        for (ItemFlag flag : ItemFlag.values()) {
+          meta.removeItemFlags(flag);
+        }
 
         stack.setItemMeta(meta);
 
         List<String> actions = new ArrayList<>();
         String singleAction = itemSec.getString("action");
-        if (singleAction != null && !singleAction.isEmpty()) actions.add(singleAction);
+        if (singleAction != null && !singleAction.isEmpty()) {
+          actions.add(singleAction);
+        }
+        
         List<String> actionList = itemSec.getStringList("actions");
-        if (actionList != null && !actionList.isEmpty()) actions.addAll(actionList);
+        if (actionList != null && !actionList.isEmpty()) {
+          actions.addAll(actionList);
+        }
 
         InventoryButton button = new InventoryButton()
             .creator(player -> {
@@ -147,10 +182,16 @@ public class GUIManager {
               if (player != null) {
                 ItemMeta cloneMeta = clone.getItemMeta();
                 if (cloneMeta != null) {
-                  if (cloneMeta.hasDisplayName()) cloneMeta.setDisplayName(template.applyPlaceholders(player, cloneMeta.getDisplayName()));
+                  if (cloneMeta.hasDisplayName()) {
+                    cloneMeta.setDisplayName(template.applyPlaceholders(player, cloneMeta.getDisplayName()));
+                  }
+                  
                   if (cloneMeta.hasLore()) {
                     List<String> newLore = new ArrayList<>();
-                    for (String line : cloneMeta.getLore()) newLore.add(template.applyPlaceholders(player, line));
+                    for (String line : cloneMeta.getLore()) {
+                      newLore.add(template.applyPlaceholders(player, line));
+                    }
+                    
                     cloneMeta.setLore(newLore);
                   }
                   clone.setItemMeta(cloneMeta);
@@ -159,7 +200,10 @@ public class GUIManager {
               return clone;
             })
             .consumer(event -> {
-              if (!((event.getWhoClicked()) instanceof Player)) return;
+              if (!((event.getWhoClicked()) instanceof Player)) {
+                return;
+              }
+              
               handleActions((Player) event.getWhoClicked(), actions);
             });
 
@@ -171,28 +215,40 @@ public class GUIManager {
   }
 
   private void handleActions(Player player, List<String> actions) {
-    if (actions == null || actions.isEmpty()) return;
+    if (actions == null || actions.isEmpty()) {
+      return;
+    }
 
     for (String action : actions) {
-      if (action == null || action.isEmpty()) continue;
+      if (action == null || action.isEmpty()) {
+        continue;
+      }
 
       if (action.startsWith("command:")) {
         String cmd = action.substring("command:".length());
         player.performCommand(cmd);
-      } else if (action.startsWith("message:")) {
-        logger.send(player, action.substring("message:".length()));
-      } else if (action.startsWith("menu:")) {
-        String menu = action.substring("menu:".length());
-        openMenu(player, menu);
-      } else if (action.equalsIgnoreCase("close")) {
-        player.closeInventory();
+      } else {
+        if (action.startsWith("message:")) {
+          logger.send(player, action.substring("message:".length()));
+        } else {
+          if (action.startsWith("menu:")) {
+            String menu = action.substring("menu:".length());
+            openMenu(player, menu);
+          } else {
+            if (action.equalsIgnoreCase("close")) {
+              player.closeInventory();
+            }
+          }
+        }
       }
     }
   }
 
   public void openMenu(Player player, String menuName) {
     InventoryGUI menu = menus.get(menuName);
-    if (menu == null || player == null) return;
+    if (menu == null || player == null) {
+      return;
+    }
 
     InventoryGUI gui = new InventoryGUI() {
       @Override
@@ -231,7 +287,10 @@ public class GUIManager {
 
     menus.keySet().forEach(menuKey -> {
       String permission = menuPermissions.get(menuKey);
-      if (permission == null) permission = "core.menu." + menuKey.toLowerCase();
+      if (permission == null) {
+        permission = "core.menu." + menuKey.toLowerCase();
+      }
+      
       registerMenuCommand(menuKey, permission);
     });
 
@@ -250,17 +309,31 @@ public class GUIManager {
   }
 
   private void registerMenuCommand(String menuKey, String permission) {
-    if (commandMap == null) return;
+    if (commandMap == null) {
+      return;
+    }
+    
     String commandName = menuCommands.get(menuKey);
-    if (commandName == null || commandName.isEmpty()) return;
+    if (commandName == null || commandName.isEmpty()) {
+      return;
+    }
 
     BukkitCommandWrapper cmd = new BukkitCommandWrapper(commandName, (sender, command, label, args) -> {
-      if (!(sender instanceof Player)) { logger.send(sender, Lang.INGAME_ONLY.replace(null)); return true; }
+      if (!(sender instanceof Player)) {
+        logger.send(sender, INGAME_ONLY);
+        return true;
+      }
 
       Player player = (Player) sender;
       String perm = menuPermissions.get(menuKey);
-      if (perm == null) perm = "core.menu." + menuKey.toLowerCase();
-      if (!player.hasPermission(perm)) { logger.send(player, Lang.NO_PERM.replace(new String[]{commandName, permission})); return true; }
+      if (perm == null) {
+        perm = "core.menu." + menuKey.toLowerCase();
+      }
+      
+      if (!player.hasPermission(perm)) {
+        logger.send(player, NO_PERM, commandName, permission);
+        return true;
+      }
 
       UUID playerId = player.getUniqueId();
       long now = System.currentTimeMillis();
@@ -272,7 +345,7 @@ public class GUIManager {
           long remainingTimeMs = GUI_COOLDOWN_DURATION_MS - timeSinceLastUse;
           long timeLeftSeconds = (long) Math.ceil(remainingTimeMs / 1000.0);
 
-          logger.sendActionBar(player, Lang.ANTI_SPAM_COMMANDS.replace(new String[]{String.valueOf(timeLeftSeconds)}));
+          logger.sendActionBar(player, ANTI_SPAM_COMMANDS, String.valueOf(timeLeftSeconds));
           return true;
         }
       }
@@ -286,7 +359,9 @@ public class GUIManager {
   }
 
   private void unregisterMenuCommands() {
-    if (commandMap == null) return;
+    if (commandMap == null) {
+      return;
+    }
 
     try {
       Field field = commandMap.getClass().getDeclaredField("knownCommands");
@@ -295,7 +370,9 @@ public class GUIManager {
 
       for (String cmdName : new ArrayList<>(menuCommands.values())) {
         Command cmd = knownCommands.remove(cmdName.toLowerCase());
-        if (cmd != null) cmd.unregister(commandMap);
+        if (cmd != null) {
+          cmd.unregister(commandMap);
+        }
         knownCommands.remove(plugin.getDescription().getName().toLowerCase() + ":" + cmdName.toLowerCase());
       }
     } catch (Exception exception) {

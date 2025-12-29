@@ -3,7 +3,6 @@ package io.github.divinerealms.core.managers;
 import github.scarsz.discordsrv.DiscordSRV;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.TextChannel;
 import io.github.divinerealms.core.configs.Config;
-import io.github.divinerealms.core.configs.Lang;
 import io.github.divinerealms.core.main.CoreManager;
 import io.github.divinerealms.core.utilities.ChannelFormats;
 import io.github.divinerealms.core.utilities.ChannelInfo;
@@ -19,6 +18,7 @@ import org.bukkit.entity.Player;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static io.github.divinerealms.core.configs.Lang.*;
 import static io.github.divinerealms.core.utilities.Permissions.PERM_BYPASS_DISABLED_CHANNEL;
 import static io.github.divinerealms.core.utilities.Permissions.PERM_CHAT_COLOR;
 
@@ -27,26 +27,36 @@ public class ChannelManager {
   private final Logger logger;
 
   private final Map<UUID, Set<String>> playerChannels = new HashMap<>();
-  @Getter private final Set<String> disabledChannels = new HashSet<>();
-  @Getter private final Map<String, List<String>> discordIdToMinecraft = new HashMap<>();
+  @Getter
+  private final Set<String> disabledChannels = new HashSet<>();
+  @Getter
+  private final Map<String, List<String>> discordIdToMinecraft = new HashMap<>();
 
-  @Getter private final Map<String, ChannelInfo> channels = new HashMap<>();
-  @Getter @Setter private String defaultChannel = "global";
-
+  @Getter
+  private final Map<String, ChannelInfo> channels = new HashMap<>();
   private final Map<UUID, String> lastActiveChannel = new ConcurrentHashMap<>();
   private final Map<UUID, String> lastChannelUsed = new ConcurrentHashMap<>();
-
-  @Getter private boolean mentionsEnabled;
-  @Getter private String mentionColor;
-  @Getter private String mentionSound;
-  @Getter private int mcMaxMessages;
-  @Getter private long mcCooldownMs;
-
-  @Getter private final ConcurrentHashMap<UUID, Integer> mcMessageCount = new ConcurrentHashMap<>();
-  @Getter private final ConcurrentHashMap<UUID, Long> mcLastMessageTime = new ConcurrentHashMap<>();
-  @Getter private final Map<String, String> discordLastMessage = new ConcurrentHashMap<>();
-
-  @Getter private final Set<UUID> socialSpy = ConcurrentHashMap.newKeySet();
+  @Getter
+  private final ConcurrentHashMap<UUID, Integer> mcMessageCount = new ConcurrentHashMap<>();
+  @Getter
+  private final ConcurrentHashMap<UUID, Long> mcLastMessageTime = new ConcurrentHashMap<>();
+  @Getter
+  private final Map<String, String> discordLastMessage = new ConcurrentHashMap<>();
+  @Getter
+  private final Set<UUID> socialSpy = ConcurrentHashMap.newKeySet();
+  @Getter
+  @Setter
+  private String defaultChannel = "global";
+  @Getter
+  private boolean mentionsEnabled;
+  @Getter
+  private String mentionColor;
+  @Getter
+  private String mentionSound;
+  @Getter
+  private int mcMaxMessages;
+  @Getter
+  private long mcCooldownMs;
 
   public ChannelManager(CoreManager coreManager) {
     this.coreManager = coreManager;
@@ -82,7 +92,9 @@ public class ChannelManager {
 
     if (lastActiveChannel.containsKey(uuid)) {
       String channel = lastActiveChannel.get(uuid);
-      if (channels.containsKey(channel)) return channel;
+      if (channels.containsKey(channel)) {
+        return channel;
+      }
     }
 
     return getChannels(uuid).stream().findFirst().orElse(defaultChannel);
@@ -97,7 +109,9 @@ public class ChannelManager {
 
     if (lastChannelUsed.containsKey(uuid)) {
       String channel = lastChannelUsed.get(uuid);
-      if (channels.containsKey(channel)) return channel;
+      if (channels.containsKey(channel)) {
+        return channel;
+      }
     }
 
     return getChannels(uuid).stream().findFirst().orElse(defaultChannel);
@@ -108,10 +122,13 @@ public class ChannelManager {
 
     if (channels.contains(channel)) {
       channels.remove(channel);
-      if (channels.isEmpty()) playerChannels.remove(uuid);
+      if (channels.isEmpty()) {
+        playerChannels.remove(uuid);
+      }
 
-      if (lastActiveChannel.containsKey(uuid) && lastActiveChannel.get(uuid).equalsIgnoreCase(channel))
+      if (lastActiveChannel.containsKey(uuid) && lastActiveChannel.get(uuid).equalsIgnoreCase(channel)) {
         setLastActiveChannel(uuid, defaultChannel);
+      }
 
       return false;
     } else {
@@ -129,14 +146,20 @@ public class ChannelManager {
     Set<String> channels = playerChannels.get(uuid);
     if (channels != null) {
       channels.remove(channel);
-      if (channels.isEmpty()) playerChannels.remove(uuid);
+      if (channels.isEmpty()) {
+        playerChannels.remove(uuid);
+      }
     }
   }
 
   public Set<UUID> getSubscribers(String channel) {
     String lowerChannel = channel.toLowerCase();
     Set<UUID> subscribers = new HashSet<>();
-    for (Map.Entry<UUID, Set<String>> entry : playerChannels.entrySet()) if (entry.getValue().contains(lowerChannel)) subscribers.add(entry.getKey());
+    for (Map.Entry<UUID, Set<String>> entry : playerChannels.entrySet()) {
+      if (entry.getValue().contains(lowerChannel)) {
+        subscribers.add(entry.getKey());
+      }
+    }
     return subscribers;
   }
 
@@ -168,7 +191,9 @@ public class ChannelManager {
     channels.clear();
     discordIdToMinecraft.clear();
 
-    if (!Config.CHANNELS_ENABLED.getValue(Boolean.class)) return;
+    if (!Config.CHANNELS_ENABLED.getValue(Boolean.class)) {
+      return;
+    }
 
     defaultChannel = Config.CHANNELS_DEFAULT.getValue(String.class);
     mentionsEnabled = Config.CONFIG.getBoolean("channels.mentions.enabled", true);
@@ -179,7 +204,10 @@ public class ChannelManager {
 
     if (Config.CONFIG.isConfigurationSection("channels.list")) {
       for (String key : Config.CONFIG.getConfigurationSection("channels.list").getKeys(false)) {
-        if (key.equalsIgnoreCase("roster_template")) continue;
+        if (key.equalsIgnoreCase("roster_template")) {
+          continue;
+        }
+        
         String path = "channels.list." + key;
 
         ChannelFormats formats = new ChannelFormats(
@@ -199,14 +227,18 @@ public class ChannelManager {
         );
 
         channels.put(key, info);
-        if (discordId != null && !discordId.isEmpty()) discordIdToMinecraft.computeIfAbsent(discordId, k -> new ArrayList<>()).add(key);
+        if (discordId != null && !discordId.isEmpty()) {
+          discordIdToMinecraft.computeIfAbsent(discordId, k -> new ArrayList<>()).add(key);
+        }
       }
     }
 
     for (UUID uuid : new HashSet<>(playerChannels.keySet())) {
       Set<String> subs = playerChannels.get(uuid);
       subs.removeIf(channel -> !channels.containsKey(channel));
-      if (subs.isEmpty()) subs.add(defaultChannel);
+      if (subs.isEmpty()) {
+        subs.add(defaultChannel);
+      }
     }
 
     logger.info("&a✔ &9Loaded &e" + channels.size() + " &9chat channels from config.");
@@ -214,57 +246,99 @@ public class ChannelManager {
 
   public void sendMessage(CommandSender sender, String channel, String message) {
     ChannelInfo info = channels.get(channel);
-    if (info == null) { logger.send(sender, Lang.CHANNEL_NOT_FOUND.replace(new String[]{channel})); return; }
+    if (info == null) {
+      logger.send(sender, CHANNEL_NOT_FOUND, channel);
+      return;
+    }
 
-    Player player = sender instanceof Player ? (Player) sender : null;
+    Player player = sender instanceof Player
+                    ? (Player) sender
+                    : null;
 
     if (message == null || message.isEmpty()) {
-      if (player == null) { logger.send(sender, Lang.INGAME_ONLY.replace(null)); return; }
+      if (player == null) {
+        logger.send(sender, INGAME_ONLY);
+        return;
+      }
 
       boolean nowOn = switchChannel(player.getUniqueId(), channel);
-      logger.send(player, Lang.CHANNEL_TOGGLE.replace(new String[]{channel.toUpperCase(), nowOn ? Lang.ON.replace(null) : Lang.OFF.replace(null)}));
+      logger.send(player, CHANNEL_TOGGLE, channel.toUpperCase(), nowOn
+                             ? ON.toString()
+                             : OFF.toString());
       return;
     }
 
     if (player == null) {
       String formatted = info.formats.minecraftChat
-          .replace("%player_name", "&cConsole").replace("%essentials_nickname%", "&cConsole")
-          .replace("%message%", message).replaceAll("%[^%]+%", "").trim();
+          .replace("%player_name", "&cConsole")
+          .replace("%essentials_nickname%", "&cConsole")
+          .replace("%message%", message)
+          .replaceAll("%[^%]+%", "").trim();
+
       logger.send(info.permission, formatted);
-      if (coreManager.isDiscordSRV() && info.formats.minecraftToDiscord != null && !info.formats.minecraftToDiscord.isEmpty())
+      
+      if (coreManager.isDiscordSRV() && info.formats.minecraftToDiscord != null &&
+          !info.formats.minecraftToDiscord.isEmpty()) {
         sendToDiscord(info, "Console » " + message);
+      }
       return;
     }
 
-    if (isChannelDisabled(channel) && !player.hasPermission(PERM_BYPASS_DISABLED_CHANNEL)) { logger.send(player, Lang.CHANNEL_DISABLED.replace(new String[]{channel})); return; }
+    if (isChannelDisabled(channel) && !player.hasPermission(PERM_BYPASS_DISABLED_CHANNEL)) {
+      logger.send(player, CHANNEL_DISABLED, channel);
+      return;
+    }
 
     String formattedMessage = formatChat(player, info.formats.minecraftChat, message, true);
     boolean isSenderSubscribed = getChannels(player.getUniqueId()).contains(channel);
     boolean isBroadcast = info.broadcast;
-    boolean hasPermission = info.permission != null && !info.permission.isEmpty() && player.hasPermission(info.permission);
+    boolean hasPermission =
+        info.permission != null && !info.permission.isEmpty() && player.hasPermission(info.permission);
 
     socialSpy.forEach(spyUUID -> {
-      if (spyUUID.equals(player.getUniqueId())) return;
-      if (isBroadcast) return;
+      if (spyUUID.equals(player.getUniqueId())) {
+        return;
+      }
+      
+      if (isBroadcast) {
+        return;
+      }
 
       Player spy = Bukkit.getPlayer(spyUUID);
-      if (spy == null) return;
-      if (getSubscribers(channel).contains(spyUUID)) return;
+      if (spy == null) {
+        return;
+      }
+      
+      if (getSubscribers(channel).contains(spyUUID)) {
+        return;
+      }
 
       String senderName = coreManager.getChat().getPlayerPrefix(player) + player.getDisplayName();
-      logger.send(spy, Lang.CHANNEL_SPY_FORMAT.replace(new String[]{channel.toUpperCase(), senderName, message}));
+      logger.send(spy, CHANNEL_SPY_FORMAT, channel.toUpperCase(), senderName, message);
     });
 
-    if (!isBroadcast && !isSenderSubscribed && !hasPermission) { logger.send(player, Lang.CHANNEL_NOT_SUBSCRIBED.replace(new String[]{channel.toUpperCase()})); return; }
+    if (!isBroadcast && !isSenderSubscribed && !hasPermission) {
+      logger.send(player, CHANNEL_NOT_SUBSCRIBED, channel.toUpperCase());
+      return;
+    }
 
     if (isBroadcast) {
       logger.broadcast(formattedMessage);
-    } else if (isSenderSubscribed) {
-      Set<UUID> subscribers = getSubscribers(channel);
-      subscribers.stream().map(Bukkit::getPlayer).filter(Objects::nonNull).forEach(p -> logger.send(p, formattedMessage));
-      if (!subscribers.contains(player.getUniqueId())) logger.send(player, formattedMessage);
-      logger.info(formattedMessage);
-    } else logger.send(info.permission, formattedMessage);
+    } else {
+      if (isSenderSubscribed) {
+        Set<UUID> subscribers = getSubscribers(channel);
+        subscribers.stream().map(Bukkit::getPlayer).filter(Objects::nonNull).forEach(
+            p -> logger.send(p, formattedMessage));
+
+        if (!subscribers.contains(player.getUniqueId())) {
+          logger.send(player, formattedMessage);
+        }
+
+        logger.logChannel(info.name, formattedMessage);
+      } else {
+        logger.send(info.permission, formattedMessage);
+      }
+    }
 
     if (info.formats.minecraftToDiscord != null && !info.formats.minecraftToDiscord.isEmpty()) {
       sendToDiscord(info, formatChat(player, info.formats.minecraftToDiscord, message, false));
@@ -276,31 +350,50 @@ public class ChannelManager {
 
     if (player != null && coreManager.isPlaceholderAPI()) {
       formatted = PlaceholderAPI.setPlaceholders(player, formatted);
-      if (formatted.contains("%")) formatted = PlaceholderAPI.setPlaceholders(player, formatted);
+      if (formatted.contains("%")) {
+        formatted = PlaceholderAPI.setPlaceholders(player, formatted);
+      }
     }
 
     formatted = logger.color(formatted);
 
-    String msgPart = colorMessage && player != null && player.hasPermission(PERM_CHAT_COLOR) ? logger.color(message) : message;
+    String msgPart = colorMessage && player != null && player.hasPermission(PERM_CHAT_COLOR)
+                     ? logger.color(message)
+                     : message;
+
     return formatted.replace("{MESSAGE}", msgPart);
   }
 
   public void sendToDiscord(ChannelInfo channelInfo, String message) {
-    if (DiscordSRV.getPlugin() == null) return;
+    if (DiscordSRV.getPlugin() == null) {
+      return;
+    }
+
     ChannelInfo defaultInfo = channels.get(defaultChannel);
     String discordId = (channelInfo.discordId == null || channelInfo.discordId.isEmpty())
-        ? (channelInfo.broadcast ? defaultInfo.discordId : "")
-        : channelInfo.discordId;
+                       ? (channelInfo.broadcast
+                          ? defaultInfo.discordId
+                          : "")
+                       : channelInfo.discordId;
 
-    if (discordId == null || discordId.isEmpty()) return;
+    if (discordId == null || discordId.isEmpty()) {
+      return;
+    }
+
     TextChannel discordChannel = DiscordSRV.getPlugin().getJda().getTextChannelById(discordId);
-    if (discordChannel == null) return;
+    if (discordChannel == null) {
+      return;
+    }
 
     TextChannel consoleChannel = DiscordSRV.getPlugin().getConsoleChannel();
-    if (consoleChannel != null && consoleChannel.getId().equals(discordId)) return;
+    if (consoleChannel != null && consoleChannel.getId().equals(discordId)) {
+      return;
+    }
 
     String lastMessage = discordLastMessage.get(discordId);
-    if (lastMessage != null && lastMessage.equalsIgnoreCase(message)) return;
+    if (lastMessage != null && lastMessage.equalsIgnoreCase(message)) {
+      return;
+    }
 
     discordChannel.sendMessage(ChatColor.stripColor(message)).queue();
     discordLastMessage.put(discordId, message);
@@ -308,7 +401,9 @@ public class ChannelManager {
 
   public void createRosterChannel(String rosterChannelName, String discordId) {
     String uniqueChannelName = rosterChannelName.toLowerCase();
-    if (channels.containsKey(uniqueChannelName)) return;
+    if (channels.containsKey(uniqueChannelName)) {
+      return;
+    }
 
     String templatePath = "channels.list.roster_template";
     if (!Config.CONFIG.isConfigurationSection(templatePath)) {
@@ -324,27 +419,40 @@ public class ChannelManager {
 
     ChannelInfo info = new ChannelInfo(uniqueChannelName, null, discordId, formats, false, Collections.emptyList());
     channels.put(uniqueChannelName, info);
-    if (discordId != null && !discordId.isEmpty()) discordIdToMinecraft.computeIfAbsent(discordId, k -> new ArrayList<>()).add(uniqueChannelName);
+
+    if (discordId != null && !discordId.isEmpty()) {
+      discordIdToMinecraft.computeIfAbsent(discordId, k -> new ArrayList<>()).add(uniqueChannelName);
+    }
   }
 
   public void handlePlayerSubscriptions(Player player) {
-    if (coreManager.getRostersManager() == null) return;
+    if (coreManager.getRostersManager() == null) {
+      return;
+    }
 
     UUID uuid = player.getUniqueId();
     String playerName = player.getName();
 
     coreManager.getRostersManager().getPlayerRosters(playerName).values().forEach(roster -> {
       String rosterChannelName = roster.getName().toLowerCase();
-      if (channels.containsKey(rosterChannelName)) subscribe(uuid, rosterChannelName);
+      if (channels.containsKey(rosterChannelName)) {
+        subscribe(uuid, rosterChannelName);
+      }
     });
 
     String defaultChannel = getDefaultChannel();
 
     channels.values().forEach(channel -> {
       String channelName = channel.name;
-      if (channelName.equalsIgnoreCase(defaultChannel)) subscribe(uuid, channelName);
-      if (channel.broadcast) subscribe(uuid, channelName);
-      if (channel.permission != null && !channel.permission.isEmpty() && player.hasPermission(channel.permission)) subscribe(uuid, channelName);
+      if (channelName.equalsIgnoreCase(defaultChannel)) {
+        subscribe(uuid, channelName);
+      }
+      if (channel.broadcast) {
+        subscribe(uuid, channelName);
+      }
+      if (channel.permission != null && !channel.permission.isEmpty() && player.hasPermission(channel.permission)) {
+        subscribe(uuid, channelName);
+      }
     });
 
     setLastActiveChannel(uuid, defaultChannel);

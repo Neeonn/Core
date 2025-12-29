@@ -43,10 +43,15 @@ public class Placeholders extends PlaceholderExpansion {
 
   @Override
   public String onRequest(OfflinePlayer player, @NotNull String params) {
-    if (player == null) return "";
+    if (player == null) {
+      return "";
+    }
 
     String playerName = player.getName();
-    if (playerName == null) return "";
+    if (playerName == null) {
+      return "";
+    }
+
     Player onlinePlayer = player.getPlayer();
 
     String activeLeague = rostersManager.getActiveLeague();
@@ -57,43 +62,91 @@ public class Placeholders extends PlaceholderExpansion {
     if (params.equalsIgnoreCase("channel_name")) {
       if (onlinePlayer != null) {
         String lastChannelName = channelManager.getLastChannelUsed(onlinePlayer);
-        if (lastChannelName != null) return lastChannelName.toUpperCase();
+        if (lastChannelName != null) {
+          return lastChannelName.toUpperCase();
+        }
       }
       return "";
     }
 
-    if (params.toLowerCase().endsWith("_roster_name") || params.toLowerCase().endsWith("_roster_tag") || params.toLowerCase().endsWith("_roster_tag_formatted")) {
+    if (params.toLowerCase().endsWith("_roster_name") || params.toLowerCase().endsWith("_roster_tag") ||
+        params.toLowerCase().endsWith("_roster_tag_formatted")) {
       String leaguePart = params.substring(0, params.indexOf('_'));
       String infoType = params.substring(params.indexOf('_') + 1);
 
       RosterInfo specificRoster = playerRosters.get(leaguePart.toLowerCase());
-      if (specificRoster == null) return "";
+      if (specificRoster == null) {
+        return "";
+      }
 
-      if (infoType.equalsIgnoreCase("roster_name")) return specificRoster.getName();
-      if (infoType.equalsIgnoreCase("roster_tag")) return specificRoster.getTag();
-      if (infoType.equalsIgnoreCase("roster_tag_formatted")) return specificRoster.getFormattedTag();
+      if (infoType.equalsIgnoreCase("roster_name")) {
+        return specificRoster.getName();
+      }
+
+      if (infoType.equalsIgnoreCase("roster_tag")) {
+        return specificRoster.getTag();
+      }
+
+      if (infoType.equalsIgnoreCase("roster_tag_formatted")) {
+        return specificRoster.getFormattedTag();
+      }
     }
 
-    if (params.equalsIgnoreCase("roster_name")) return activeRoster != null ? activeRoster.getName() : "";
-    if (params.equalsIgnoreCase("roster_tag")) return activeRoster != null ? activeRoster.getTag() : "";
-    if (params.equalsIgnoreCase("roster_tag_formatted")) return activeRoster != null ? activeRoster.getFormattedTag() : "";
-    if (params.equalsIgnoreCase("roster_league")) return activeRoster != null ? activeRoster.getLeague().toUpperCase() : "";
-    if (params.equalsIgnoreCase("active_league")) return activeLeague;
+    if (params.equalsIgnoreCase("roster_name")) {
+      return activeRoster != null
+             ? activeRoster.getName()
+             : "";
+    }
+
+    if (params.equalsIgnoreCase("roster_tag")) {
+      return activeRoster != null
+             ? activeRoster.getTag()
+             : "";
+    }
+
+    if (params.equalsIgnoreCase("roster_tag_formatted")) {
+      return activeRoster != null
+             ? activeRoster.getFormattedTag()
+             : "";
+    }
+
+    if (params.equalsIgnoreCase("roster_league")) {
+      return activeRoster != null
+             ? activeRoster.getLeague().toUpperCase()
+             : "";
+    }
+
+    if (params.equalsIgnoreCase("active_league")) {
+      return activeLeague;
+    }
 
     if (params.equalsIgnoreCase("all_tags")) {
       StringBuilder tags = new StringBuilder();
       for (String league : rostersManager.getAvailableLeagues()) {
         RosterInfo roster = playerRosters.get(league);
-        if (roster != null) tags.append(roster.getFormattedTag()).append(" ");
+        if (roster != null) {
+          tags.append(roster.getFormattedTag()).append(" ");
+        }
       }
       return tags.toString().trim();
     }
 
-    if (params.equalsIgnoreCase("roster_members")) return activeRoster != null ? String.valueOf(activeRoster.getMemberCount()) : "0";
-    if (params.equalsIgnoreCase("roster_manager")) return activeRoster != null && activeRoster.getManager() != null ? activeRoster.getManager() : "";
+    if (params.equalsIgnoreCase("roster_members")) {
+      return activeRoster != null
+             ? String.valueOf(activeRoster.getMemberCount())
+             : "0";
+    }
+
+    if (params.equalsIgnoreCase("roster_manager")) {
+      return activeRoster != null && activeRoster.getManager() != null
+             ? activeRoster.getManager()
+             : "";
+    }
 
     if (params.equalsIgnoreCase("is_manager")) {
-      if (activeRoster == null) return "false";
+      if (activeRoster == null) {
+        return "false";
+      }
       return String.valueOf(activeRoster.isManager(playerName));
     }
 
@@ -113,7 +166,9 @@ public class Placeholders extends PlaceholderExpansion {
           String exclusionPath = "rosters.league_settings." + league + ".is_excluded_from_display";
           boolean isExcluded = config.getBoolean(exclusionPath, false);
 
-          if (isExcluded) continue;
+          if (isExcluded) {
+            continue;
+          }
 
           RosterInfo roster = playerRosters.get(league);
           if (roster != null && roster.isManager(playerName)) {
@@ -127,7 +182,10 @@ public class Placeholders extends PlaceholderExpansion {
       return "";
     }
 
-    if (params.equalsIgnoreCase("has_roster")) return String.valueOf(activeRoster != null);
+    if (params.equalsIgnoreCase("has_roster")) {
+      return String.valueOf(activeRoster != null);
+    }
+
     if (params.toLowerCase().startsWith("has_") && params.toLowerCase().endsWith("_roster")) {
       String leagueName = params.substring(4, params.lastIndexOf('_')).toLowerCase();
       return String.valueOf(playerRosters.containsKey(leagueName));
@@ -141,16 +199,22 @@ public class Placeholders extends PlaceholderExpansion {
 
       if (isActiveExclusive) {
         RosterInfo activeLeagueRoster = playerRosters.get(activeLeague);
-        if (activeLeagueRoster != null) display.append(activeLeagueRoster.getFormattedTag());
+        if (activeLeagueRoster != null) {
+          display.append(activeLeagueRoster.getFormattedTag());
+        }
       } else {
         for (String league : rostersManager.getAvailableLeagues()) {
           String exclusionPath = "rosters.league_settings." + league + ".is_excluded_from_display";
           boolean isExcluded = config.getBoolean(exclusionPath, false);
 
-          if (isExcluded) continue;
+          if (isExcluded) {
+            continue;
+          }
 
           RosterInfo roster = playerRosters.get(league);
-          if (roster != null) display.append(roster.getFormattedTag());
+          if (roster != null) {
+            display.append(roster.getFormattedTag());
+          }
         }
       }
 
@@ -163,16 +227,22 @@ public class Placeholders extends PlaceholderExpansion {
 
       if (isActiveExclusive) {
         RosterInfo activeLeagueRoster = playerRosters.get(activeLeague);
-        if (activeLeagueRoster != null) return activeLeagueRoster.getTag() + " ";
+        if (activeLeagueRoster != null) {
+          return activeLeagueRoster.getTag() + " ";
+        }
       } else {
         for (String league : rostersManager.getAvailableLeagues()) {
           String exclusionPath = "rosters.league_settings." + league + ".is_excluded_from_display";
           boolean isExcluded = config.getBoolean(exclusionPath, false);
 
-          if (isExcluded) continue;
+          if (isExcluded) {
+            continue;
+          }
 
           RosterInfo roster = playerRosters.get(league);
-          if (roster != null) return roster.getTag() + " ";
+          if (roster != null) {
+            return roster.getTag() + " ";
+          }
         }
       }
 
@@ -185,17 +255,23 @@ public class Placeholders extends PlaceholderExpansion {
 
       if (isActiveExclusive) {
         RosterInfo activeLeagueRoster = playerRosters.get(activeLeague);
-        if (activeLeagueRoster != null) return "1_" + activeLeagueRoster.getName().toLowerCase();
+        if (activeLeagueRoster != null) {
+          return "1_" + activeLeagueRoster.getName().toLowerCase();
+        }
       } else {
         int sortPriority = 1;
         for (String league : rostersManager.getAvailableLeagues()) {
           String exclusionPath = "rosters.league_settings." + league + ".is_excluded_from_display";
           boolean isExcluded = config.getBoolean(exclusionPath, false);
 
-          if (isExcluded) continue;
+          if (isExcluded) {
+            continue;
+          }
 
           RosterInfo roster = playerRosters.get(league);
-          if (roster != null) return sortPriority + "_" + roster.getName().toLowerCase();
+          if (roster != null) {
+            return sortPriority + "_" + roster.getName().toLowerCase();
+          }
           sortPriority++;
         }
       }
@@ -211,15 +287,21 @@ public class Placeholders extends PlaceholderExpansion {
         String exclusionPath = "rosters.league_settings." + league + ".is_excluded_from_display";
         boolean isExcluded = config.getBoolean(exclusionPath, false);
 
-        if (isExcluded) continue;
+        if (isExcluded) {
+          continue;
+        }
 
         RosterInfo roster = playerRosters.get(league);
-        if (roster != null && roster.isManager(playerName)) return "0";
+        if (roster != null && roster.isManager(playerName)) {
+          return "0";
+        }
       }
 
       if (isActiveExclusive) {
         RosterInfo activeLeagueRoster = playerRosters.get(activeLeague);
-        if (activeLeagueRoster != null && activeLeagueRoster.isManager(playerName)) return "0";
+        if (activeLeagueRoster != null && activeLeagueRoster.isManager(playerName)) {
+          return "0";
+        }
       }
 
       return "1";

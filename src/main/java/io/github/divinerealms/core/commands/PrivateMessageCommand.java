@@ -1,6 +1,5 @@
 package io.github.divinerealms.core.commands;
 
-import io.github.divinerealms.core.configs.Lang;
 import io.github.divinerealms.core.main.CoreManager;
 import io.github.divinerealms.core.managers.PrivateMessagesManager;
 import io.github.divinerealms.core.utilities.Logger;
@@ -13,6 +12,7 @@ import org.bukkit.entity.Player;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static io.github.divinerealms.core.configs.Lang.*;
 import static io.github.divinerealms.core.utilities.Permissions.PERM_COMMAND_MSG;
 
 public class PrivateMessageCommand implements CommandExecutor {
@@ -26,15 +26,33 @@ public class PrivateMessageCommand implements CommandExecutor {
 
   @Override
   public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-    if (!(sender instanceof Player)) { logger.send(sender, Lang.INGAME_ONLY.replace(null)); return true; }
+    if (!(sender instanceof Player)) {
+      logger.send(sender, INGAME_ONLY);
+      return true;
+    }
+
     Player pmSender = (Player) sender;
-    if (!pmSender.hasPermission(PERM_COMMAND_MSG)) { logger.send(pmSender, Lang.NO_PERM.replace(new String[]{PERM_COMMAND_MSG, label})); return true; }
-    if (args.length < 2) { logger.send(pmSender, Lang.USAGE.replace(new String[]{label + " <player> <message>"})); return true; }
+    if (!pmSender.hasPermission(PERM_COMMAND_MSG)) {
+      logger.send(pmSender, NO_PERM, PERM_COMMAND_MSG, label);
+      return true;
+    }
+
+    if (args.length < 2) {
+      logger.send(pmSender, USAGE, label + " <player> <message>");
+      return true;
+    }
 
     String targetName = args[0];
     Player recipient = Bukkit.getPlayer(targetName);
-    if (recipient == null || !recipient.isOnline()) { logger.send(pmSender, Lang.PLAYER_NOT_FOUND.replace(new String[]{targetName})); return true; }
-    if (recipient.equals(pmSender)) { logger.send(pmSender, Lang.PRIVATE_MESSAGES_SELF.replace(null)); return true; }
+    if (recipient == null || !recipient.isOnline()) {
+      logger.send(pmSender, PLAYER_NOT_FOUND, targetName);
+      return true;
+    }
+
+    if (recipient.equals(pmSender)) {
+      logger.send(pmSender, PRIVATE_MESSAGES_SELF);
+      return true;
+    }
 
     String message = Stream.of(args).skip(1).collect(Collectors.joining(" "));
     privateMessagesManager.sendPrivateMessage(pmSender, recipient, message);
