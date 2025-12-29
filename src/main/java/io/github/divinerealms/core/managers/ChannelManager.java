@@ -207,7 +207,7 @@ public class ChannelManager {
         if (key.equalsIgnoreCase("roster_template")) {
           continue;
         }
-        
+
         String path = "channels.list." + key;
 
         ChannelFormats formats = new ChannelFormats(
@@ -263,8 +263,8 @@ public class ChannelManager {
 
       boolean nowOn = switchChannel(player.getUniqueId(), channel);
       logger.send(player, CHANNEL_TOGGLE, channel.toUpperCase(), nowOn
-                             ? ON.toString()
-                             : OFF.toString());
+                                                                 ? ON.toString()
+                                                                 : OFF.toString());
       return;
     }
 
@@ -276,7 +276,7 @@ public class ChannelManager {
           .replaceAll("%[^%]+%", "").trim();
 
       logger.send(info.permission, formatted);
-      
+
       if (coreManager.isDiscordSRV() && info.formats.minecraftToDiscord != null &&
           !info.formats.minecraftToDiscord.isEmpty()) {
         sendToDiscord(info, "Console » " + message);
@@ -299,7 +299,7 @@ public class ChannelManager {
       if (spyUUID.equals(player.getUniqueId())) {
         return;
       }
-      
+
       if (isBroadcast) {
         return;
       }
@@ -308,7 +308,7 @@ public class ChannelManager {
       if (spy == null) {
         return;
       }
-      
+
       if (getSubscribers(channel).contains(spyUUID)) {
         return;
       }

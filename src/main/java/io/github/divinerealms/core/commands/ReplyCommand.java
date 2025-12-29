@@ -26,13 +26,13 @@ public class ReplyCommand implements CommandExecutor {
       logger.send(sender, INGAME_ONLY);
       return true;
     }
-    
+
     Player pmSender = (Player) sender;
     if (!pmSender.hasPermission(PERM_COMMAND_MSG)) {
       logger.send(pmSender, NO_PERM, PERM_COMMAND_MSG, label);
       return true;
     }
-    
+
     if (args.length < 1) {
       logger.send(pmSender, USAGE, label + " <message>");
       return true;

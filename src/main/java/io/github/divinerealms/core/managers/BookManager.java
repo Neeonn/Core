@@ -59,7 +59,7 @@ public class BookManager {
     if (packetMethod == null) {
       packetMethod = getMethod(playerConnectionClass, "a", PACKET_CLASS_GENERIC);
     }
-    
+
     SEND_PACKET_METHOD = packetMethod;
 
     if (CRAFT_BOOK_CLASS != null && AS_NMS_COPY_METHOD != null &&
@@ -87,7 +87,7 @@ public class BookManager {
     if (clazz == null) {
       return null;
     }
-    
+
     try {
       return clazz.getConstructor(parameterTypes);
     } catch (NoSuchMethodException e) {
@@ -105,7 +105,7 @@ public class BookManager {
     if (clazz == null) {
       return null;
     }
-    
+
     try {
       return clazz.getMethod(name, parameterTypes);
     } catch (NoSuchMethodException e) {
@@ -175,7 +175,7 @@ public class BookManager {
       logger.send(player, BOOK_NOT_FOUND, bookId);
       return;
     }
-    
+
     if (!reflectionInitialized) {
       logger.send(player,
           "&cCould not open book. Server reflection failed to initialize. Check console for NMS errors.");

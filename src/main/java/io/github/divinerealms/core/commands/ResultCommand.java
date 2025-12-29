@@ -33,7 +33,7 @@ public class ResultCommand implements CommandExecutor, TabCompleter {
       logger.send(sender, NO_PERM, PERM_RESULT_MAIN, label);
       return true;
     }
-    
+
     if (args.length == 0) {
       logger.send(sender, RESULT_HELP);
       return true;

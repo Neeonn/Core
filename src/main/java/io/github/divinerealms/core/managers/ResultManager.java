@@ -233,8 +233,8 @@ public class ResultManager {
 
       currentHalfExtraTime += seconds;
       logger.send(sender, RESULT_MATCH_EXTRA.replace((subtract
-       ? "&c-"
-       : "&a+") + Math.abs(seconds)));
+                                                      ? "&c-"
+                                                      : "&a+") + Math.abs(seconds)));
       updateHalfMessage();
     } catch (NumberFormatException exception) {
       logger.send(sender, RESULT_MATCH_INVALID_TIME);

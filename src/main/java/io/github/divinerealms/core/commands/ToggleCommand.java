@@ -50,8 +50,8 @@ public class ToggleCommand implements CommandExecutor, TabCompleter {
       settings.setMentionSoundEnabled(!settings.isMentionSoundEnabled());
       playerData.set("mention_sound.enabled", settings.isMentionSoundEnabled());
       logger.send(player, MENTION_TOGGLED, settings.isMentionSoundEnabled()
-      ? ON.toString()
-      : OFF.toString());
+                                           ? ON.toString()
+                                           : OFF.toString());
       return true;
     }
 
@@ -72,11 +72,11 @@ public class ToggleCommand implements CommandExecutor, TabCompleter {
     settings.setMentionSoundEnabled(!settings.isMentionSoundEnabled());
     playerData.set("mention_sound.enabled", settings.isMentionSoundEnabled());
     logger.send(player, MENTION_TOGGLED, settings.isMentionSoundEnabled()
-    ? ON.toString()
-    : OFF.toString());
+                                         ? ON.toString()
+                                         : OFF.toString());
     logger.send(target, MENTION_TOGGLED, settings.isMentionSoundEnabled()
-    ? ON.toString()
-    : OFF.toString());
+                                         ? ON.toString()
+                                         : OFF.toString());
 
     return true;
   }

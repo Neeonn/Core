@@ -278,8 +278,8 @@ public class RostersManager {
                       ? ONLINE.toString()
                       : OFFLINE.toString();
       info.add(ROSTERS_INFO_PLAYER_ENTRY.replace(status, member.isOnline()
-              ? member.getPlayer().getDisplayName()
-              : member.getName()));
+                                                         ? member.getPlayer().getDisplayName()
+                                                         : member.getName()));
     }
 
     info.add(System.lineSeparator());

@@ -38,7 +38,7 @@ public class RostersCommand implements CommandExecutor, TabCompleter {
       logger.send(sender, NO_PERM, PERM_ROSTERS_MAIN, label);
       return true;
     }
-    
+
     String allAvailableLeagues = String.join(", ",
         rostersManager.getAvailableLeagues()), activeLeague = rostersManager.getActiveLeague();
     if (args.length == 0) {
@@ -67,12 +67,13 @@ public class RostersCommand implements CommandExecutor, TabCompleter {
               return;
             }
 
-            logger.send(sender, ROSTERS_LIST_ENTRY.replace(rosterList.getTag(), rosterList.getLongName(), String.valueOf(rosterList.getMemberCount()),
+            logger.send(sender, ROSTERS_LIST_ENTRY.replace(rosterList.getTag(), rosterList.getLongName(),
+                String.valueOf(rosterList.getMemberCount()),
                 rosterList.getManager() != null
                 ? ROSTERS_INFO_MANAGER_DISPLAY.replace(rosterList.getManager())
                 : ""));
           });
-          
+
           logger.send(sender, System.lineSeparator());
         } else {
           List<String> leagueOrder = rostersManager.getAvailableLeagues();

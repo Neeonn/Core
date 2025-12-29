@@ -44,8 +44,8 @@ public class ClientBlockerCommand implements CommandExecutor, TabCompleter {
 
     if (args.length == 0) {
       logger.send(sender, CLIENT_BLOCKER_TOGGLE, clientBlocker.isEnabled()
-      ? ON.toString()
-      : OFF.toString());
+                                                 ? ON.toString()
+                                                 : OFF.toString());
       return true;
     }
 
@@ -133,8 +133,8 @@ public class ClientBlockerCommand implements CommandExecutor, TabCompleter {
                         : OFF.toString();
 
         logger.send(sender, CLIENT_BLOCKER_CHECK_RESULT, target.getDisplayName(), (blocked
-                                  ? "&c"
-                                  : "&a") + brand, exempt);
+                                                                                   ? "&c"
+                                                                                   : "&a") + brand, exempt);
         return true;
 
       case "help":

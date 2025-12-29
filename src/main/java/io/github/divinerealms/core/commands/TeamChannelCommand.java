@@ -56,8 +56,8 @@ public class TeamChannelCommand implements CommandExecutor {
                                                                 : team);
 
       logger.send(player, CHANNEL_TOGGLE, roster.getName().toUpperCase(), alreadyActive
-                                      ? OFF.toString()
-                                      : ON.toString());
+                                                                          ? OFF.toString()
+                                                                          : ON.toString());
     } else {
       channelManager.sendMessage(sender, team, message);
     }

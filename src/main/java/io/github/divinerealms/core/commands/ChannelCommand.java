@@ -53,7 +53,7 @@ public class ChannelCommand implements CommandExecutor, TabCompleter {
         String toggledStatus = disabled
                                ? OFF.toString()
                                : ON.toString();
-        
+
         logger.broadcast(CHANNEL_DISABLED_BROADCAST,
             args[1].toUpperCase(), toggledStatus, sender.getName()
         );
@@ -123,7 +123,7 @@ public class ChannelCommand implements CommandExecutor, TabCompleter {
         }
 
         logger.send(sender, CHANNEL_INFO,
-            channelName.toUpperCase(), disabledStatus, 
+            channelName.toUpperCase(), disabledStatus,
             hasPermission, isBroadcast, definedDiscordId,
             subscribersList
         );
@@ -175,8 +175,8 @@ public class ChannelCommand implements CommandExecutor, TabCompleter {
                                                                            : channelToSwitchTo.toLowerCase());
 
         logger.send(switchingPlayer, CHANNEL_TOGGLE, channelToSwitchTo.toUpperCase(), alreadyActive
-                                         ? OFF.toString()
-                                         : ON.toString());
+                                                                                      ? OFF.toString()
+                                                                                      : ON.toString());
         break;
 
       case "status":

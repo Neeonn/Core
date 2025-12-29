@@ -356,12 +356,13 @@ public class CoreManager {
   }
 
   private void sendBanner() {
-    String[] banner = new String[]{"┏┓┏┓┳┓┏┓" + "&8 -+------------------------------------+-",
-                                   "┃ ┃┃┣┫┣ " + "&7  Created by &b" +
-                                   plugin.getDescription().getAuthors().stream().map(String::valueOf).collect(
-                                       Collectors.joining(", ")) + "&7, version &f" +
-                                   plugin.getDescription().getVersion(),
-                                   "┗┛┗┛┛┗┗┛" + "&8 -+------------------------------------+-"
+    String[] banner = new String[]{
+        "┏┓┏┓┳┓┏┓" + "&8 -+------------------------------------+-",
+        "┃ ┃┃┣┫┣ " + "&7  Created by &b" +
+        plugin.getDescription().getAuthors().stream().map(String::valueOf).collect(
+            Collectors.joining(", ")) + "&7, version &f" +
+        plugin.getDescription().getVersion(),
+        "┗┛┗┛┛┗┗┛" + "&8 -+------------------------------------+-"
     };
 
     for (String line : banner) {

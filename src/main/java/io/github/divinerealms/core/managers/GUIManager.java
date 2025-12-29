@@ -58,7 +58,7 @@ public class GUIManager {
       if (permission == null) {
         permission = "core.menu." + menuKey.toLowerCase();
       }
-      
+
       registerMenuCommand(menuKey, permission);
     });
 
@@ -153,7 +153,7 @@ public class GUIManager {
           for (String line : rawLore) {
             colored.add(logger.color(line));
           }
-          
+
           meta.setLore(colored);
         } else {
           meta.setLore(new ArrayList<>());
@@ -170,7 +170,7 @@ public class GUIManager {
         if (singleAction != null && !singleAction.isEmpty()) {
           actions.add(singleAction);
         }
-        
+
         List<String> actionList = itemSec.getStringList("actions");
         if (actionList != null && !actionList.isEmpty()) {
           actions.addAll(actionList);
@@ -185,13 +185,13 @@ public class GUIManager {
                   if (cloneMeta.hasDisplayName()) {
                     cloneMeta.setDisplayName(template.applyPlaceholders(player, cloneMeta.getDisplayName()));
                   }
-                  
+
                   if (cloneMeta.hasLore()) {
                     List<String> newLore = new ArrayList<>();
                     for (String line : cloneMeta.getLore()) {
                       newLore.add(template.applyPlaceholders(player, line));
                     }
-                    
+
                     cloneMeta.setLore(newLore);
                   }
                   clone.setItemMeta(cloneMeta);
@@ -203,7 +203,7 @@ public class GUIManager {
               if (!((event.getWhoClicked()) instanceof Player)) {
                 return;
               }
-              
+
               handleActions((Player) event.getWhoClicked(), actions);
             });
 
@@ -290,7 +290,7 @@ public class GUIManager {
       if (permission == null) {
         permission = "core.menu." + menuKey.toLowerCase();
       }
-      
+
       registerMenuCommand(menuKey, permission);
     });
 
@@ -312,7 +312,7 @@ public class GUIManager {
     if (commandMap == null) {
       return;
     }
-    
+
     String commandName = menuCommands.get(menuKey);
     if (commandName == null || commandName.isEmpty()) {
       return;
@@ -329,7 +329,7 @@ public class GUIManager {
       if (perm == null) {
         perm = "core.menu." + menuKey.toLowerCase();
       }
-      
+
       if (!player.hasPermission(perm)) {
         logger.send(player, NO_PERM, commandName, permission);
         return true;

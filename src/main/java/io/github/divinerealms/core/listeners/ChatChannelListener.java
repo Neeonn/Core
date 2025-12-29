@@ -94,7 +94,7 @@ public class ChatChannelListener implements Listener {
     if (!player.hasPermission(PERM_CHAT_COLOR)) {
       message = ChatColor.stripColor(logger.color(message));
     }
-    
+
     final String initialMessage = message;
 
     UUID uuid = player.getUniqueId();
